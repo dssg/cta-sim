@@ -1,4 +1,5 @@
 
+#Usage: awk -f <Name of AWK file> <.csv in> <.csv out>
 
 BEGIN { 
 
