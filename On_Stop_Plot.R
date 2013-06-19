@@ -77,14 +77,13 @@ base2 <- base2 + geom_point(position = 'jitter') + theme(panel.grid.minor = elem
 print(base2)
 
 # Violin plots for different hours
-
 violin.plot <- ggplot(final.data, aes(x=factor(TIME), y=PASSENGER_ON))  + stat_ydensity()
 violin.plot<- violin.plot + stat_summary(fun.y=function(x) mean(x), 
-                                     colour="red", ymin=0, ymax=0) +
-  scale_y_continuous(breaks = c(0:20))
+                                         colour="red", ymin=0, ymax=0) 
 violin.plot<- violin.plot + stat_summary(fun.y=function(x) quantile(x, prob=.75), 
-                                     colour="black", ymin=0, ymax=0)+ xlab("Hour of the day") + 
-  ylab("Number of people BOARDING") + ggtitle(paste('Number of people BORADING at Stop ',BusStop, sep="")) + theme(panel.grid.minor = element_blank())
+                                         colour="black", ymin=0, ymax=0)+ xlab("Hour of the day") +
+                                          scale_y_continuous(breaks = c(0:20)) +
+                                          ylab("Number of people BOARDING") + ggtitle(paste('Number of people BORADING at Stop ',BusStop, sep=""))
 print(violin.plot)
 
 pdf(paste(paste("People_On_per_Hour_Stop", BusStop, sep=""),".pdf", sep=""),width=16, height=9)
