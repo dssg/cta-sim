@@ -15,20 +15,26 @@
   <properties>
     <!-- Convenience property to set the GWT version -->
     <gwtVersion>2.5.1</gwtVersion>
+    <gxtVersion>3.0.0</gxtVersion>
     <!-- GWT needs at least java 1.5 -->
     <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   
   <repositories>
-  	<repository>
-      <id>codehaus-maven-repo</id>
-      <name>Codehaus repo</name>
-      <url>http://repository.codehaus.org/org/codehaus/mojo/</url>
-    </repository>
+      <repository>
+          <id>sencha-commercial-release</id>
+          <name>Sencha commercial releases</name>
+          <url>https://maven.sencha.com/repo/commercial-release/</url>
+      </repository>
   </repositories>
-  
+
   <dependencies>
+    <dependency>
+        <groupId>com.sencha.gxt</groupId>
+        <artifactId>gxt</artifactId>
+        <version>${gxtVersion}</version>
+    </dependency>
     <dependency>
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-servlet</artifactId>
