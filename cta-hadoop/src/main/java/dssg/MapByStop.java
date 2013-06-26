@@ -12,13 +12,27 @@ public class MapByStop {
 	    static class Map extends MapReduceBase implements Mapper <LongWritable, Text, Text, DoubleWritable> {
 		   
 		   public void map(LongWritable key, Text value, OutputCollector<Text, DoubleWritable> output, Reporter reporter) throws IOException {
-			    String line = value.toString();
-			   	String[] parts = line.split(",");
-			  	String route =  parts[0];
-			  	Double passengers = Double.parseDouble(parts[1]);
-
+			   	String route = "0";
+			   	Double passengers;
+			   	String line = value.toString();
+			   	if(!line.isEmpty()){
+			   		String[] parts = line.split(",");
+			   		if(!parts[0].isEmpty()){
+				   		route =  parts[0];
+				   	}
+				   
+				   	if(!parts[1].isEmpty()){
+				   		passengers = Double.parseDouble(parts[1]);
+				   	}
+				   	else {
+				   		passengers=(double) 0;
+				   	}
+			   	}else{
+			   		passengers=(double) 0;
+			   	}
+			   	
+			   	
 			  	output.collect(new Text(route), new DoubleWritable(passengers));
-			   
 			}
 	   }
 	   
