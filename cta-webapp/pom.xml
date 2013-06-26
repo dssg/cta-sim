@@ -15,7 +15,7 @@
   <properties>
     <!-- Convenience property to set the GWT version -->
     <gwtVersion>2.5.1</gwtVersion>
-    <gxtVersion>3.0.0</gxtVersion>
+    <gxtVersion>3.0.1</gxtVersion>
     <!-- GWT needs at least java 1.5 -->
     <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,9 +23,9 @@
   
   <repositories>
       <repository>
-          <id>sencha-commercial-release</id>
-          <name>Sencha commercial releases</name>
-          <url>https://maven.sencha.com/repo/commercial-release/</url>
+         <id>sencha-gpl-release</id>
+         <name>Open source licensed Sencha artifacts</name>
+         <url>https://maven.sencha.com/repo/gpl-release/</url>
       </repository>
   </repositories>
 
@@ -33,6 +33,16 @@
     <dependency>
         <groupId>com.sencha.gxt</groupId>
         <artifactId>gxt</artifactId>
+        <version>${gxtVersion}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.sencha.gxt</groupId>
+        <artifactId>gxt-chart</artifactId>
+        <version>${gxtVersion}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.sencha.gxt</groupId>
+        <artifactId>gxt-legacy</artifactId>
         <version>${gxtVersion}</version>
     </dependency>
     <dependency>
