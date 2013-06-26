@@ -23,9 +23,9 @@
   
   <repositories>
       <repository>
-          <id>sencha-commercial-release</id>
-          <name>Sencha commercial releases</name>
-          <url>https://maven.sencha.com/repo/gxt-gpl-release/</url>
+         <id>sencha-gpl-release</id>
+         <name>Open source licensed Sencha artifacts</name>
+         <url>https://maven.sencha.com/repo/gpl-release/</url>
       </repository>
   </repositories>
 
@@ -37,7 +37,12 @@
     </dependency>
     <dependency>
         <groupId>com.sencha.gxt</groupId>
-        <artifactId>gxt</artifactId>
+        <artifactId>gxt-chart</artifactId>
+        <version>${gxtVersion}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.sencha.gxt</groupId>
+        <artifactId>gxt-legacy</artifactId>
         <version>${gxtVersion}</version>
     </dependency>
     <dependency>
