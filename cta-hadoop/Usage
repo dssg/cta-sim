@@ -23,7 +23,7 @@ Steps:
 -Jar the contents of the <nameDirectory_classes>
 	jar -cvf <script_name>.jar -C <nameDirectory_classes>/ .
 -Put the files to work on in the input directory
-	(If you do not know the directories in which you can put the data use hadoop dfs -ls /)
+	(If you do not know the directories in which you can put the data use hadoop dfs -ls / also use hadoop dfs -mkdir to create a directory)
 	hadoop dfs -put <data_directowry>/ <input_directory>
 -Run the application
 	hadoop jar script.jar org.myorg.<ClassName> <input_directory> <output_directory>
