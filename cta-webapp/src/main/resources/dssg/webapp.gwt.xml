@@ -5,8 +5,10 @@
   <set-property name="user.agent" value="safari"/>
   <!-- We need the JUnit module in the main module,               -->
   <!-- otherwise eclipse complains (Google plugin bug?)           -->
+  <inherits name='com.extjs.gxt.ui.GXT'/>
+  
   <inherits name='com.google.gwt.junit.JUnit' />
-  <inherits name="com.sencha.gxt.ui.GXT" />
+<!--   <inherits name="com.sencha.gxt.ui.GXT" /> -->
   <!-- Inherit the default GWT style sheet.  You can change       -->
   <!-- the theme of your GWT application by uncommenting          -->
   <!-- any one of the following lines.                            -->

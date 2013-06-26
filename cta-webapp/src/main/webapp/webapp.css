@@ -12,7 +12,9 @@ h1 {
 
 .sendButton {
   display: block;
-  font-size: 16pt;
+	color: Black;
+	font-size: 16pt;
+	background-color: Silver;
 }
 
 /** Most GWT widgets already have a style name defined */

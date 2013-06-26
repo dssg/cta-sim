@@ -40,7 +40,7 @@ public class webapp implements EntryPoint {
    * This is the entry point method.
    */
   public void onModuleLoad() {
-    BasicTabExample tabs = new BasicTabExample();
+    AdvancedTabExample tabs = new AdvancedTabExample();
     RootPanel.get().add(tabs);
 
     final Button sendButton = new Button( messages.sendButton() );
