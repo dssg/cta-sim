@@ -8,7 +8,7 @@
   <!-- Servlets -->
   <servlet>
     <servlet-name>greetServlet</servlet-name>
-    <servlet-class>dssg.server.GreetingServiceImpl</servlet-class>
+    <servlet-class>dssg.server.SimulationServiceImpl</servlet-class>
   </servlet>
 
   <servlet-mapping>

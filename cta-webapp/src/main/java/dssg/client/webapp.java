@@ -30,9 +30,9 @@ public class webapp implements EntryPoint {
       + "connection and try again.";
 
   /**
-   * Create a remote service proxy to talk to the server-side Greeting service.
+   * Create a remote service proxy to talk to the server-side simulation service.
    */
-  private final GreetingServiceAsync greetingService = GWT.create(GreetingService.class);
+  private final SimulationServiceAsync simulationService = GWT.create(SimulationService.class);
 
   private final Messages messages = GWT.create(Messages.class);
 
@@ -123,7 +123,7 @@ public class webapp implements EntryPoint {
         sendButton.setEnabled(false);
         textToServerLabel.setText(textToServer);
         serverResponseLabel.setText("");
-        greetingService.greetServer(textToServer, new AsyncCallback<String>() {
+        simulationService.simulationServer(textToServer, new AsyncCallback<String>() {
           public void onFailure(Throwable caught) {
             // Show the RPC error message to the user
             dialogBox.setText("Remote Procedure Call - Failure");
