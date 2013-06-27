@@ -4,7 +4,7 @@ hadoop dfs
 
 -ls / # directories valid for input data
 -cat <output directory>/*  # give the output for the job
-- put <input folder> <file path> # 
+-put <input folder> <file path> # 
 
 
 Steps:
@@ -30,9 +30,28 @@ Steps:
 -See the results
 	hadoop dfs -cat /<output_directory>/*
 
-To use this from Eclipse do last 5 steps using 
+To use this from Eclipse do last 5 steps using:
+	hadoop dfs -rmr /tmp/output
+
 	javac -classpath /usr/local/hadoop/hadoop-core-1.0.3.jar -d MapByStop_classes src/main/java/dssg/MapByStop.java
 
 	jar -cvf MapByStop.jar -C MapByStop_classes/ .
 
 	hadoop jar MapByStop.jar dssg.MapByStop /tmp/input /tmp/output
+
+	hadoop dfs -cat /tmp/output/*
+
+Using ECLIPSE and MAVEN it is easier to do it this way (in the cta-hadoop directory):
+	hadoop dfs -rmr /tmp/output
+	mvn clean package
+You will see a .jar in target that says ...SNAPSHOT-job.jar Run:
+	hadoop jar target/MapByStop.jar dssg.MapByStop /tmp/input /tmp/output
+or
+	hadoop jar target/MapByStop-job.jar  /tmp/input /tmp/output
+
+	hadoop dfs -cat /tmp/output/*
+	(The output file is named part-00000)
+
+To save the output hdfs file into a local file use:
+	hadoop dfs -cat /tmp/ouput/* > file.txt
+

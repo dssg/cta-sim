@@ -2,3 +2,5 @@
 *.jpg
 *.zip
 *.csv
+target/
+.DS_Store

@@ -46,6 +46,7 @@
   </dependencies>
 
   <build>
+    <finalName>MapByStop</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -66,7 +67,7 @@
           </descriptors>
           <archive>
             <manifest>
-              <mainClass>dssg.WordCount</mainClass>
+              <mainClass>dssg.MapByStop</mainClass>
             </manifest>
           </archive>
         </configuration>
