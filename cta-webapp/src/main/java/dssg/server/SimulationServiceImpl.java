@@ -2,6 +2,8 @@ package dssg.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.Route;
@@ -32,15 +34,18 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
      * We need to read a GTFS file for the simulation.
      * If it fails, then no-go.
      */
-    String simName;
+    String simName = null;
     try {
-      GtfsDaoImpl store = getGtfs(input);
+      URI basePath = new URI("http://gtfs.s3.amazonaws.com/");
+      URI uri = basePath.resolve("chicago-transit-authority_20130607_0333.zip");
+      GtfsDaoImpl store = getGtfs(new File(uri));//new File(input));
 
       simName = createSimulation(store);
 
     } catch (IOException e) {
       e.printStackTrace();
-      simName = null;
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
     }
     
     return simName;
@@ -64,10 +69,10 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
    * @return
    * @throws IOException 
    */
-  private GtfsDaoImpl getGtfs(String gtfsFileName) throws IOException {
+  private GtfsDaoImpl getGtfs(final File gtfsFile) throws IOException {
 
     GtfsReader reader = new GtfsReader();
-    reader.setInputLocation(new File(gtfsFileName));
+    reader.setInputLocation(gtfsFile);
 
     GtfsDaoImpl store = new GtfsDaoImpl();
     reader.setEntityStore(store);
