@@ -5,3 +5,5 @@ cta-example-data.zip
 *.csv
 target/
 .DS_Store
+.gwt
+
