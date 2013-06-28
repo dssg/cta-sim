@@ -1,3 +1,5 @@
+//Code to split the data by the stop id. Initial version.
+
 package dssg;
 
 import java.io.IOException;
@@ -7,11 +9,15 @@ import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 
-// This code 
+// This code my have problems with the number of threads it creates. When the number of routes is large enough it 
+// will give an error saying "error unable to create new native thread hadoop".
+
 public class MapByStop {
 	    static class Map extends MapReduceBase implements Mapper <LongWritable, Text, Text, Text> {
 		   // Map function
 		   public void map(LongWritable key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
+			   // For every line it reads and splits it to read the stop which is the first value.
+			   // Stop value is used as a key.
 			   	String route = "0";
 			   	String line = value.toString();
 			   	if(!line.isEmpty()){
