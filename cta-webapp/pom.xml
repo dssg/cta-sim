@@ -12,12 +12,6 @@
   <version>1.0-SNAPSHOT</version>
   <name>GWT Maven Archetype</name>
 
-  <scm>
-    <connection>scm:git:http://github.com/dssg/dssg-cta-project</connection>
-    <developerConnection>scm:git:ssh://git@github.com/dssg/dssg-cta-project.git</developerConnection>
-    <url>http://github.com/dssg/dssg-cta-project</url>
-  </scm>   
-
   <properties>
     <!-- Convenience property to set the GWT version -->
     <gwtVersion>2.5.1</gwtVersion>
@@ -146,7 +140,7 @@
           <execution>
             <goals>
               <goal>compile</goal>
-<!--               <goal>test</goal> -->
+              <goal>test</goal>
               <goal>i18n</goal>
               <goal>generateAsync</goal>
             </goals>

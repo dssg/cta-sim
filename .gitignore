@@ -1,9 +1,6 @@
 *.bug
 *.jpg
-cta-example-data.zip
 *.zip
 *.csv
 target/
 .DS_Store
-.gwt
-
