@@ -6,6 +6,7 @@ import java.util.*;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 
 
 public class MapByStop {
@@ -46,6 +47,21 @@ public class MapByStop {
 		         
 		     }
 	   }
+	    
+	    public static class PartitionByStop extends MultipleTextOutputFormat<Text,DoubleWritable>
+	    {
+	    	protected String generateFileNameForKeyValue(Text key, DoubleWritable value, String filename)
+	    	{	
+	    		String file;
+	    		if(!key.toString().isEmpty()){
+	    			file = key + "/" + filename;
+	    		}
+	    		else{
+	    			file = "error" + filename;
+	    		}
+	    		return file;
+	    	}
+	    }
 	   
 	   public static void main(String[] args) throws Exception {
 	   		if (args.length != 2) {
@@ -61,8 +77,9 @@ public class MapByStop {
 		     conf.setMapperClass(Map.class);
 		     conf.setReducerClass(Reduce.class);
 
-		    /*[*/conf/*]*/.setOutputKeyClass(Text.class);
-    		/*[*/conf/*]*/.setOutputValueClass(DoubleWritable.class);
+		     conf.setOutputKeyClass(Text.class);
+    		 conf.setOutputValueClass(DoubleWritable.class);
+    		 conf.setOutputFormat(PartitionByStop.class);
 
 		     JobClient.runJob(conf);
 	   }
