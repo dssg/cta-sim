@@ -13,7 +13,9 @@ import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.button.ToggleButton;  
 import com.google.gwt.user.client.Element;  
   
-public class AdvancedTabExample extends LayoutContainer {  
+public class AdvancedTabExample extends LayoutContainer {
+	public AdvancedTabExample() {
+	}  
   
   private int index = 0;  
   private TabPanel advanced;  
