@@ -14,6 +14,8 @@ import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 
 public class MapByStop {
 	    static class Map extends MapReduceBase implements Mapper <LongWritable, Text, Text, Text> {
+	    	Text outputKey = new Text();
+	    	Text outputLine = new Text();
 		   // Map function
 		   public void map(LongWritable key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
 			   // For every line it reads and splits it to read the stop which is the first value.
@@ -26,10 +28,10 @@ public class MapByStop {
 				   		route =  parts[0];
 			   		}
 				}
-			   	
 			   	// Add code to partition data even further.
-			   	
-			  	output.collect(new Text(route), new Text(line));
+			   	outputKey.set(route);
+			   	outputLine.set(line);
+			  	output.collect(outputKey, outputLine);
 			}
 	   }
 	   
