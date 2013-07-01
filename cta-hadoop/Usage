@@ -74,7 +74,13 @@ hadoop dfs
 -put <input folder> <file path> # 
 
 Usefull resources
+
 HDFS data: http://hadoop.apache.org/docs/stable/file_system_shell.html#put
 EMP (AWS): http://commoncrawl.org/mapreduce-for-the-masses/
 Tutorial: http://hadoop.apache.org/docs/r1.1.1/mapred_tutorial.html#Example%3A+WordCount+v1.0
 Book: "Hadoop: the definite guide", "Hadoop in action"
+
+Problems
+
+Error: unable to create new native thread
+attempt_201307011525_0002_m_000000_0: 2013-07-01 15:45:30.239 java[97675:1203] Unable to load realm info from SCDynamicStore
