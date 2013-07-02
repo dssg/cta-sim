@@ -70,6 +70,8 @@ import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.extjs.gxt.ui.client.widget.tips.ToolTip;
 import com.extjs.gxt.ui.client.widget.toolbar.LabelToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.cell.client.ButtonCellBase.DefaultAppearance.Resources;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.i18n.client.NumberFormat;  
 import com.google.gwt.user.client.Element;  
 import com.google.gwt.user.client.Random;
@@ -85,6 +87,7 @@ import com.extjs.gxt.ui.client.widget.Slider;
 public class GwtPortalContainer extends LayoutContainer {
 	FormData formData;
     VerticalPanel vp;
+    Integer sliderValue; 
     
 	public GwtPortalContainer() {
 	}  
@@ -96,7 +99,7 @@ public class GwtPortalContainer extends LayoutContainer {
     setLayout(layout); 
     
     
-    Slider slider = new Slider();
+    Slider slider;
   
     LayoutContainer north = new LayoutContainer();
     ContentPanel west = new ContentPanel(); 
@@ -108,27 +111,40 @@ public class GwtPortalContainer extends LayoutContainer {
     north.setLayout(new RowLayout(Orientation.HORIZONTAL));
     north.setStyleAttribute("background-color", "#000033");
     
-    
-    Image image = new Image();
-    image.setUrl("http://www.colorhexa.com/000033.png");
+    	Image image = new Image();
+    	image.setUrl(GWT.getModuleBaseURL() + "000033.png");
     north.add(image, new RowData(.03, 1, new Margins(4)));
-    image = new Image();
-    image.setUrl("http://www.transitchicago.com/images/global/hdr-cta.gif");
-    north.add(image, new RowData(.32, 1, new Margins(4)));
-    image = new Image();
-    image.setUrl("http://www.colorhexa.com/000033.png");
-    north.add(image, new RowData(.54, 1, new Margins(4)));
-    image = new Image();
-    image.setUrl("http://dssg.io/img/logo.png");
-    north.add(image, new RowData(.08, 1, new Margins(4)));
-    image = new Image();
-    image.setUrl("http://www.colorhexa.com/000033.png");
-    north.add(image, new RowData(.03, 1, new Margins(4)));
+    	image = new Image();
+    	image.setUrl(GWT.getModuleBaseURL() + "cta-logo2.gif");
+    	image.setSize("415px", "70px");
+    	ContentPanel panel = new ContentPanel();
+    	panel.setFrame(false);
+    	panel.setBodyBorder(false);
+    	panel.setHeaderVisible(false);
+    	panel.setBodyStyle("background: #000033");
+    	panel.add(image);
+    north.add(panel, new RowData(.27,1, new Margins(6,0,0,0)));
+    	image = new Image();
+    	image.setUrl(GWT.getModuleBaseURL() + "000033.png");
+    north.add(image, new RowData(.62, 1, new Margins(4)));
+    	image = new Image();
+    	image.setUrl(GWT.getModuleBaseURL() + "dssg-logo_round.png");
+    	image.setSize("67px", "67px");
+    	panel = new ContentPanel();
+    	panel.setFrame(false);
+    	panel.setBodyBorder(false);
+    	panel.setHeaderVisible(false);
+    	panel.setBodyStyle("background: #000033");
+    	panel.add(image);
+    north.add(panel, new RowData(.05, 1, new Margins(6,0,0,0)));
+    	image = new Image();
+    	image.setUrl(GWT.getModuleBaseURL() + "000033.png");
+    north.add(image, new RowData(.03, 1, new Margins()));
     
  // East information
     east.setBorders(true);
     east.setBodyBorder(true); 
-    east.setHeight(400);
+    east.setAutoHeight(true);
     east.setLayout(new AccordionLayout());
     east.setHeading("Additional Info"); 
     	ContentPanel stats = new ContentPanel();  
@@ -225,6 +241,7 @@ public class GwtPortalContainer extends LayoutContainer {
     	slider.setMaxValue(24);
     	slider.setMinValue(0);
     	slider.setValue(12);
+    	sliderValue =slider.getValue();
     	slider.setData("text", "Choose the time Window");
     	portlet.add(slider);
     	r = new Resizable(portlet);  
@@ -235,17 +252,40 @@ public class GwtPortalContainer extends LayoutContainer {
     	portlet = new Portlet();  
     	portlet.setHeading("Boardings/Alightings");  
     	configPanel(portlet);
-    	portlet.setHeight(450);
+    	portlet.setAutoHeight(false);
         r = new Resizable(portlet);  
         r.setDynamic(true);
-    	url = "chart/open-flash-chart.swf";
-    	chart = new Chart(url);  
-    	chart.setBorders(true);  
-    	chart.setHeight(400);
-    	r = new Resizable(chart);  
-        r.setDynamic(true);
-    	chart.setChartModel(getVerticalAreaChartModel()); 
-    	portlet.add(chart);
+        	vp = new VerticalPanel();
+        	vp.setAutoHeight(true);
+        		url = "chart/open-flash-chart.swf";
+        		chart = new Chart(url);  
+        		chart.setBorders(true);
+        		chart.setHeight(400);
+        		r = new Resizable(chart);  
+        		r.setDynamic(true);
+        		chart.setChartModel(getVerticalAreaChartModel());
+        		panel = new ContentPanel();
+        		panel.setFrame(false);
+        		panel.setBodyBorder(false);
+        		panel.setHeaderVisible(false);
+        		panel.add(chart);
+        	vp.add(panel);
+        		slider = new Slider();
+            	slider.setTitle("Time window (24hr)");
+            	slider.setIncrement(1);
+            	slider.setMaxValue(24);
+            	slider.setMinValue(0);
+            	slider.setValue(12);
+            	sliderValue =slider.getValue();
+            	slider.setData("text", "Choose the time Window");
+            	panel = new ContentPanel();
+        		panel.setFrame(false);
+        		panel.setBodyBorder(false);
+        		panel.setHeaderVisible(false);
+        		panel.setAutoHeight(false);
+        		panel.add(slider);
+            vp.add(panel);
+    	portlet.add(vp);
     portal.add(portlet, 0); 
     
     	portlet = new Portlet();  
@@ -304,7 +344,8 @@ public class GwtPortalContainer extends LayoutContainer {
     add(center, centerData);  
     add(east, eastData); 
   }  
-  
+
+// Modules to create forms
   private void createForm1() {  
 	    FormPanel simple = new FormPanel(); 
 	    simple.setFrame(false); 
@@ -495,9 +536,23 @@ public class GwtPortalContainer extends LayoutContainer {
         area1.addValues(Math.abs(Math.cos(Random.nextDouble())*150*Math.cos(n/30)));   
     }  
     
+    AreaChart area2 = new AreaChart();  
+    area1.setFillAlpha(0.3f);  
+    area1.setColour("#ff0000");  
+    area1.setFillColour("#ff0000");  
+    for (int n = 0; n < 48; n++) { 
+        if(n==13) {
+        	area2.addValues(220);
+        }
+        else {
+        	area2.addValues(0);
+        }
+    }  
+    
     //add the bchart as the Chart Config of the ChartModel  
     cm.addChartConfig(achart);
     cm.addChartConfig(area1); 
+    cm.addChartConfig(area2); 
     
     return cm;    
   } 
@@ -519,7 +574,7 @@ public class GwtPortalContainer extends LayoutContainer {
 	    PieChart pie = new PieChart();  
 	    pie.setAlpha(0.5f);  
 	    pie.setNoLabels(true);  
-	    pie.setTooltip("#label# $#val#<br>#percent#");  
+	    pie.setTooltip("#label# #val#<br>#percent#");  
 	    pie.setColours("#ff0000", "#00aa00", "#0000ff", "#ff9900", "#ff00ff");  
 	    pie.addSlices(new PieChart.Slice(100, "Mich/Lad", ""));  
 	    pie.addSlices(new PieChart.Slice(200, "Mich/Ost", ""));  
@@ -530,5 +585,9 @@ public class GwtPortalContainer extends LayoutContainer {
 	  
 	    cm.addChartConfig(pie);  
 	    return cm;  
-	  }
+
+	  }  
+  
+  //private void getStops()
+ 
 }
