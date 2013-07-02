@@ -5,6 +5,7 @@ CTA project for the DSSG program.
 
 <h3> Context </h3>
 The CTA is the Chicago Transit Authority. Among other things, they manage the Chicago bus system, which encompasses over 10000 stops.
+At every stop, CTA uses door sensors to log all of the passengers that get on and off the bus. Additionally, each bus is equipped with a GPS that allows CTA to collect data on when the bus arrives at each stop (early, late, on-time).
 <h3> Problem </h3>
 The CTA bus system has problems with bunching (buses piling up because they are late or early) and crowding (too many people on buses).
 Currently, the CTA uses historical data to plan their quarterly schedules, with no form of predictive modeling. This means that if the CTA makes a schedule change, they have to wait 3 months to evaluate the effect of that change on such variables as bunching and crowding.
