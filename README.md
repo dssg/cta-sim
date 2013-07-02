@@ -1,22 +1,30 @@
-Project Overview
-================
+DSSG: CTA-Project
+=================
 
-CTA project for the DSSG program.
-
+<h1> Introduction </h1>
 <h3> Context </h3>
-The CTA is the Chicago Transit Authority. Among other things, they manage the Chicago bus system, which encompasses over 10000 stops.
+The Chicago Transit Authority (CTA) has made a concerted effort to decrease crowding on public transportation that has been a 
+cause for concern over the last few years. The CTA has been collecting information such as: the number of people riding a 
+specific bus, the times at which more people board buses at a specific stop, the delay times on different routes, among other
+things. This data, after some processing, is used to understand and modify schedules and routes for the following quarter.
 
-At every stop, CTA uses door sensors to log all of the passengers that get on and off the bus. Additionally, each bus is equipped with a GPS that allows CTA to collect data on when the bus arrives at each stop (early, late, on-time).
-<h3> Problem </h3>
-The CTA bus system has problems with bunching (buses piling up because they are late or early) and crowding (too many people on buses).
-Currently, the CTA uses historical data to plan their quarterly schedules, with no form of predictive modeling. This means that if the CTA makes a schedule change, they have to wait 3 months to evaluate the effect of that change on such variables as bunching and crowding.
-<h3> Solution Prototype </h3>
-We are building a predictive model for demand. This model will be used in a simple Java web application that will display a variety of charts, graphs, and figures generated from analysis of the data.
+<h3> Prototype idea </h3>
+While current best practices are data-focused, they are retrospective in nature. We propose to turn scheduling into a more 
+prospective exercise through statistical modeling and simulation. This will allow the planning analytics department to be more
+proactive and to better understand the impact of certain scheduling decisions on bus crowding before implementation. Given the 
+richness of the data available, we believe that even a simple statistical model and simulation approach will provide useful 
+insight into bus de-crowding.
+
+Our tool will display historical data with the metrics the CTA used today and will incorporate new metrics along with simulated
+data. The new data will help the CTA have a deeper understanding of the results that arise from schedule changes. This new
+understanding will help the CTA in the effort to reduce crowing on buses.
+
 <h3> Impact </h3>
-This project will hopefully reduce the issues of bunching and crowding for the bus system, which will in turn make Chicago transit more efficient and enjoyable for the many people who rely on it to get to work.
+The CTA bus service has more than 950 thousand riders on an average weekday. By reducing the crowding on buses we will hopefully
+toincrease the quality of life of many daily commuters and help the CTA move more people around the city.
 
 <h1> Quick-Start Guide </h1>
-
+Most of the information regarding the project idea can be found in the wiki secting of the github repository.
 <h1> The DSSG Team </h1>
 
 Andres Akle Carranza - Webapp design/coding, Modeling
