@@ -32,11 +32,6 @@
          <name>Old GXT</name>
          <url>http://repo2.maven.org/maven2/</url>
       </repository>
-      <repository>
-        <id>thirdparty-releases</id>
-        <name>JBoss Thirdparty Releases</name>
-        <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-releases</url>
-      </repository>
   </repositories>
 
   <dependencies>
@@ -60,11 +55,6 @@
 <!--         <artifactId>gxt-legacy</artifactId> -->
 <!--         <version>${gxtVersion}</version> -->
 <!--     </dependency> -->
-    <dependency>
-      <groupId>com.gwtext</groupId>
-      <artifactId>gwtext</artifactId>
-      <version>2.0.5</version>
-    </dependency>
     <dependency>
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-servlet</artifactId>
