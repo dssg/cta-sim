@@ -4,7 +4,7 @@
 #loading {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 40%;
   margin-left: -45px;
   padding: 2px;
   z-index: 20001;
@@ -19,10 +19,10 @@
 #loading .loading-indicator {
   background: white;
   color: #444;
-  font: bold 13px tahoma, arial, helvetica;
-  padding: 10px;
+  font: bold 16px tahoma, arial, helvetica;
+  padding:8px;
   margin: 0;
-  height: auto;
+  height: 40px;
 }
 
 #loading .loading-indicator img {
@@ -32,7 +32,7 @@
 }
 
 #loading-msg {
-  font: normal 10px arial, tahoma, sans-serif;
+  font: normal 12px arial, tahoma, sans-serif;
 }
 
 .search-item {
