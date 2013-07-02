@@ -17,3 +17,9 @@ This project will hopefully reduce the issues of bunching and crowding for the b
 <h1> Quick-Start Guide </h1>
 
 <h1> The DSSG Team </h1>
+
+Andres Akle Carranza
+Jordan Bates
+Walter Dempsey
+David Sekora
+Brandon Willard
