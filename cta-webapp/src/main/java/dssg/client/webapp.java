@@ -2,6 +2,7 @@ package dssg.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.RootPanel;
 
 /**
@@ -21,6 +22,7 @@ public class webapp implements EntryPoint {
   public void onModuleLoad() {
     RootPanel rootPanel = RootPanel.get();
     rootPanel.add(new GwtPortalContainer());
-
+    
+    DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("loading"));
   }
 }						
