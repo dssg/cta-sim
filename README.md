@@ -19,12 +19,12 @@ This project will hopefully reduce the issues of bunching and crowding for the b
 
 <h1> The DSSG Team </h1>
 
-Andres Akle Carranza
+Andres Akle Carranza - Webapp design/coding, Modeling
 
-Jordan Bates
+Jordan Bates - Data Management/Formatting
 
-Walter Dempsey
+Walter Dempsey - Statistics/Modeling
 
-David Sekora
+David Sekora - Webapp coding/debugging, Eclipse expert
 
-Brandon Willard
+Brandon Willard - Project Mentor
