@@ -4,3 +4,4 @@
 *.csv
 target/
 .DS_Store
+.gwt/
