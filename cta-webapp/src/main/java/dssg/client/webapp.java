@@ -21,7 +21,6 @@ public class webapp implements EntryPoint {
    */
   public void onModuleLoad() {
     RootPanel rootPanel = RootPanel.get();
-    //rootPanel.add(new LoadingWindow());
     rootPanel.add(new GwtPortalContainer());
     DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("loading"));
   }

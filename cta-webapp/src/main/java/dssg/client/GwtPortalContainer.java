@@ -76,15 +76,13 @@ import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.ProvidesResize;
-import com.google.gwt.user.client.ui.RequiresResize;
 import com.gwtext.client.widgets.form.Checkbox;
 import com.gwtext.client.widgets.layout.VerticalLayout;
 
 import dssg.simulator.SimulationInstance;
 import com.extjs.gxt.ui.client.widget.Slider;
   
-public class GwtPortalContainer extends LayoutContainer implements RequiresResize, ProvidesResize{
+public class GwtPortalContainer extends LayoutContainer {
 	FormData formData;
     VerticalPanel vp;
     
@@ -533,8 +531,4 @@ public class GwtPortalContainer extends LayoutContainer implements RequiresResiz
 	    cm.addChartConfig(pie);  
 	    return cm;  
 	  }
-  public void onResize()
-  {
-	  System.out.println("RESIZE");
-  }
 }
