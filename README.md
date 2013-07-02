@@ -5,6 +5,7 @@ CTA project for the DSSG program.
 
 <h3> Context </h3>
 The CTA is the Chicago Transit Authority. Among other things, they manage the Chicago bus system, which encompasses over 10000 stops.
+
 At every stop, CTA uses door sensors to log all of the passengers that get on and off the bus. Additionally, each bus is equipped with a GPS that allows CTA to collect data on when the bus arrives at each stop (early, late, on-time).
 <h3> Problem </h3>
 The CTA bus system has problems with bunching (buses piling up because they are late or early) and crowding (too many people on buses).
@@ -19,7 +20,11 @@ This project will hopefully reduce the issues of bunching and crowding for the b
 <h1> The DSSG Team </h1>
 
 Andres Akle Carranza
+
 Jordan Bates
+
 Walter Dempsey
+
 David Sekora
+
 Brandon Willard
