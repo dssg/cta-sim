@@ -76,13 +76,15 @@ import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.ProvidesResize;
+import com.google.gwt.user.client.ui.RequiresResize;
 import com.gwtext.client.widgets.form.Checkbox;
 import com.gwtext.client.widgets.layout.VerticalLayout;
 
 import dssg.simulator.SimulationInstance;
 import com.extjs.gxt.ui.client.widget.Slider;
   
-public class GwtPortalContainer extends LayoutContainer {
+public class GwtPortalContainer extends LayoutContainer implements RequiresResize, ProvidesResize{
 	FormData formData;
     VerticalPanel vp;
     
@@ -114,17 +116,16 @@ public class GwtPortalContainer extends LayoutContainer {
     north.add(image, new RowData(.03, 1, new Margins(4)));
     image = new Image();
     image.setUrl("http://www.transitchicago.com/images/global/hdr-cta.gif");
-    north.add(image, new RowData(.27, 1, new Margins(4)));
+    north.add(image, new RowData(.32, 1, new Margins(4)));
     image = new Image();
     image.setUrl("http://www.colorhexa.com/000033.png");
-    north.add(image, new RowData(.6, 1, new Margins(4)));
+    north.add(image, new RowData(.54, 1, new Margins(4)));
     image = new Image();
     image.setUrl("http://dssg.io/img/logo.png");
-    north.add(image, new RowData(.07, 1, new Margins(4)));
+    north.add(image, new RowData(.08, 1, new Margins(4)));
     image = new Image();
     image.setUrl("http://www.colorhexa.com/000033.png");
     north.add(image, new RowData(.03, 1, new Margins(4)));
-    
     
  // East information
     east.setBorders(true);
@@ -285,7 +286,7 @@ public class GwtPortalContainer extends LayoutContainer {
     BorderLayoutData northData = new BorderLayoutData(LayoutRegion.NORTH, 80);  
     northData.setCollapsible(false);
     northData.setHideCollapseTool(true);     
-    northData.setMargins(new Margins(0, 0, 5, 0));  
+    northData.setMargins(new Margins(0, 0, 5, 0)); 
   
     BorderLayoutData westData = new BorderLayoutData(LayoutRegion.WEST, 260);  
     westData.setCollapsible(true); 
@@ -467,7 +468,7 @@ public class GwtPortalContainer extends LayoutContainer {
      
     XAxis xa = new XAxis();  
     //set the maximum, minimum and the step value for the X axis 
-    for(int i =0; i<48;i+=1) {
+    for(int i =0; i<48;i++) {
     	xa.addLabels(Integer.toString(i));
     }
     xa.setOffset(true);  
@@ -531,6 +532,9 @@ public class GwtPortalContainer extends LayoutContainer {
 	  
 	    cm.addChartConfig(pie);  
 	    return cm;  
-	  }  
-  
+	  }
+  public void onResize()
+  {
+	  System.out.println("RESIZE");
+  }
 }

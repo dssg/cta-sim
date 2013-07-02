@@ -1,0 +1,2 @@
+serviceClass: dssg.client.SimulationService
+path: 9625317260B2B6FD2D6C2A264624F740.gwt.rpc
