@@ -20,7 +20,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 public class SimulationServiceImpl extends RemoteServiceServlet
     implements SimulationService {
 
-  public String simulationServer(String route, Date date,
+  public String submitSimulation(String route, Date date,
     long startTime, long endTime) throws IllegalArgumentException {
     /*
      * FIXME Verify that the input is valid.

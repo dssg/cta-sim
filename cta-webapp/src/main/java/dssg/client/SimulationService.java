@@ -10,6 +10,6 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("simulate")
 public interface SimulationService extends RemoteService {
-  String simulationServer(String route, Date date, long startTime,
+  String submitSimulation(String route, Date date, long startTime,
     long endTime) throws IllegalArgumentException;
 }
