@@ -24,7 +24,7 @@ The CTA bus service has more than 950,000 riders on an average weekday. By reduc
 increase the quality of life of many daily commuters and help the CTA move more people around the city.
 
 <h1> Quick-Start Guide </h1>
-Most of the information regarding the project idea can be found in the wiki section of the github repository.
+Most of the information regarding the project idea can be found in the wiki section of the github repository at https://github.com/dssg/dssg-cta-project/wiki
 
 <h1> The DSSG Team </h1>
 Andres Akle Carranza - Webapp design/coding, Modeling
