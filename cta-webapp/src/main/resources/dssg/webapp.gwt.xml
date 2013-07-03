@@ -19,7 +19,6 @@
 
   <!-- Other module inherits                                      -->
   <inherits name='com.extjs.gxt.charts.Chart'/>
-  <inherits name="com.gwtext.GwtExt"/>
   <!-- Specify the app entry point class.                         -->
   <entry-point class='dssg.client.webapp' />
 
