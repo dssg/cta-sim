@@ -62,8 +62,8 @@ public class SimulationServiceImpl extends RemoteServiceServlet
   private String createSimulation(GtfsDaoImpl store) {
     /*
      * FIXME: run a simulation!
-     * create a simulation instance, add it to some queue/list of
-     * running/run simulations,
+     * create a simulation instance, spawn a thread to step through the simulation, 
+     * add the thread's future object to some queue/list of * running/run simulations, etc.
      */
     return null;
   }
