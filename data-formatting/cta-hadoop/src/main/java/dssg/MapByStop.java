@@ -35,6 +35,7 @@ public class MapByStop {
 			   	String line = value.toString();
 			   	
 			   	if(!line.isEmpty()){
+			   		// We are using csv files, first column is the route id.
 			   		String[] parts = line.split(",");
 			   		if(!parts[0].isEmpty()){
 				   		route =  parts[0];
