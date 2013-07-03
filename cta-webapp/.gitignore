@@ -1,5 +1,0 @@
-/target
-.classpath
-.project
-.settings/*
-/src/main/gwt-unitCache

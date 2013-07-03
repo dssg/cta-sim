@@ -1,8 +1,7 @@
+.*
 *.bug
 *.jpg
 *.zip
 *.csv
 target/
-.DS_Store
-.gwt/
 src/main/gwt-unitCache
