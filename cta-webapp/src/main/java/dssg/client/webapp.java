@@ -10,11 +10,12 @@ import com.google.gwt.user.client.ui.RootPanel;
  */
 public class webapp implements EntryPoint {
 
-	
   /**
-   * Create a remote service proxy to talk to the server-side simulation service.
+   * Create a remote service proxy to talk to the server-side simulation
+   * service.
    */
-  private final SimulationServiceAsync simulationService = GWT.create(SimulationService.class);
+  private final SimulationServiceAsync simulationService = GWT
+      .create(SimulationService.class);
 
   /**
    * This is the entry point method.
@@ -22,6 +23,7 @@ public class webapp implements EntryPoint {
   public void onModuleLoad() {
     RootPanel rootPanel = RootPanel.get();
     rootPanel.add(new GwtPortalContainer());
-    DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("loading"));
+    DOM.removeChild(RootPanel.getBodyElement(),
+        DOM.getElementById("loading"));
   }
-}						
+}
