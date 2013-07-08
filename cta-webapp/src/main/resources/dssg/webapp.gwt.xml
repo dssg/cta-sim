@@ -7,8 +7,7 @@
   <!-- otherwise eclipse complains (Google plugin bug?)           -->
   <inherits name='com.extjs.gxt.ui.GXT'/>
   
-  <inherits name='com.google.gwt.junit.JUnit' />
-  <inherits name="com.gwtext.GwtExt"/>
+<!--   <inherits name='com.google.gwt.junit.JUnit' /> -->
   <inherits name="com.gwtext.GwtExt"/>
 <!--   <inherits name="com.sencha.gxt.ui.GXT" /> -->
   <!-- Inherit the default GWT style sheet.  You can change       -->
@@ -20,19 +19,12 @@
 
   <!-- Other module inherits                                      -->
   <inherits name='com.extjs.gxt.charts.Chart'/>
-  <inherits name="com.gwtext.GwtExt"/>
   <!-- Specify the app entry point class.                         -->
   <entry-point class='dssg.client.webapp' />
 
   <!-- Specify the paths for translatable code                    -->
   <source path='client' />
   <source path='shared' />
-  <stylesheet src="js/ext/resources/css/ext-all.css"/>
-  <script src="js/ext/adapter/ext/ext-base.js"/>
-  <script src="js/ext/ext-all.js"/>
-  <stylesheet src="js/ext/resources/css/ext-all.css"/>
-  <script src="js/ext/adapter/ext/ext-base.js"/>
-  <script src="js/ext/ext-all.js"/>
   <stylesheet src="js/ext/resources/css/ext-all.css"/>
   <script src="js/ext/adapter/ext/ext-base.js"/>
   <script src="js/ext/ext-all.js"/>

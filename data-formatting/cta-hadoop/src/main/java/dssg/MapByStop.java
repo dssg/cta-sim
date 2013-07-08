@@ -1,4 +1,11 @@
-//Code to split the data by the stop id. Initial version.
+// Code to split the APC data by stop id. 
+
+// INPUT: APC data for a quarter
+// OUTPUT: folders with data for each stop
+
+// This code my have problems with the number of threads it creates. When the number of routes is large enough it 
+// will give an error saying "error unable to create new native thread hadoop". 
+// **It has been tested in EMP and works properly.**
 
 package dssg;
 
@@ -9,33 +16,43 @@ import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 
-// This code my have problems with the number of threads it creates. When the number of routes is large enough it 
-// will give an error saying "error unable to create new native thread hadoop".
+// Main class
 
 public class MapByStop {
+	
+		// Map class
+	
 	    static class Map extends MapReduceBase implements Mapper <LongWritable, Text, Text, Text> {
 	    	Text outputKey = new Text();
 	    	Text outputLine = new Text();
-		   // Map function
-		   public void map(LongWritable key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
-			   // For every line it reads and splits it to read the stop which is the first value.
-			   // Stop value is used as a key.
+	    	
+	    	// Map function
+	    	
+	    	// For every line it reads and splits it to read the stop which is the first value.
+	    	// Stop value is used as a key.
+	    	public void map(LongWritable key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
 			   	String route = "0";
 			   	String line = value.toString();
+			   	
 			   	if(!line.isEmpty()){
+			   		// We are using csv files, first column is the route id.
 			   		String[] parts = line.split(",");
 			   		if(!parts[0].isEmpty()){
 				   		route =  parts[0];
 			   		}
 				}
 			   	// Add code to partition data even further.
+			   	
 			   	outputKey.set(route);
 			   	outputLine.set(line);
 			  	output.collect(outputKey, outputLine);
 			}
 	   }
 	   
-		//Code needed to apply any function needed to the data.
+		//Reduce function
+	    
+	    //Code to apply any extra function to the data while aggregating it.
+	    // Example code sums the second row of the data for every route.
 	    /* 
 	    static class Reduce extends MapReduceBase implements Reducer<Text, DoubleWritable, Text, DoubleWritable> {
 	    	// Reduce function
@@ -49,6 +66,10 @@ public class MapByStop {
 		     }
 	   }
 	   */ 
+	    
+	    //Partition by Stop Class
+	    
+	    // Creates the name files for the output data (essentially creates the "folders" for the output data)
 	    public static class PartitionByStop extends MultipleTextOutputFormat<Text,Text>
 	    {
 	    	// File generation function
@@ -79,14 +100,14 @@ public class MapByStop {
 		     FileOutputFormat.setOutputPath(conf, new Path(args[1]));
 
 		     conf.setMapperClass(Map.class);
-		     // Uncomment if reducer needed  
+		// Uncomment if reducer needed  
 		     // conf.setReducerClass(Reduce.class);
 
 		     conf.setOutputKeyClass(Text.class);
     		 conf.setOutputValueClass(Text.class);
     		 conf.setOutputFormat(PartitionByStop.class);
     		 
-    		 //Comment out if Reduce function is used
+    	//Comment out if Reduce function is used
     		 conf.setNumReduceTasks(0);
 
 		     JobClient.runJob(conf);
