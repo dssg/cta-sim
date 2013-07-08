@@ -8,6 +8,7 @@ import java.nio.channels.Channels;
 import java.net.URL;
 import java.util.Date;
 
+import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.serialization.GtfsReader;
