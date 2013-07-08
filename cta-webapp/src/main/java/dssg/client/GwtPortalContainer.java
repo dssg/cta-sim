@@ -11,6 +11,7 @@ import com.extjs.gxt.charts.client.model.ChartModel;
 import com.extjs.gxt.charts.client.model.axis.XAxis;
 import com.extjs.gxt.charts.client.model.axis.YAxis;
 import com.extjs.gxt.charts.client.model.charts.AreaChart;
+import com.extjs.gxt.charts.client.model.charts.LineChart;
 import com.extjs.gxt.charts.client.model.charts.PieChart;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
@@ -81,9 +82,11 @@ public class GwtPortalContainer extends LayoutContainer {
 	private Image image;
 	private ContentPanel panel;
 	private Command updateCmd;
-	private Integer chartNumber = 0;
-	private Resizable r; 
-	
+	private Command updateChart1Cmd;
+	private Integer time = 0;
+	private Resizable r;
+	private String route = "0";
+
 	// Main portal container (main window) is a portal container which is
 	// divided into North, South, East and West regions.
 	public GwtPortalContainer() {
@@ -98,30 +101,28 @@ public class GwtPortalContainer extends LayoutContainer {
 		setLayout(layout);
 
 		// --Layout data for all regions--
-		BorderLayoutData northData = 
-				new BorderLayoutData(LayoutRegion.NORTH,80);
+		BorderLayoutData northData = new BorderLayoutData(LayoutRegion.NORTH,
+				80);
 		northData.setCollapsible(false);
 		northData.setHideCollapseTool(true);
 		northData.setMargins(new Margins(0, 0, 5, 0));
-		BorderLayoutData westData = 
-				new BorderLayoutData(LayoutRegion.WEST, 260);
+		BorderLayoutData westData = new BorderLayoutData(LayoutRegion.WEST, 260);
 		westData.setCollapsible(true);
 		westData.setSplit(true);
 		westData.setMargins(new Margins(0, 5, 0, 0));
-		BorderLayoutData centerData = 
-				new BorderLayoutData(LayoutRegion.CENTER);
+		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
 		centerData.setMargins(new Margins(0));
-		BorderLayoutData eastData = 
-				new BorderLayoutData(LayoutRegion.EAST, 200);
-		eastData.setSplit(true);
-		eastData.setCollapsible(true);
-		eastData.setMargins(new Margins(0, 0, 0, 5));
+		// BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST,
+		// 200);
+		// eastData.setSplit(true);
+		// eastData.setCollapsible(true);
+		// eastData.setMargins(new Margins(0, 0, 0, 5));
 
 		// Regions added to the main function //
 		add(getNorth(), northData);
 		add(getWest(), westData);
 		add(getCenter(), centerData);
-		add(getEast(), eastData);
+		// add(getEast(), eastData);
 	}
 
 	// --- North region information (top region of the webapp) ---
@@ -184,14 +185,14 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Content panel for "Information Type"
 		panel = new ContentPanel();
 		// Layout preferences
-		panel.setHeading("Information Type");
+		panel.setHeading("General Information");
 		panel.setBorders(false);
 		panel.setCollapsible(true);
 		formData = new FormData("-20");
 		// Vertical panel for form data
 		vp = new VerticalPanel();
 		vp.setSpacing(10);
-		createForm1West();
+		createGenInfWest();
 		panel.add(vp);
 		west.add(panel);
 
@@ -205,7 +206,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Vertical panel for for data
 		vp = new VerticalPanel();
 		vp.setSpacing(10);
-		createForm2West();
+		createCharOptWest();
 		panel.add(vp);
 		panel.collapse();
 		west.add(panel);
@@ -213,14 +214,14 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Content panel for "General Settings"
 		panel = new ContentPanel();
 		// Layout preferences
-		panel.setHeading("General Settings");
+		panel.setHeading("Upload Files");
 		panel.setBorders(false);
 		panel.setCollapsible(true);
 		formData = new FormData("-20");
 		// Vertical panel for form data
 		vp = new VerticalPanel();
 		vp.setSpacing(10);
-		createForm3West();
+		createUpldFileWest();
 		panel.add(vp);
 		panel.collapse();
 		west.add(panel);
@@ -277,7 +278,6 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		// Local variables
 		Portlet portlet;
-		
 
 		// Portal columns created for portlet items (sub-regions)
 		Portal portal = new Portal(2);
@@ -292,7 +292,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		 * be greater
 		 */
 		// Box Layout for the charts and sliders
-		VBoxLayout portletLayout = new VBoxLayout(); 
+		VBoxLayout portletLayout = new VBoxLayout();
 		portletLayout.setPadding(new Padding(15));
 		portletLayout.setVBoxLayoutAlign(VBoxLayoutAlign.STRETCH);
 
@@ -305,8 +305,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		portlet.setLayout(portletLayout);
 		r = new Resizable(portlet);
 		r.setDynamic(true);
-		VBoxLayoutData vBoxData = new VBoxLayoutData(10,25,10,40);
-		
+		VBoxLayoutData vBoxData = new VBoxLayoutData(10, 25, 10, 40);
 		portlet.add(getCrowdingChart());
 		portlet.add(getHourControls(), vBoxData);
 		portlet.add(getCrowdingChart2());
@@ -327,27 +326,27 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		portal.add(portlet, 1); // Portlet added to the second column of the
 								// portal
-		
-		 // Portlet for the Delay Graph
-		 portlet = new Portlet();
-		 // Layout preferences
-		 portlet.setHeading("Delay by stop");
-		 configPanel(portlet);
-		 r = new Resizable(portlet);
-		 r.setDynamic(true);
-		 portlet.add(getPieChart());
-		 portal.add(portlet, 1);
-		
-		
+
+		// Portlet for the Delay Graph
+		portlet = new Portlet();
+		// Layout preferences
+		portlet.setHeading("Delay by stop");
+		configPanel(portlet);
+		r = new Resizable(portlet);
+		r.setDynamic(true);
+		portlet.add(getPieChart());
+		portal.add(portlet, 1);
+
 		// Portal added to the center region
 		center.add(portal);
 
 		return center;
 	}
 
-	// -- Methods to get Center Controls
+	// -- Methods to get Center Charts
 	private ContentPanel getCrowdingChart() {
-
+		// Static chart
+		// FIXME add refresh listener for route id submit button
 		String url;
 		final Chart chart;
 		// Content panel for chart
@@ -361,11 +360,16 @@ public class GwtPortalContainer extends LayoutContainer {
 		chart.setBorders(true);
 		chart.setHeight(300);
 		panel.add(chart);
-		chart.setChartModel(getVerticalAreaChartModel(chartNumber));
-		
+		updateChart1Cmd = new Command() {
+			public void execute() {
+				chart.setChartModel(getLoad24());
+			}
+		};
+		updateChart1Cmd.execute();
+
 		return panel;
 	}
-	
+
 	private ContentPanel getCrowdingChart2() {
 
 		String url;
@@ -383,11 +387,11 @@ public class GwtPortalContainer extends LayoutContainer {
 		panel.add(chart);
 		updateCmd = new Command() {
 			public void execute() {
-				chart.setChartModel(getVerticalAreaChartModel(chartNumber));
+				chart.setChartModel(getLoadAtTime());
 			}
 		};
 		updateCmd.execute();
-		
+
 		return panel;
 	}
 
@@ -415,6 +419,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 	}
 
+	// -- Methods to get Center Controls
 	private SliderField getHourControls() {
 
 		// 24 hrs slider
@@ -425,27 +430,25 @@ public class GwtPortalContainer extends LayoutContainer {
 		slider.setMinValue(0);
 		slider.setTitle("Hour select");
 		slider.setMessage("{0} hrs");
-		final SliderField sf = new SliderField(slider);  
-	    sf.setFieldLabel("Time:");
-	    
+		final SliderField sf = new SliderField(slider);
+		sf.setFieldLabel("Time:");
+
 		slider.addListener(Events.Change, new Listener<SliderEvent>() {
 			public void handleEvent(SliderEvent be) {
-				chartNumber = be.getNewValue();
+				time = be.getNewValue();
 				updateCmd.execute();
 			}
 		});
-		
+
 		return sf;
 	}
 
 	// -- Methods to create forms --
-
 	// Form to display data visualization options
-	private void createForm1West() {
+	private void createGenInfWest() {
 
 		// Local variables
-		Radio radio;
-		TextField<String> text;
+		final TextField<String> text;
 
 		// Initial form panel
 		FormPanel simple = new FormPanel();
@@ -472,19 +475,22 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Submit and Cancel buttons
 		Button b = new Button("Submit");
 		b.addClickHandler(new ClickHandler() {
-			 @Override
-			  public void onClick(ClickEvent event) {
-				 callSimulationServices();
-			  }
-			});
+			@Override
+			public void onClick(ClickEvent event) {
+				route = text.getValue();
+				callSimulationServices();
+				updateChart1Cmd.execute();
+				updateCmd.execute();
+			}
+		});
 		simple.add(b);
 		simple.add(new Button("Cancel"));
 
 		vp.add(simple);
 	}
 
-	// Form to display type of information
-	private void createForm2West() {
+	// Form to display Chart Option
+	private void createCharOptWest() {
 
 		// Initial Layout
 		FormPanel simple = new FormPanel();
@@ -516,7 +522,7 @@ public class GwtPortalContainer extends LayoutContainer {
 	}
 
 	// Form to input schedule or gtfs
-	private void createForm3West() {
+	private void createUpldFileWest() {
 		// Initial panel
 		final FormPanel simple = new FormPanel();
 		// Layout preferences
@@ -605,19 +611,67 @@ public class GwtPortalContainer extends LayoutContainer {
 
 						}));
 	}
- 
+
 	// -- Methods to get charts --
-	// Area chart for Delta Times
-	public ChartModel getVerticalAreaChartModel(int chartNum) {
+	// Area chart for Load 24hrs
+	public ChartModel getLoad24() {
 		// Create a ChartModel with the Chart Title and some style attributes
-		ChartModel cm = new ChartModel("Boardings per stop",
+		ChartModel cm = new ChartModel("Max load per hour. Route: " + route,
 				"font-size: 14px; font-family:      Verdana; text-align: center;");
 
 		// Create the X axis
 		XAxis xa = new XAxis();
 		xa.setOffset(true);
 		// set the labels for the axis
-		for (int i = 0; i < 24; i++) {
+		for (int i = 0; i < 23; i++) {
+			xa.addLabels(Integer.toString(i));
+		}
+
+		cm.setXAxis(xa);
+
+		// Create the Y axis
+		YAxis ya = new YAxis();
+		// Add the labels to the Y axis
+		ya.setRange(0, 300, 50);
+		cm.setYAxis(ya);
+
+		// Create a Area Chart object and add points to the object
+		LineChart lchart = new LineChart();
+		lchart.setColour("#00aa00");
+		lchart.setTooltip("#val#");
+		for (int n = 0; n < 24; n++) {
+			lchart.addValues(Math.abs( 150
+					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
+					+ Random.nextDouble() * 80 ));
+		}
+		cm.addChartConfig(lchart);
+
+		// Create a Area Chart object and add points to the object
+		lchart = new LineChart();
+		lchart.setColour("#ff0000");
+		lchart.setTooltip("#val#");
+		for (int n = 0; n < 24; n++) {
+			lchart.addValues(Math.abs( 180
+					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
+					+ Math.random() * 80 ));
+		}
+		cm.addChartConfig(lchart);
+
+		// Returns the Chart Model
+		return cm;
+	}
+
+	// Area chart for Load per stop @ TIME
+	public ChartModel getLoadAtTime() {
+		// Create a ChartModel with the Chart Title and some style attributes
+		ChartModel cm = new ChartModel("Max load @ " + time,
+				"font-size: 14px; font-family:      Verdana; text-align: center;");
+
+		// Create the X axis
+		XAxis xa = new XAxis();
+		xa.setOffset(true);
+		// set the labels for the axis
+		for (int i = 0; i < 80; i++) {
 			xa.addLabels(Integer.toString(i));
 		}
 
@@ -630,27 +684,26 @@ public class GwtPortalContainer extends LayoutContainer {
 		cm.setYAxis(ya);
 
 		// Create a Area Chart object and add points to the object
-		AreaChart achart = new AreaChart();
-		achart.setFillAlpha(0.3f);
-		achart.setColour("#00aa00");
-		achart.setFillColour("#00aa00");
-		achart.setTooltip("#val#Boardings");
-		for (int n = 0; n < 24; n++) {
-			achart.addValues(Math.abs(Math.cos(Random.nextDouble()) * 200
-					* Math.cos(n / 30)));
+		LineChart lchart = new LineChart();
+		lchart.setColour("#00aa00");
+		lchart.setTooltip("#val#");
+		for (int n = 0; n < 80; n++) {
+			lchart.addValues(Math.sin(time * (Math.PI / 24) + Math.PI / 24)
+					* Math.abs(Math.cos(Random.nextDouble()) * 180
+							* Math.sin(n* Math.PI / 70)) + 20);
 		}
-		cm.addChartConfig(achart);
+		cm.addChartConfig(lchart);
 
 		// Create a Area Chart object and add points to the object
-		achart = new AreaChart();
-		achart.setFillAlpha(0.3f);
-		achart.setColour("#ff0000");
-		achart.setFillColour("#ff0000");
-		for (int n = 0; n < 24; n++) {
-			achart.addValues((chartNum*20)+Math.abs(Math.cos(Random.nextDouble()) * 150
-					* Math.cos(n / 30)));
+		lchart = new LineChart();
+		lchart.setColour("#ff0000");
+		lchart.setTooltip("#val#");
+		for (int n = 0; n < 80; n++) {
+			lchart.addValues(Math.sin(time * (Math.PI / 24) + Math.PI / 24)
+					* Math.abs(Math.cos(Random.nextDouble()) * 180
+							* Math.sin(n* Math.PI / 70)) + 20);
 		}
-		cm.addChartConfig(achart);
+		cm.addChartConfig(lchart);
 
 		// Returns the Chart Model
 		return cm;
@@ -696,10 +749,9 @@ public class GwtPortalContainer extends LayoutContainer {
 					"" + ce.getValue());
 		}
 	};
-	
+
 	private void callSimulationServices() {
-		Info.display("Calling simulation services",
-				"");
+		Info.display("Calling simulation services", "");
 	}
 
 }
