@@ -2,9 +2,13 @@ package dssg.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileOutputStream;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.Channels;
+import java.net.URL;
 import java.util.Date;
 
-import org.onebusaway.gtfs.impl.GtfsDaoImpl;
+import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.serialization.GtfsReader;
 
@@ -37,9 +41,10 @@ public class SimulationServiceImpl extends RemoteServiceServlet
      * FIXME use the arguments to find/produce the GTFS files
      * If it fails, then no-go.
      */
-    String gtfsInputFile = "";
+    String gtfsInputFile = "chicago-transit-authority_20111020_0226.zip";
     String simName;
-    try {
+    try {	
+
       GtfsDaoImpl store = getGtfs(gtfsInputFile);
 
       simName = createSimulation(store);
@@ -75,12 +80,21 @@ public class SimulationServiceImpl extends RemoteServiceServlet
    * @return
    * @throws IOException
    */
-  private GtfsDaoImpl getGtfs(String gtfsFileName) throws IOException {
+  private GtfsRelationalDaoImpl getGtfs(String gtfsFileName) throws IOException {
 
     GtfsReader reader = new GtfsReader();
-    reader.setInputLocation(new File(gtfsFileName));
+    String currentDir = System.getProperty("user.dir");
+    File tmpDir = new File(currentDir,"tmp");
+    File gtfsFile = new File(tmpDir,gtfsFileName);
+    if(!gtfsFile.exists()) {
+    	URL s3url = new URL("http://gtfs.s3.amazonaws.com/" + gtfsFileName);
+    	ReadableByteChannel rbc = Channels.newChannel(s3url.openStream());
+        FileOutputStream fos = new FileOutputStream(gtfsFile);
+        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+    }
+    reader.setInputLocation(gtfsFile);
 
-    GtfsDaoImpl store = new GtfsDaoImpl();
+    GtfsRelationalDaoImpl store = new GtfsRelationalDaoImpl();
     reader.setEntityStore(store);
 
     reader.run();

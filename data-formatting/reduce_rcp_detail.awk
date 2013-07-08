@@ -1,0 +1,107 @@
+#Usage: awk -f reduce_rcp_detail.awk <.csv in> <.csv out>
+# The rcp_detail files we received for picks N-25 and N-26 contained the
+# full set of columns, N-21 to N-24 contained a subset.  This script gives
+# takes the full set and produces the same subset used in the earlier picks.
+
+BEGIN { 
+    FS = ","    # input field seperator 
+    OFS = ","   # output field seperator
+    RS = "\r\n" # input record seperator
+    ORS = "\r\n" # output record seperator
+}
+
+NR == 1 {
+    print "\"ID\",\"SERIAL_NUMBER\",\"SORT_ORDER\",\"SIGNUP_NAME\",\"STOP_ID\",\"MAIN_CROSS_STREET\",\"TRAVEL_DIRECTION\",\"TIMEPOINT\",\"TIME_ACTUAL_ARRIVE\",\"TIME_ACTUAL_DEPART\",\"SERVICED_STOP\",\"NEXT_DAY\",\"SEGMENT_MILES\",\"PASSENGER_MILES\",\"PASSENGERS_ON\",\"PASSENGERS_OFF\",\"PASSENGERS_IN\",\"TRIP_EARLY\",\"TRIP_ONTIME\",\"TRIP_LATE\",\"RAW_FON\",\"RAW_FOFF\",\"RAW_RON\",\"RAW_ROFF\",\"RUNNING_TIME_SCHEDULED\",\"RUNNING_TIME_ACTUAL\",\"TRIP_DIFF_MINUTES\",\"TIME_SCHEDULED\",\"TIMEPOINT_MILES\""
+}
+
+NR > 1 { 
+    ID = $1
+    SERIAL_NUMBER = $2
+    SORT_ORDER = $3
+    STOP_ID = $4
+    NEXT_TIMEPOINT_ID = $5
+    MAIN_CROSS_STREET = $6
+    TRAVEL_DIRECTION = $7
+    TIMEPOINT = $8
+    SEGMENT_MILES = $9
+    TIMEPOINT_MILES = $10
+    CITY = $11
+    COUNTY = $12
+    TAZ = $13
+    CENSUS_TRACT = $14
+    PASSENGER_MILES = $15
+    NEXT_DAY = $16
+    TIME_SCHEDULED = $17
+    TIME_ACTUAL_ARRIVE = $18
+    TIME_ACTUAL_DEPART = $19
+    DWELL_TIME = $20
+    RUNNING_TIME_SCHEDULED = $21
+    RUNNING_TIME_ACTUAL = $22
+    PASSENGERS_ON = $23
+    PASSENGERS_OFF = $24
+    PASSENGERS_IN = $25
+    PASSENGERS_SPOT = $26
+    PASSENGERS_ERROR = $27
+    TRIP_EARLY = $28
+    TRIP_ONTIME = $29
+    TRIP_LATE = $30
+    TRIP_DIFF_MINUTES = $31
+    WHEELCHAIRS = $32
+    BICYCLES = $33
+    PASSENGER_TRANSACTIONS = $34
+    SERVICED_STOP = $35
+    FIRST_LAST_STOP = $36
+    COMMENT_NUMBER = $37
+    DEMOG_01 = $38
+    DEMOG_02 = $39
+    DEMOG_03 = $40
+    DEMOG_04 = $41
+    DEMOG_05 = $42
+    DEMOG_06 = $43
+    DEMOG_07 = $44
+    DEMOG_08 = $45
+    DEMOG_09 = $46
+    DEMOG_10 = $47
+    DEMOG_11 = $48
+    DEMOG_12 = $49
+    DEMOG_13 = $50
+    DEMOG_14 = $51
+    DEMOG_15 = $52
+    DEMOG_16 = $53
+    DEMOG_17 = $54
+    DEMOG_18 = $55
+    DEMOG_19 = $56
+    DEMOG_20 = $57
+    DEMOG_21 = $58
+    DEMOG_22 = $59
+    DEMOG_23 = $60
+    DEMOG_24 = $61
+    DEMOG_25 = $62
+    NON_STUDENT_FARE = $63
+    MATCH_DISTANCE = $64
+    RAW_FON = $65
+    RAW_FOFF = $66
+    RAW_RON = $67
+    RAW_ROFF = $68
+    FREE_RUNNING = $69
+    SIGNUP_NAME = $70
+    CONTROL_POINT = $71
+    DEMOG_26 = $72
+    DEMOG_27 = $73
+    CHECKER_TIME = $74
+    LATITUDE = $75
+    LONGITUDE = $76
+    SEGMENT_ON = $77
+    SEGMENT_OFF = $78
+    CHILD = $79
+    NR_BOARD = $80
+    NR_ALIGHT = $81
+    KNEELS = $82
+    SEGMENT_MAX_LOAD = $83
+    LATITUDE_ACTUAL = $84
+    LONGITUDE_ACTUAL = $85
+    TRAFFIC_PRIORITY = $86
+
+    print ID, SERIAL_NUMBER, SORT_ORDER, SIGNUP_NAME, STOP_ID, MAIN_CROSS_STREET, TRAVEL_DIRECTION, TIMEPOINT, TIME_ACTUAL_ARRIVE, TIME_ACTUAL_DEPART, SERVICED_STOP, NEXT_DAY, SEGMENT_MILES, PASSENGER_MILES, PASSENGERS_ON, PASSENGERS_OFF, PASSENGERS_IN, TRIP_EARLY, TRIP_ONTIME, TRIP_LATE, RAW_FON, RAW_FOFF, RAW_RON, RAW_ROFF, RUNNING_TIME_SCHEDULED, RUNNING_TIME_ACTUAL, TRIP_DIFF_MINUTES, TIME_SCHEDULED, TIMEPOINT_MILES
+
+}
