@@ -102,31 +102,37 @@ empty_days = vector(length = num_days)
 
 for(i in 1:num_days){empty_days[i] <- max(buckets_in[,i])}
 
-### BAD OBSERVATIONS : Need to Remove Observations with N = 0 ###
+### Vectorize the Matrix ###
+Ydata = round(buckets_off,0)
+N = round(buckets_in,0)
+buckets <- seq(1,num_buckets)
 
-allobs <- seq(1,num_buckets)
-badobs <- list(which(buckets_in[,1] == 0))
-goodobs <- list(allobs[-badobs[[1]]])
-for (i in 2:num_days) {
-  badobs[[i]] <- which(buckets_in[,i] == 0)
-  goodobs[[i]] <- allobs[-badobs[[i]]]
+obs <- which(N[,1] != 0)
+vector.N <- N[obs,1]
+vector.Y <- Ydata[obs,1]
+vector.bucket <- buckets[obs]  
+vector.weekend <- rep(weekend[1],length(obs))
+vector.month <- rep(months[1], length(obs))
+
+for (d in 2:num_days) {
+  obs <- which(N[,d] != 0)
+  vector.N <- c(vector.N,N[obs,d])
+  vector.Y <- c(vector.Y,Ydata[obs,d])
+  vector.bucket <- c(vector.bucket,buckets[obs])
+  vector.weekend <- c(vector.weekend,rep(weekend[d],length(obs)))
+  vector.month <- c(vector.month,rep(months[d], length(obs)))
 }
 
-
-buckets_in[badobs[[1]],1]
-buckets_in[goodobs[[1]],1]
-
+totalobs <- length(vector.Y)
 
 ### BUGS CODE ###
 
 if(num_months < 12) {
 model.str <- 'model
 {
-for (d in 1:num_days) {
-  for (m in goodobs[[d]]) {
-    logit(p[m,d]) <- alpha[m]+beta[weekend[d]]+gamma[months[d]]
-    Y[m, d] ~ dbin(p[m,d], buckets_in[m,d])
-  }
+for (i in 1:totalobs) {
+    logit(p[i]) <- alpha[bucket[i]]+beta[weekend[i]]+gamma[months[i]]
+    Y[i] ~ dbin(p[i], N[i])
 }
 
 beta[1] <- 0
@@ -157,11 +163,9 @@ if (num_months == 12) {
 
 model.str <- 'model
 {
-for (m in 1:num_buckets) {
-  for (d in 1:num_days) {
-    logit(p[m,d]) <- alpha[m]+beta[weekend[d]]+gamma[months[d]]
-    Y[m, d] ~ dbin(p[m,d], buckets_in[m,d])   
-  }
+for (i in 1:totalobs) {
+    logit(p[i]) <- alpha[bucket[i]]+beta[weekend[i]]+gamma[months[i]]
+    Y[i] ~ dbin(p[i], N[i])
 }
 
 beta[1] <- 0
@@ -195,13 +199,8 @@ model.file = file("poisson_model.bug")
 writeLines(model.str, model.file)
 close(model.file)
 
-Ydata = round(buckets_off,0)
-N = round(buckets_in,0)
-
-Ydata[,1]
-N[,1]
-
-data <- list("num_buckets" = num_buckets, "num_days" = num_days, "Y" = Ydata, "weekend" = weekend, "months" = months, "num_months" = num_months, "buckets_in" = N)
+data <- list("num_buckets" = num_buckets, "num_days" = num_days, "Y" = vector.Y, "weekend" = vector.weekend, "months" = vector.month, "num_months" = num_months, 
+             "buckets_in" = vector.N, "totalobs" = totalobs, bucket = vector.bucket)
 
 inits <- list(list(alpha0 = rnorm(1,0,0.01), alpha = replicate(num_buckets,rnorm(1,0,0.1)), itau2.alpha=rgamma(1, 0.1, 10),
                    beta0 = rnorm(1,0,0.01), beta = c(NA, rnorm(1,0,0.1)), itau2.beta = rgamma(1,0.1,10),
@@ -218,8 +217,5 @@ load.sim <- rbugs(data, inits, parameters, "poisson_model.bug",
 load.mcmc <- rbugs2coda(load.sim)
 summary(load.mcmc)
 effectiveSize(load.mcmc)
-
-
-
 
 
