@@ -10,16 +10,12 @@ import com.extjs.gxt.charts.client.event.ChartListener;
 import com.extjs.gxt.charts.client.model.ChartModel;
 import com.extjs.gxt.charts.client.model.axis.XAxis;
 import com.extjs.gxt.charts.client.model.axis.YAxis;
-import com.extjs.gxt.charts.client.model.charts.AreaChart;
 import com.extjs.gxt.charts.client.model.charts.LineChart;
 import com.extjs.gxt.charts.client.model.charts.PieChart;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.Style.Scroll;
-import com.extjs.gxt.ui.client.event.ButtonEvent;
-import com.extjs.gxt.ui.client.event.DragEvent;
-import com.extjs.gxt.ui.client.event.DragListener;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.IconButtonEvent;
 import com.extjs.gxt.ui.client.event.Listener;
@@ -30,7 +26,6 @@ import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.util.Padding;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Info;
-import com.extjs.gxt.ui.client.widget.Layout;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.VerticalPanel;
 import com.extjs.gxt.ui.client.widget.button.ToolButton;
@@ -48,7 +43,6 @@ import com.extjs.gxt.ui.client.widget.form.TimeField;
 import com.extjs.gxt.ui.client.widget.layout.AccordionLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
-import com.extjs.gxt.ui.client.widget.layout.CenterLayout;
 import com.extjs.gxt.ui.client.widget.layout.FillLayout;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.FormData;
@@ -64,10 +58,7 @@ import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.Image;
-import com.gwtext.client.widgets.form.FieldSet;
-import com.gwtext.client.widgets.layout.FormLayout;
 import com.extjs.gxt.ui.client.widget.Slider;
 
 import dssg.simulator.SimulationInstance;
@@ -86,11 +77,13 @@ public class GwtPortalContainer extends LayoutContainer {
 	private Integer time = 0;
 	private Resizable r;
 	private String route = "0";
+	private Boolean bothDir = true;
+	private Boolean north = true;
+	private Integer startT = 0;
+	private Integer stopT = 0;
 
 	// Main portal container (main window) is a portal container which is
 	// divided into North, South, East and West regions.
-	public GwtPortalContainer() {
-	}
 
 	// Elements to add upon rendering
 	@Override
@@ -108,7 +101,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		northData.setMargins(new Margins(0, 0, 5, 0));
 		BorderLayoutData westData = new BorderLayoutData(LayoutRegion.WEST, 260);
 		westData.setCollapsible(true);
-		westData.setSplit(true);
+		westData.setSplit(false);
 		westData.setMargins(new Margins(0, 5, 0, 0));
 		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
 		centerData.setMargins(new Margins(0));
@@ -287,10 +280,6 @@ public class GwtPortalContainer extends LayoutContainer {
 		portal.setColumnWidth(0, .75);
 		portal.setColumnWidth(1, .25);
 
-		/*
-		 * Portlet Layout preferences FIXME the separation between items should
-		 * be greater
-		 */
 		// Box Layout for the charts and sliders
 		VBoxLayout portletLayout = new VBoxLayout();
 		portletLayout.setPadding(new Padding(15));
@@ -305,7 +294,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		portlet.setLayout(portletLayout);
 		r = new Resizable(portlet);
 		r.setDynamic(true);
-		VBoxLayoutData vBoxData = new VBoxLayoutData(10, 25, 10, 40);
+		VBoxLayoutData vBoxData = new VBoxLayoutData(10, 15, 10, 30);
 		portlet.add(getCrowdingChart());
 		portlet.add(getHourControls(), vBoxData);
 		portlet.add(getCrowdingChart2());
@@ -399,7 +388,6 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		String url;
 		Chart chart;
-		Resizable r; // Charts can be resized
 
 		// Content panel for chart
 		panel = new ContentPanel();
@@ -421,20 +409,18 @@ public class GwtPortalContainer extends LayoutContainer {
 
 	// -- Methods to get Center Controls
 	private SliderField getHourControls() {
-
 		// 24 hrs slider
-		Slider slider = new Slider();
-		slider.setWidth(200);
+		final Slider slider = new Slider();
 		slider.setIncrement(1);
-		slider.setMaxValue(23);
+		slider.setMaxValue(47);
 		slider.setMinValue(0);
-		slider.setTitle("Hour select");
-		slider.setMessage("{0} hrs");
+		
 		final SliderField sf = new SliderField(slider);
 		sf.setFieldLabel("Time:");
 
 		slider.addListener(Events.Change, new Listener<SliderEvent>() {
 			public void handleEvent(SliderEvent be) {
+				slider.setMessage(((double) (slider.getValue()))*.5 + " hrs");
 				time = be.getNewValue();
 				updateCmd.execute();
 			}
@@ -449,13 +435,28 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		// Local variables
 		final TextField<String> text;
+		RadioGroup rGroup = new RadioGroup();
+		
 
 		// Initial form panel
 		FormPanel simple = new FormPanel();
 		// Layout preferences
 		simple.setFrame(false);
 		simple.setHeaderVisible(false);
-		simple.setButtonAlign(HorizontalAlignment.CENTER);
+		
+		// Add radio button for North South
+		final Radio northB = new Radio();
+		northB.setBoxLabel("N");
+		final Radio southB = new Radio();
+		southB.setBoxLabel("S");
+		final Radio bothB = new Radio();
+		bothB.setBoxLabel("Both");
+		bothB.setValue(true);
+		rGroup.setFieldLabel("Dir:");
+		rGroup.add(northB);
+		rGroup.add(southB);
+		rGroup.add(bothB);
+		simple.add(rGroup);
 
 		// Text fields for route number
 		text = new TextField<String>();
@@ -469,22 +470,32 @@ public class GwtPortalContainer extends LayoutContainer {
 		date.setFieldLabel("Date");
 		simple.add(date, formData);
 		// Time field
-		TimeField time = new TimeField();
-		time.setFieldLabel("Time");
-		simple.add(time, formData);
+		TimeField timeS = new TimeField();
+		timeS.setFieldLabel("Start Time");
+		timeS.setIncrement(30);
+		simple.add(timeS, formData);
+		TimeField timeF = new TimeField();
+		timeF.setFieldLabel("End Time");
+		timeF.setIncrement(30);
+		simple.add(timeF, formData);
 		// Submit and Cancel buttons
 		Button b = new Button("Submit");
 		b.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				route = text.getValue();
 				callSimulationServices();
+				route = text.getValue();
+				north = northB.getValue();
+				bothDir = bothB.getValue();
+				//startT =  (int) timeS.getValue();
+				//startT =  (int) timeS.getValue();
 				updateChart1Cmd.execute();
 				updateCmd.execute();
 			}
 		});
 		simple.add(b);
 		simple.add(new Button("Cancel"));
+		simple.setWidth(235);
 
 		vp.add(simple);
 	}
@@ -623,8 +634,14 @@ public class GwtPortalContainer extends LayoutContainer {
 		XAxis xa = new XAxis();
 		xa.setOffset(true);
 		// set the labels for the axis
-		for (int i = 0; i < 23; i++) {
-			xa.addLabels(Integer.toString(i));
+		for (double i = 0; i < 24; i=i+.5) {
+			if(i%1==0) {
+				xa.addLabels(Double.toString(i));
+			}
+			else {
+				xa.addLabels("");
+			}
+				
 		}
 
 		cm.setXAxis(xa);
@@ -639,24 +656,27 @@ public class GwtPortalContainer extends LayoutContainer {
 		LineChart lchart = new LineChart();
 		lchart.setColour("#00aa00");
 		lchart.setTooltip("#val#");
-		for (int n = 0; n < 24; n++) {
+		for (double n = 0; n < 24; n=n+.5) {
 			lchart.addValues(Math.abs( 150
 					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
 					+ Random.nextDouble() * 80 ));
 		}
+		if(north ==true || bothDir == true) {
 		cm.addChartConfig(lchart);
-
+		}
+		
 		// Create a Area Chart object and add points to the object
 		lchart = new LineChart();
 		lchart.setColour("#ff0000");
 		lchart.setTooltip("#val#");
-		for (int n = 0; n < 24; n++) {
+		for (double n = 0; n < 24; n=n+.5) {
 			lchart.addValues(Math.abs( 180
 					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
 					+ Math.random() * 80 ));
 		}
+		if(north ==false || bothDir == true) {
 		cm.addChartConfig(lchart);
-
+		}
 		// Returns the Chart Model
 		return cm;
 	}
@@ -672,7 +692,13 @@ public class GwtPortalContainer extends LayoutContainer {
 		xa.setOffset(true);
 		// set the labels for the axis
 		for (int i = 0; i < 80; i++) {
-			xa.addLabels(Integer.toString(i));
+			if(i%5==0) {
+				xa.addLabels(Integer.toString(i));
+			}
+			else {
+				xa.addLabels("");
+			}
+			
 		}
 
 		cm.setXAxis(xa);
@@ -680,30 +706,34 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Create the Y axis
 		YAxis ya = new YAxis();
 		// Add the labels to the Y axis
-		ya.setRange(0, 220, 50);
+		ya.setRange(0, 300, 50);
 		cm.setYAxis(ya);
 
 		// Create a Area Chart object and add points to the object
 		LineChart lchart = new LineChart();
 		lchart.setColour("#00aa00");
 		lchart.setTooltip("#val#");
-		for (int n = 0; n < 80; n++) {
-			lchart.addValues(Math.sin(time * (Math.PI / 24) + Math.PI / 24)
-					* Math.abs(Math.cos(Random.nextDouble()) * 180
+		for (int n = 0; n <= 80; n++) {
+			lchart.addValues(Math.abs(Math.sin(time * (Math.PI / 24) + Math.PI / 24))
+					* Math.abs(Math.cos(Random.nextDouble()) * 220
 							* Math.sin(n* Math.PI / 70)) + 20);
 		}
+		if(north ==true || bothDir == true) {
 		cm.addChartConfig(lchart);
+		}
 
 		// Create a Area Chart object and add points to the object
 		lchart = new LineChart();
 		lchart.setColour("#ff0000");
 		lchart.setTooltip("#val#");
-		for (int n = 0; n < 80; n++) {
-			lchart.addValues(Math.sin(time * (Math.PI / 24) + Math.PI / 24)
-					* Math.abs(Math.cos(Random.nextDouble()) * 180
+		for (int n = 0; n <= 80; n++) {
+			lchart.addValues(Math.abs(Math.sin(time * (Math.PI / 24) + Math.PI / 24))
+					* Math.abs(Math.cos(Random.nextDouble()) * 220
 							* Math.sin(n* Math.PI / 70)) + 20);
 		}
+		if(north ==false || bothDir == true) {
 		cm.addChartConfig(lchart);
+		}
 
 		// Returns the Chart Model
 		return cm;
