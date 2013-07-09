@@ -206,12 +206,23 @@ parameters <- c("alpha0", "alpha", "itau2.alpha", "beta0", "beta", "itau2.beta",
 
 load.sim <- rbugs(data, inits, parameters, "model_poisson.bug",
                   verbose=T,
-                  n.chains=1, n.iter=6000,
+                  n.chains=1, n.iter=1000,
                   bugsWorkingDir="/tmp", cleanBugsWorkingDir = T)
 
 load.mcmc <- rbugs2coda(load.sim)
-summary(load.mcmc)
-effectiveSize(load.mcmc)
+
+X <- load.mcmc[[1]]
+X <- as.matrix(X)
+X <- data.frame(X)
+
+X[1,]
+
+summary(X)
+
+# write to file
+write.table(X, "output.csv", sep=",", row.names = FALSE)
+
+# effectiveSize(load.mcmc)
 
 
 
