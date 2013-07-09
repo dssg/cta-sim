@@ -17,7 +17,7 @@ simulate <- function(time_dist, sigma) { # Simulate Delta Times for a Given Time
   num_stops = length(time_dist)+1
   bus_times <- rep(0,num_stops) # Assume Delta Times are Conditional Normal, will adjust to be skewed normal
   for(i in 2:num_stops) {
-    neg_portion <- rnorm(1,bus_times[i-1],sigma * time_dist[i-1])
+    neg_portion <- rnorm(1,0,sigma * time_dist[i-1])
     bus_times[i] <- rnorm(1,bus_times[i-1],sigma * time_dist[i-1]) + neg_portion * as.numeric(neg_portion < 0) 
   }
   return(bus_times)
@@ -32,6 +32,7 @@ for (i in 1:num_obs) {
   simulation[,i] <- simulate(time_dist,sigma)[2:num_stops]
 }
 
+simulation[,1]
 
 ### BUGS CODE - Estimate Single Variance Parameter ###
 
