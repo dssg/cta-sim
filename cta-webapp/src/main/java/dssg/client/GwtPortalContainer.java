@@ -170,12 +170,12 @@ public class GwtPortalContainer extends LayoutContainer {
 		west.setBodyBorder(true);
 		west.setLayout(new FillLayout());
 		west.setButtonAlign(HorizontalAlignment.CENTER);
-		west.setHeading("Information Tools");
+		west.setHeadingHtml("Information Tools");
 
 		// Content panel for "Information Type"
 		panel = new ContentPanel();
 		// Layout preferences
-		panel.setHeading("General Information");
+		panel.setHeadingHtml("General Information");
 		panel.setBorders(false);
 		panel.setCollapsible(true);
 		formData = new FormData("-20");
@@ -189,7 +189,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Content panel for "Chart Options"
 		panel = new ContentPanel();
 		// Layout preferences
-		panel.setHeading("Chart Options");
+		panel.setHeadingHtml("Chart Options");
 		panel.setBorders(false);
 		panel.setCollapsible(true);
 		formData = new FormData("-20");
@@ -204,7 +204,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Content panel for "General Settings"
 		panel = new ContentPanel();
 		// Layout preferences
-		panel.setHeading("Upload Files");
+		panel.setHeadingHtml("Upload Files");
 		panel.setBorders(false);
 		panel.setCollapsible(true);
 		formData = new FormData("-20");
@@ -227,13 +227,13 @@ public class GwtPortalContainer extends LayoutContainer {
 		east.setBodyBorder(true);
 		east.setAutoHeight(true);
 		east.setLayout(new AccordionLayout());
-		east.setHeading("Additional Info");
+		east.setHeadingHtml("Additional Info");
 		east.setHeight(200);
 
 		// Content panel for statistics
 		panel = new ContentPanel();
 		// Layout preferences
-		panel.setHeading("Statistical Summary");
+		panel.setHeadingHtml("Statistical Summary");
 		panel.setBorders(false);
 		panel.setCollapsible(true);
 		formData = new FormData("-20");
@@ -248,7 +248,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Content panel for additional information
 		panel = new ContentPanel();
 		// Layout preferences
-		panel.setHeading("Event Information");
+		panel.setHeadingHtml("Event Information");
 		panel.setBorders(false);
 		panel.setCollapsible(true);
 		panel.setBodyStyle("fontSize: 12px; padding: 10px");
@@ -263,7 +263,7 @@ public class GwtPortalContainer extends LayoutContainer {
 	private ContentPanel getCenter() {
 		ContentPanel center = new ContentPanel();
 		// Layout preferences
-		center.setHeading("Charts");
+		center.setHeadingHtml("Charts");
 		center.setScrollMode(Scroll.AUTOX);
 
 		// Local variables
@@ -285,7 +285,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Portlet for the Crowding charts
 		portlet = new Portlet();
 		// Layout preferences
-		portlet.setHeading("Crowding");
+		portlet.setHeadingHtml("Crowding");
 		configPanel(portlet);
 		portlet.setHeight(700);
 		portlet.setLayout(portletLayout);
@@ -301,7 +301,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		// Portlet for the Information Grid
 		portlet = new Portlet();
-		portlet.setHeading("Information Grid 2");
+		portlet.setHeadingHtml("Information Grid 2");
 		configPanel(portlet);
 		portlet.setLayout(new FitLayout());
 		/* FIXME create some grid data to populate this. */
@@ -316,7 +316,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Portlet for the Delay Graph
 		portlet = new Portlet();
 		// Layout preferences
-		portlet.setHeading("Delay by stop");
+		portlet.setHeadingHtml("Delay by stop");
 		configPanel(portlet);
 		r = new Resizable(portlet);
 		r.setDynamic(true);

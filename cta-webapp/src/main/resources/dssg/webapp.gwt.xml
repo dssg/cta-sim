@@ -8,7 +8,7 @@
   <inherits name='com.extjs.gxt.ui.GXT'/>
   
 <!--   <inherits name='com.google.gwt.junit.JUnit' /> -->
-  <inherits name="com.gwtext.GwtExt"/>
+  <!-- <inherits name="com.gwtext.GwtExt"/> -->
 <!--   <inherits name="com.sencha.gxt.ui.GXT" /> -->
   <!-- Inherit the default GWT style sheet.  You can change       -->
   <!-- the theme of your GWT application by uncommenting          -->
