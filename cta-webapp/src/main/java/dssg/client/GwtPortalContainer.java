@@ -682,7 +682,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		
 		// Creates the line for max sugested load
 		lchart = new LineChart();
-		lchart.setColour("#00FFF");
+		lchart.setColour("#00FFFF");
 		for (double n = 0; n < 24; n=n+.5) {
 			lchart.addValues(220);
 		}
@@ -750,7 +750,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		// Creates the line for max sugested load
 		lchart = new LineChart();
-		lchart.setColour("#00FFF");
+		lchart.setColour("#00FFFF");
 		for (double n = 0; n <= 80; n++) {
 			lchart.addValues(220);
 		}
