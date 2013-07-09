@@ -7,10 +7,10 @@
 <stringAttribute key="com.google.gwt.eclipse.core.STYLE" value="OBFUSCATED"/>
 <stringAttribute key="com.google.gwt.eclipse.core.WEB_MODE" value="true"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/cta-webapp/src/test/java/dssg/client/GwtTestwebapp.java"/>
+<listEntry value="/cta-webapp"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
-<listEntry value="1"/>
+<listEntry value="4"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.junit.CONTAINER" value=""/>
 <booleanAttribute key="org.eclipse.jdt.junit.KEEPRUNNING_ATTR" value="false"/>
