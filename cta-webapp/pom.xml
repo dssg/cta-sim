@@ -14,7 +14,7 @@
 
   <properties>
     <!-- Convenience property to set the GWT version -->
-    <gwtVersion>2.2.0</gwtVersion>
+    <gwtVersion>2.5.1</gwtVersion>
     <gxtVersion>2.3.0-gwt22</gxtVersion>
     <!-- GWT needs at least java 1.5 -->
     <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
