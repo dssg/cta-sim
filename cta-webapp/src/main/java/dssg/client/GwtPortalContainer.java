@@ -8,9 +8,12 @@ import com.extjs.gxt.charts.client.Chart;
 import com.extjs.gxt.charts.client.event.ChartEvent;
 import com.extjs.gxt.charts.client.event.ChartListener;
 import com.extjs.gxt.charts.client.model.ChartModel;
+import com.extjs.gxt.charts.client.model.Legend;
+import com.extjs.gxt.charts.client.model.Legend.Position;
 import com.extjs.gxt.charts.client.model.axis.XAxis;
 import com.extjs.gxt.charts.client.model.axis.YAxis;
 import com.extjs.gxt.charts.client.model.charts.LineChart;
+import com.extjs.gxt.charts.client.model.charts.LineChart.LineStyle;
 import com.extjs.gxt.charts.client.model.charts.PieChart;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
@@ -70,7 +73,6 @@ public class GwtPortalContainer extends LayoutContainer {
 
 	private FormData formData;
 	private VerticalPanel vp;
-	private Image image;
 	private ContentPanel panel;
 	private Command updateCmd;
 	private Command updateChart1Cmd;
@@ -111,7 +113,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		// eastData.setCollapsible(true);
 		// eastData.setMargins(new Margins(0, 0, 0, 5));
 
-		// Regions added to the main function //
+		// Regions added to the main function 
 		add(getNorth(), northData);
 		add(getWest(), westData);
 		add(getCenter(), centerData);
@@ -129,39 +131,35 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Image loading for the north region
 
 		// Blue image
-		image = new Image();
-		image.setUrl(GWT.getModuleBaseURL() + "000033.png");
-		north.add(image, new RowData(.03, 1, new Margins(4)));
+		Image blueImage = new Image();
+		blueImage.setUrl(GWT.getModuleBaseURL() + "000033.png");
+		north.add(blueImage, new RowData(.03, 1, new Margins(4)));
 		// CTA logo
-		image = new Image();
-		image.setUrl(GWT.getModuleBaseURL() + "cta-logo2.gif");
-		image.setSize("415px", "70px");
+		Image ctaImage = new Image();
+		ctaImage.setUrl(GWT.getModuleBaseURL() + "cta-logo2.gif");
+		ctaImage.setSize("415px", "70px");
 		panel = new ContentPanel();
 		panel.setFrame(false);
 		panel.setBodyBorder(false);
 		panel.setHeaderVisible(false);
 		panel.setBodyStyle("background: #000033");
-		panel.add(image);
+		panel.add(ctaImage);
 		north.add(panel, new RowData(.27, 1, new Margins(6, 0, 0, 0)));
-		// blue image
-		image = new Image();
-		image.setUrl(GWT.getModuleBaseURL() + "000033.png");
-		north.add(image, new RowData(.62, 1, new Margins(4)));
+		// Blue image
+		north.add(blueImage, new RowData(.62, 1, new Margins(4)));
 		// DSSG logo round
-		image = new Image();
-		image.setUrl(GWT.getModuleBaseURL() + "dssg-logo.png");
-		image.setSize("65px", "65px");
+		Image dssgImage = new Image();
+		dssgImage.setUrl(GWT.getModuleBaseURL() + "dssg-logo.png");
+		dssgImage.setSize("65px", "65px");
 		panel = new ContentPanel();
 		panel.setFrame(false);
 		panel.setBodyBorder(false);
 		panel.setHeaderVisible(false);
 		panel.setBodyStyle("background: #000033");
-		panel.add(image);
+		panel.add(dssgImage);
 		north.add(panel, new RowData(.05, 1, new Margins(10, 0, 0, 0)));
 		// Blue image
-		image = new Image();
-		image.setUrl(GWT.getModuleBaseURL() + "000033.png");
-		north.add(image, new RowData(.03, 1, new Margins()));
+		north.add(blueImage, new RowData(.03, 1, new Margins()));
 		return north;
 	}
 
@@ -334,8 +332,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 	// -- Methods to get Center Charts
 	private ContentPanel getCrowdingChart() {
-		// Static chart
-		// FIXME add refresh listener for route id submit button
+		// Local variables
 		String url;
 		final Chart chart;
 		// Content panel for chart
@@ -439,7 +436,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		
 
 		// Initial form panel
-		FormPanel simple = new FormPanel();
+		final FormPanel simple = new FormPanel();
 		// Layout preferences
 		simple.setFrame(false);
 		simple.setHeaderVisible(false);
@@ -478,7 +475,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		timeF.setFieldLabel("End Time");
 		timeF.setIncrement(30);
 		simple.add(timeF, formData);
-		// Submit and Cancel buttons
+		// Submit button
 		Button b = new Button("Submit");
 		b.addClickHandler(new ClickHandler() {
 			@Override
@@ -494,7 +491,15 @@ public class GwtPortalContainer extends LayoutContainer {
 			}
 		});
 		simple.add(b);
-		simple.add(new Button("Cancel"));
+		// Cancel button
+		b = new Button("Reset");
+		b.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				simple.reset();
+			}
+		});
+		simple.add(b);
 		simple.setWidth(235);
 
 		vp.add(simple);
@@ -553,32 +558,25 @@ public class GwtPortalContainer extends LayoutContainer {
 		file.setData("text", "Choose Schedule file");
 		simple.add(file);
 
-		// Reset Button
-		Button btn = new Button("Reset");
-		/* FIXME figure out what is the equivalent for GWT 3 */
-		// btn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-		// @Override
-		// public void componentSelected(ButtonEvent ce) {
-		// simple.reset();
-		// }
-		// });
-		simple.add(btn);
 		// Submit Button
-		btn = new Button("Submit");
-		/* FIXME figure out what is the equivalent for GWT 3 */
-		// btn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-		// @Override
-		// public void componentSelected(ButtonEvent ce) {
-		// if (!simple.isValid()) {
-		// return;
-		// }
-		// // normally would submit the form but for example no server set up to
-		// // handle the post
-		// // panel.submit();
-		// MessageBox.info("Action", "You file was uploaded", null);
-		// }
-		// });
-		simple.add(btn);
+		Button submitBtn = new Button("Submit");
+		submitBtn.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				//FIXME add code to upload a file to S3
+			}
+		});
+		simple.add(submitBtn);
+		
+		// Reset Button
+		Button resetBtn = new Button("Reset");
+		resetBtn.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				simple.reset();
+			}
+		});
+		simple.add(resetBtn);
 
 		vp.add(simple);
 	}
@@ -629,7 +627,10 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Create a ChartModel with the Chart Title and some style attributes
 		ChartModel cm = new ChartModel("Max load per hour. Route: " + route,
 				"font-size: 14px; font-family:      Verdana; text-align: center;");
-
+		// Code to add legends and paddings
+		Legend lg = new Legend(Position.RIGHT, true);
+		lg.setPadding(20);
+		cm.setLegend(lg);
 		// Create the X axis
 		XAxis xa = new XAxis();
 		xa.setOffset(true);
@@ -640,11 +641,8 @@ public class GwtPortalContainer extends LayoutContainer {
 			}
 			else {
 				xa.addLabels("");
-			}
-				
+			}		
 		}
-
-		cm.setXAxis(xa);
 
 		// Create the Y axis
 		YAxis ya = new YAxis();
@@ -654,6 +652,8 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		// Create a Area Chart object and add points to the object
 		LineChart lchart = new LineChart();
+		// FIXME uncomment animation line for the deployment
+		//lchart.setAnimateOnShow(true); 
 		lchart.setColour("#00aa00");
 		lchart.setTooltip("#val#");
 		for (double n = 0; n < 24; n=n+.5) {
@@ -667,6 +667,8 @@ public class GwtPortalContainer extends LayoutContainer {
 		
 		// Create a Area Chart object and add points to the object
 		lchart = new LineChart();
+		// FIXME uncomment animation line for the deployment
+		//lchart.setAnimateOnShow(true); 
 		lchart.setColour("#ff0000");
 		lchart.setTooltip("#val#");
 		for (double n = 0; n < 24; n=n+.5) {
@@ -677,6 +679,17 @@ public class GwtPortalContainer extends LayoutContainer {
 		if(north ==false || bothDir == true) {
 		cm.addChartConfig(lchart);
 		}
+		
+		// Creates the line for max sugested load
+		lchart = new LineChart();
+		lchart.setColour("#00FFF");
+		for (double n = 0; n < 24; n=n+.5) {
+			lchart.addValues(220);
+		}
+		cm.addChartConfig(lchart);
+		
+		
+		
 		// Returns the Chart Model
 		return cm;
 	}
@@ -684,7 +697,7 @@ public class GwtPortalContainer extends LayoutContainer {
 	// Area chart for Load per stop @ TIME
 	public ChartModel getLoadAtTime() {
 		// Create a ChartModel with the Chart Title and some style attributes
-		ChartModel cm = new ChartModel("Max load @ " + time,
+		ChartModel cm = new ChartModel("Max load @ " + time + " hrs.",
 				"font-size: 14px; font-family:      Verdana; text-align: center;");
 
 		// Create the X axis
@@ -735,6 +748,14 @@ public class GwtPortalContainer extends LayoutContainer {
 		cm.addChartConfig(lchart);
 		}
 
+		// Creates the line for max sugested load
+		lchart = new LineChart();
+		lchart.setColour("#00FFF");
+		for (double n = 0; n <= 80; n++) {
+			lchart.addValues(220);
+		}
+		cm.addChartConfig(lchart);
+		
 		// Returns the Chart Model
 		return cm;
 	}
@@ -746,9 +767,9 @@ public class GwtPortalContainer extends LayoutContainer {
 				"font-size: 10px; font-family: Verdana; text-align: center;");
 		cm.setBackgroundColour("#fffff5");
 		// Code to add legends and paddings
-		// Legend lg = new Legend(Position.RIGHT, true);
-		// lg.setPadding(10);
-		// cm.setLegend(lg);
+		//Legend lg = new Legend(Position.RIGHT, true);
+		//lg.setPadding(10);
+	 	//cm.setLegend(lg);
 
 		// Creation of the pie chart
 		PieChart pie = new PieChart();
