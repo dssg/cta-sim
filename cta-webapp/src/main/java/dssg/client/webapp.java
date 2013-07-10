@@ -1,5 +1,6 @@
 package dssg.client;
 
+import com.extjs.gxt.ui.client.widget.Viewport;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.DOM;
@@ -21,8 +22,16 @@ public class webapp implements EntryPoint {
    * This is the entry point method.
    */
   public void onModuleLoad() {
+	Viewport view = new Viewport();
+	
+	view.setStyleAttribute("background-color", "#000033");
+	view.add(new GwtPortalContainer());
+	
     RootPanel rootPanel = RootPanel.get();
-    rootPanel.add(new GwtPortalContainer());
+    rootPanel.addStyleName("requires-min-width");
+    rootPanel.addStyleName("root");
+    rootPanel.add(view);
+    
     DOM.removeChild(RootPanel.getBodyElement(),
         DOM.getElementById("loading"));
   }

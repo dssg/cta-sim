@@ -58,3 +58,12 @@
     display:block;
     clear:none;
 }
+
+.requires-min-width {
+    min-width: 600px;
+}
+  
+.root{
+    padding-right: 20px;
+    padding-bottom: 20px;   
+}

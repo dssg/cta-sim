@@ -22,6 +22,7 @@ import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.data.BaseModel;
 import com.extjs.gxt.ui.client.data.ModelData;
+import com.extjs.gxt.ui.client.event.ComponentEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.IconButtonEvent;
 import com.extjs.gxt.ui.client.event.Listener;
@@ -102,7 +103,6 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Layout preferences for the entire page
 		final BorderLayout layout = new BorderLayout();
 		setLayout(layout);
-
 		// --Layout data for all regions--
 		BorderLayoutData northData = new BorderLayoutData(LayoutRegion.NORTH,
 				80);
@@ -113,7 +113,8 @@ public class GwtPortalContainer extends LayoutContainer {
 		westData.setCollapsible(true);
 		westData.setSplit(false);
 		westData.setMargins(new Margins(0, 5, 0, 0));
-		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
+		final BorderLayoutData centerData = new BorderLayoutData(
+				LayoutRegion.CENTER);
 		centerData.setMargins(new Margins(0));
 		// BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST,
 		// 200);
@@ -121,7 +122,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		// eastData.setCollapsible(true);
 		// eastData.setMargins(new Margins(0, 0, 0, 5));
 
-		// Regions added to the main function 
+		// Regions added to the main function
 		add(getNorth(), northData);
 		add(getWest(), westData);
 		add(getCenter(), centerData);
@@ -152,9 +153,9 @@ public class GwtPortalContainer extends LayoutContainer {
 		panel.setHeaderVisible(false);
 		panel.setBodyStyle("background: #000033");
 		panel.add(ctaImage);
-		north.add(panel, new RowData(.27, 1, new Margins(6, 0, 0, 0)));
+		north.add(panel, new RowData(-1, 1, new Margins(6, 0, 0, 0)));
 		// Blue image
-		north.add(blueImage, new RowData(.62, 1, new Margins(4)));
+		north.add(blueImage, new RowData(.94, 1, new Margins(4)));
 		// DSSG logo round
 		Image dssgImage = new Image();
 		dssgImage.setUrl(GWT.getModuleBaseURL() + "dssg-logo.png");
@@ -165,7 +166,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		panel.setHeaderVisible(false);
 		panel.setBodyStyle("background: #000033");
 		panel.add(dssgImage);
-		north.add(panel, new RowData(.05, 1, new Margins(10, 0, 0, 0)));
+		north.add(panel, new RowData(-1, 1, new Margins(10, 0, 0, 0)));
 		// Blue image
 		north.add(blueImage, new RowData(.03, 1, new Margins()));
 		return north;
@@ -270,11 +271,21 @@ public class GwtPortalContainer extends LayoutContainer {
 
 	// --- Center region information (center region of the webapp) ---
 	private ContentPanel getCenter() {
-		ContentPanel center = new ContentPanel();
+		final ContentPanel center = new ContentPanel();
 		// Layout preferences
 		center.setHeadingHtml("Charts");
-		center.setScrollMode(Scroll.AUTOX);
-
+		// FIXME scroll is not working
+		center.setScrollMode(Scroll.AUTOY);
+		r = new Resizable(center);
+		r.setDynamic(true);
+		// FIXME get the center pannel to redraw when resizing
+		center.addListener(Events.Resize, new Listener<ComponentEvent>() {
+			@Override
+			public void handleEvent(ComponentEvent be) {
+				//Info.display("Window resize", "");
+				//center.repaint();
+			}
+		});
 		// Local variables
 		Portlet portlet;
 
@@ -304,10 +315,10 @@ public class GwtPortalContainer extends LayoutContainer {
 		centerPortlet.add(getCrowdingChart());
 		centerPortlet.add(getHourControls(), vBoxData);
 		centerPortlet.add(getCrowdingChart2());
-				
-		
-		portal.add(centerPortlet, 0); // Portlet added to the first column of the
-								// portal
+
+		portal.add(centerPortlet, 0); // Portlet added to the first column of
+										// the
+		// portal
 
 		// Portlet for the Information Grid
 		portlet = new Portlet();
@@ -316,7 +327,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		portlet.setLayout(new FitLayout());
 		/* FIXME create some grid data to populate this. */
 		portlet.add(createGrid());
-		
+
 		portlet.setHeight(250);
 		r = new Resizable(portlet);
 		r.setDynamic(true);
@@ -395,19 +406,18 @@ public class GwtPortalContainer extends LayoutContainer {
 		b.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				
+
 				route = text.getValue();
 				north = northB.getValue();
 				bothDir = bothB.getValue();
-				if(route!=null && timeS!=null && timeF!=null) {
+				if (route != null && timeS != null && timeF != null) {
 					callSimulationServices();
 					startT = timeS.getDateValue().getHours();
 					stopT = timeF.getDateValue().getHours();
 					updateChart1Cmd.execute();
 					updateChart2Cmd.execute();
 					updateSliderCmd.execute();
-				}
-				else {
+				} else {
 					MessageBox.alert("Alert", "Null Values not allowed", null);
 				}
 			}
@@ -426,6 +436,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		vp.add(simple);
 	}
+
 	// Form to display Chart Option
 	private void createCharOptWest() {
 
@@ -457,6 +468,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		vp.add(simple);
 	}
+
 	// Form to input schedule or gtfs
 	private void createUpldFileWest() {
 		// Initial panel
@@ -500,6 +512,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		vp.add(simple);
 	}
+
 	// Form to display statistical information
 	private void createFormEast() {
 		// Initial panel
@@ -520,7 +533,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		vp.add(simple);
 	}
 
-	// -- GET Center Objects
+	// -- GET Center Objects --
 	// Crowding Chart
 	private ContentPanel getCrowdingChart() {
 		// Local variables
@@ -547,6 +560,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		return panel;
 	}
+
 	// Crowding Chart 2
 	private ContentPanel getCrowdingChart2() {
 
@@ -573,6 +587,7 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		return panel;
 	}
+
 	// Pie Chart
 	private ContentPanel getPieChart() {
 
@@ -596,6 +611,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		return panel;
 
 	}
+
 	// Methods to get Center Controls
 	private SliderField getHourControls() {
 		// 24 hrs slider
@@ -604,56 +620,37 @@ public class GwtPortalContainer extends LayoutContainer {
 		updateSliderCmd = new Command() {
 			@Override
 			public void execute() {
-				slider.setValue(startT*2);
-				slider.setMaxValue(stopT*2);
-				slider.setMinValue(startT*2);
+				slider.setValue(startT * 2);
+				slider.setMaxValue(stopT * 2);
+				slider.setMinValue(startT * 2);
 			}
 		};
 		updateSliderCmd.execute();
-		
-		
+
 		final SliderField sf = new SliderField(slider);
 		sf.setFieldLabel("Time:");
 
 		slider.addListener(Events.Change, new Listener<SliderEvent>() {
 			@Override
 			public void handleEvent(SliderEvent be) {
-				slider.setMessage(((slider.getValue()))*.5 + " hrs");
-				time = be.getNewValue()/2;
+				slider.setMessage(((slider.getValue())) * .5 + " hrs");
+				time = be.getNewValue() / 2;
 				updateChart2Cmd.execute();
 			}
 		});
 
 		return sf;
 	}
+
 	// Grid
+	// FIXME create grid file and populate grid
 	
-	
-	// Panel configuration method for all center portlets
-	private void configPanel(final ContentPanel panel) {
-		// Layout configuration
-		panel.setCollapsible(true);
-		panel.setAnimCollapse(false);
-		// panel.getHeader().addTool(new ToolButton("x-tool-gear")); //Deleted
-		// the gear button
-		// Close button
-		panel.getHeader().addTool(
-				new ToolButton("x-tool-close",
-						new SelectionListener<IconButtonEvent>() {
-
-							@Override
-							public void componentSelected(IconButtonEvent ce) {
-								panel.removeFromParent();
-							}
-
-						}));
-	}
-
 	// -- CHARTS --
 	// Area chart for Load 24hrs
-	public ChartModel getLoad24() {
+	private ChartModel getLoad24() {
 		// Create a ChartModel with the Chart Title and some style attributes
-		ChartModel cm = new ChartModel("Max load per hour. Route: " + route +" from "+startT+"hrs. to "+stopT+"hrs.",
+		ChartModel cm = new ChartModel("Max load per hour.  Route: " + route
+				+ "  Time Window: " + startT + "hrs. to " + stopT + "hrs.",
 				"font-size: 14px; font-family:      Verdana; text-align: center;");
 		// Code to add legends and paddings
 		Legend lg = new Legend(Position.TOP, true);
@@ -663,13 +660,12 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Create the X axis
 		XAxis xa = new XAxis();
 		// set the labels for the axis
-		for (double i = startT; i <= stopT; i=i+0.5) {
-			if(i%1==0) {
+		for (double i = startT; i <= stopT; i = i + 0.5) {
+			if (i % 1 == 0) {
 				xa.addLabels(Double.toString(i));
-			}
-			else {
+			} else {
 				xa.addLabels("");
-			}		
+			}
 		}
 		cm.setXAxis(xa);
 
@@ -681,48 +677,47 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		// Create a Area Chart object NORTH
 		LineChart lchart = new LineChart();
-		lchart.setAnimateOnShow(true); 
+		lchart.setAnimateOnShow(true);
 		lchart.setColour("#00aa00");
 		lchart.setTooltip("#val#");
 		lchart.setText("North");
-		for (double n = startT; n <= stopT; n=n+.5) {
-			lchart.addValues(Math.abs( 150
+		for (double n = startT; n <= stopT; n = n + .5) {
+			lchart.addValues(Math.floor(Math.abs(150
 					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
-					+ Random.nextDouble() * 80 ));
+					+ Random.nextDouble() * 80)));
 		}
-		if((north ==true || bothDir == true) && route!=null) {
-		cm.addChartConfig(lchart);
+		if ((north == true || bothDir == true) && route != null) {
+			cm.addChartConfig(lchart);
 		}
-		
+
 		// Create a Area Chart object SOUTH
 		lchart = new LineChart();
-		lchart.setAnimateOnShow(true); 
+		lchart.setAnimateOnShow(true);
 		lchart.setColour("#ff0000");
 		lchart.setTooltip("#val#");
 		lchart.setText("South");
-		for (double n = startT; n <= stopT; n=n+.5) {
-			lchart.addValues(Math.abs( 180
+		for (double n = startT; n <= stopT; n = n + .5) {
+			lchart.addValues(Math.floor(Math.abs(180
 					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
-					+ Math.random() * 80 ));
+					+ Math.random() * 80)));
 		}
-		if((north ==false || bothDir == true) && route!=null){
-		cm.addChartConfig(lchart);
+		if ((north == false || bothDir == true) && route != null) {
+			cm.addChartConfig(lchart);
 		}
-		
+
 		// Creates the line for max sugested load
 		lchart = new LineChart();
 		lchart.setColour("#0099FF");
 		lchart.setText("Suggested Max Load");
-		for (double n = startT; n <= stopT; n=n+.5) {
+		for (double n = startT; n <= stopT; n = n + .5) {
 			lchart.addValues(220);
 		}
 		cm.addChartConfig(lchart);
-		
-		
-		
+
 		// Returns the Chart Model
 		return cm;
 	}
+
 	// Area chart for Load per stop @ TIME
 	public ChartModel getLoadAtTime() {
 		// Create a ChartModel with the Chart Title and some style attributes
@@ -738,13 +733,12 @@ public class GwtPortalContainer extends LayoutContainer {
 		xa.setOffset(true);
 		// set the labels for the axis
 		for (int i = 0; i < 80; i++) {
-			if(i%5==0) {
+			if (i % 5 == 0) {
 				xa.addLabels(Integer.toString(i));
-			}
-			else {
+			} else {
 				xa.addLabels("");
 			}
-			
+
 		}
 		cm.setXAxis(xa);
 		// Create the Y axis
@@ -759,12 +753,13 @@ public class GwtPortalContainer extends LayoutContainer {
 		lchart.setTooltip("#val#");
 		lchart.setText("North");
 		for (int n = 0; n <= 80; n++) {
-			lchart.addValues(Math.abs(Math.sin(time * (Math.PI / 24) + Math.PI / 24))
+			lchart.addValues(Math.floor(Math.abs(Math.sin(time * (Math.PI / 24)
+					+ Math.PI / 24))
 					* Math.abs(Math.cos(Random.nextDouble()) * 220
-							* Math.sin(n* Math.PI / 70)) + 20);
+							* Math.sin(n * Math.PI / 70)) + 20));
 		}
-		if((north ==true || bothDir == true) && route!=null){
-		cm.addChartConfig(lchart);
+		if ((north == true || bothDir == true) && route != null) {
+			cm.addChartConfig(lchart);
 		}
 
 		// Create a Area Chart object and add points to the object
@@ -773,12 +768,13 @@ public class GwtPortalContainer extends LayoutContainer {
 		lchart.setTooltip("#val#");
 		lchart.setText("South");
 		for (int n = 0; n <= 80; n++) {
-			lchart.addValues(Math.abs(Math.sin(time * (Math.PI / 24) + Math.PI / 24))
-					* Math.abs(Math.cos(Random.nextDouble()) * 220
-							* Math.sin(n* Math.PI / 70)) + 20);
+			lchart.addValues(Math.abs(Math.sin(time * (Math.PI / 24) + Math.PI
+					/ 24))
+					* Math.abs(Math.floor(Math.cos(Random.nextDouble()) * 220
+							* Math.sin(n * Math.PI / 70)) + 20));
 		}
-		if((north ==false || bothDir == true) && route!=null) {
-		cm.addChartConfig(lchart);
+		if ((north == false || bothDir == true) && route != null) {
+			cm.addChartConfig(lchart);
 		}
 
 		// Creates the line for max sugested load
@@ -789,10 +785,11 @@ public class GwtPortalContainer extends LayoutContainer {
 			lchart.addValues(220);
 		}
 		cm.addChartConfig(lchart);
-		
+
 		// Returns the Chart Model
 		return cm;
 	}
+
 	// Area chart for Delta Times
 	private ChartModel getPieChartData() {
 		// Chart model initialization
@@ -800,9 +797,9 @@ public class GwtPortalContainer extends LayoutContainer {
 				"font-size: 10px; font-family: Verdana; text-align: center;");
 		cm.setBackgroundColour("#fffff5");
 		// Code to add legends and paddings
-		//Legend lg = new Legend(Position.RIGHT, true);
-		//lg.setPadding(10);
-	 	//cm.setLegend(lg);
+		// Legend lg = new Legend(Position.RIGHT, true);
+		// lg.setPadding(10);
+		// cm.setLegend(lg);
 
 		// Creation of the pie chart
 		PieChart pie = new PieChart();
@@ -840,51 +837,70 @@ public class GwtPortalContainer extends LayoutContainer {
 		Info.display("Calling simulation services", "");
 	}
 
-	// -- DATA -- 
+	// -- DATA --
 	private ContentPanel createGrid() {
-		final EditorGrid<ModelData> grid; 
-		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();  
-		
-		ColumnConfig column = new ColumnConfig();  
-	    column.setId("name");  
-	    column.setHeaderHtml("Common Name");  
-	    column.setWidth(220); 
-	    TextField<String> text = new TextField<String>();  
-	    text.setAllowBlank(false);  
-	    column.setEditor(new CellEditor(text));  
-	    configs.add(column);  
-	    
-	    ColumnConfig column2 = new ColumnConfig();  
-	    column2.setId("name2");  
-	    column2.setHeaderHtml("Common Name 2");  
-	    column2.setWidth(220); 
-	    TextField<String> text2 = new TextField<String>();  
-	    text2.setAllowBlank(false);  
-	    column2.setEditor(new CellEditor(text2));  
-	    configs.add(column2); 
-	    
-	    ModelData mData;
-	    mData = new BaseModel();
-	    mData.set("StartPattern", new int[] {-1,0,0,0});
-	    mData.set("EndPattern", new int[] {-1,0,24,0});
+		final EditorGrid<ModelData> grid;
+		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
+
+		ColumnConfig column = new ColumnConfig();
+		column.setId("name");
+		column.setHeaderHtml("Common Name");
+		column.setWidth(220);
+		TextField<String> text = new TextField<String>();
+		text.setAllowBlank(false);
+		column.setEditor(new CellEditor(text));
+		configs.add(column);
+
+		ColumnConfig column2 = new ColumnConfig();
+		column2.setId("name2");
+		column2.setHeaderHtml("Common Name 2");
+		column2.setWidth(220);
+		TextField<String> text2 = new TextField<String>();
+		text2.setAllowBlank(false);
+		column2.setEditor(new CellEditor(text2));
+		configs.add(column2);
+
+		ModelData mData;
+		mData = new BaseModel();
+		mData.set("StartPattern", new int[] { -1, 0, 0, 0 });
+		mData.set("EndPattern", new int[] { -1, 0, 24, 0 });
 		mData.set("Cls", "");
-	    
-	    final ListStore<ModelData> store = new ListStore<ModelData>();  
-	    
-	    ColumnModel cm = new ColumnModel(configs);  
-	    
-	    panel = new ContentPanel();  
-	    panel.setHeadingHtml("Auto Height Edit Plants");  
-	    panel.setFrame(true);  
-	    panel.setWidth(600);  
-	    panel.setLayout(new FitLayout());  
-	  
-	    grid = new EditorGrid<ModelData>(store, cm);  
-	    grid.setAutoExpandColumn("name");  
-	    grid.setBorders(true);   
-	    panel.add(grid);
-	    
-	    return panel;
+
+		final ListStore<ModelData> store = new ListStore<ModelData>();
+
+		ColumnModel cm = new ColumnModel(configs);
+
+		panel = new ContentPanel();
+		panel.setHeadingHtml("Auto Height Edit Plants");
+		panel.setFrame(true);
+		panel.setWidth(600);
+		panel.setLayout(new FitLayout());
+
+		grid = new EditorGrid<ModelData>(store, cm);
+		grid.setAutoExpandColumn("name");
+		grid.setBorders(true);
+		panel.add(grid);
+
+		return panel;
 	}
-    
+
+	// Panel configuration method for all center portlets
+	private void configPanel(final ContentPanel panel) {
+		// Layout configuration
+		panel.setCollapsible(true);
+		panel.setAnimCollapse(false);
+		// panel.getHeader().addTool(new ToolButton("x-tool-gear")); //Deleted
+		// the gear button
+		// Close button
+		panel.getHeader().addTool(
+				new ToolButton("x-tool-close",
+						new SelectionListener<IconButtonEvent>() {
+
+							@Override
+							public void componentSelected(IconButtonEvent ce) {
+								panel.removeFromParent();
+							}
+
+						}));
+	}
 }
