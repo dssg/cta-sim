@@ -36,3 +36,5 @@ Walter Dempsey - Statistics/Modeling
 David Sekora - Webapp coding/debugging, Eclipse expert
 
 Brandon Willard - Project Mentor
+
+More information at github.com/dssg/dssg-cta-project/wiki/Team
