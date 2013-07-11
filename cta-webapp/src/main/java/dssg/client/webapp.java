@@ -22,15 +22,10 @@ public class webapp implements EntryPoint {
    * This is the entry point method.
    */
   public void onModuleLoad() {
-	Viewport view = new Viewport();
-	
-	view.setStyleAttribute("background-color", "#000033");
-	view.add(new GwtPortalContainer());
-	
-    RootPanel rootPanel = RootPanel.get();
-    rootPanel.addStyleName("requires-min-width");
-    rootPanel.addStyleName("root");
-    rootPanel.add(view);
+	RootPanel rootPanel = RootPanel.get();
+    rootPanel.setStyleName("requires-min-width");
+    rootPanel.setStyleName("root");
+    rootPanel.add(new GwtPortalContainer());
     
     DOM.removeChild(RootPanel.getBodyElement(),
         DOM.getElementById("loading"));

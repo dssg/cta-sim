@@ -14,15 +14,13 @@ import com.extjs.gxt.charts.client.model.Legend;
 import com.extjs.gxt.charts.client.model.Legend.Position;
 import com.extjs.gxt.charts.client.model.axis.XAxis;
 import com.extjs.gxt.charts.client.model.axis.YAxis;
+import com.extjs.gxt.charts.client.model.charts.FilledBarChart;
 import com.extjs.gxt.charts.client.model.charts.LineChart;
-import com.extjs.gxt.charts.client.model.charts.PieChart;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.Style.Scroll;
-import com.extjs.gxt.ui.client.data.BaseModel;
 import com.extjs.gxt.ui.client.data.ModelData;
-import com.extjs.gxt.ui.client.event.ComponentEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.IconButtonEvent;
 import com.extjs.gxt.ui.client.event.Listener;
@@ -37,6 +35,7 @@ import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.VerticalPanel;
+import com.extjs.gxt.ui.client.widget.Viewport;
 import com.extjs.gxt.ui.client.widget.button.ToolButton;
 import com.extjs.gxt.ui.client.widget.custom.Portal;
 import com.extjs.gxt.ui.client.widget.custom.Portlet;
@@ -53,6 +52,8 @@ import com.extjs.gxt.ui.client.widget.grid.CellEditor;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.EditorGrid;
+import com.extjs.gxt.ui.client.widget.grid.Grid;
+import com.extjs.gxt.ui.client.widget.grid.GridSelectionModel;
 import com.extjs.gxt.ui.client.widget.layout.AccordionLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
@@ -75,7 +76,7 @@ import com.google.gwt.user.client.ui.Image;
 import com.extjs.gxt.ui.client.widget.Slider;
 
 // Main class containing all elements
-public class GwtPortalContainer extends LayoutContainer {
+public class GwtPortalContainer extends Viewport {
 
 	// Global variables
 
@@ -84,14 +85,18 @@ public class GwtPortalContainer extends LayoutContainer {
 	private ContentPanel panel;
 	private Command updateChart1Cmd;
 	private Command updateChart2Cmd;
+	private Command updateChart3Cmd;
 	private Command updateSliderCmd;
+	private Command updateSlider2Cmd;
 	private Integer time = 0;
 	private Resizable r;
-	private String route = "1";
+	private String route = null;
 	private Boolean bothDir = true;
 	private Boolean north = true;
 	private Integer startT = 0;
 	private Integer stopT = 23;
+	private Integer numStops = 80;
+	private Integer stop = 0;
 
 	// Main portal container (main window) is a portal container which is
 	// divided into North, South, East and West regions.
@@ -100,6 +105,11 @@ public class GwtPortalContainer extends LayoutContainer {
 	@Override
 	protected void onRender(Element parent, int index) {
 		super.onRender(parent, index);
+		Viewport view = new Viewport();
+		view.setScrollMode(Scroll.AUTOY);
+		view.setMonitorWindowResize(true);
+		view.setStyleAttribute("backgroundcolor", "#000033");
+
 		// Layout preferences for the entire page
 		final BorderLayout layout = new BorderLayout();
 		setLayout(layout);
@@ -123,6 +133,12 @@ public class GwtPortalContainer extends LayoutContainer {
 		// eastData.setMargins(new Margins(0, 0, 0, 5));
 
 		// Regions added to the main function
+		// FIXME
+		// protected void onWindowResize() {
+		// @Override
+		//
+		//
+		// }
 		add(getNorth(), northData);
 		add(getWest(), westData);
 		add(getCenter(), centerData);
@@ -181,6 +197,8 @@ public class GwtPortalContainer extends LayoutContainer {
 		west.setLayout(new FillLayout());
 		west.setButtonAlign(HorizontalAlignment.CENTER);
 		west.setHeadingHtml("Information Tools");
+		west.setBodyStyle("background: #000033");
+		west.setBorders(false);
 
 		// Content panel for "Information Type"
 		panel = new ContentPanel();
@@ -274,18 +292,10 @@ public class GwtPortalContainer extends LayoutContainer {
 		final ContentPanel center = new ContentPanel();
 		// Layout preferences
 		center.setHeadingHtml("Charts");
-		// FIXME scroll is not working
+		// FIXME scroll is only working on the edges
 		center.setScrollMode(Scroll.AUTOY);
 		r = new Resizable(center);
 		r.setDynamic(true);
-		// FIXME get the center pannel to redraw when resizing
-		center.addListener(Events.Resize, new Listener<ComponentEvent>() {
-			@Override
-			public void handleEvent(ComponentEvent be) {
-				//Info.display("Window resize", "");
-				//center.repaint();
-			}
-		});
 		// Local variables
 		Portlet portlet;
 
@@ -294,8 +304,9 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Layout preferences
 		portal.setBorders(true);
 		portal.setStyleAttribute("backgroundColor", "white");
-		portal.setColumnWidth(0, .75);
-		portal.setColumnWidth(1, .25);
+		portal.setColumnWidth(0, .55);
+		portal.setColumnWidth(1, .45);
+		portal.setScrollMode(Scroll.AUTOY);
 
 		// Box Layout for the charts and sliders
 		VBoxLayout portletLayout = new VBoxLayout();
@@ -307,47 +318,48 @@ public class GwtPortalContainer extends LayoutContainer {
 		// Layout preferences
 		centerPortlet.setHeadingHtml("Crowding");
 		configPanel(centerPortlet);
-		centerPortlet.setHeight(700);
+		centerPortlet.setHeight(750);
 		centerPortlet.setLayout(portletLayout);
 		r = new Resizable(centerPortlet);
 		r.setDynamic(true);
 		final VBoxLayoutData vBoxData = new VBoxLayoutData(10, 15, 10, 30);
+		final VBoxLayoutData vBoxData2 = new VBoxLayoutData(10, 10, 10, 25);
 		centerPortlet.add(getCrowdingChart());
 		centerPortlet.add(getHourControls(), vBoxData);
 		centerPortlet.add(getCrowdingChart2());
+		centerPortlet.add(getHourControls2(), vBoxData2);
 
 		portal.add(centerPortlet, 0); // Portlet added to the first column of
 										// the
 		// portal
 
+		// Portlet for the Delay Graph
+		portlet = new Portlet();
+		// Layout preferences
+		portlet.setHeadingHtml("Load @ stop 24 hrs.");
+		configPanel(portlet);
+		portlet.setHeight(370);
+		r = new Resizable(portlet);
+		r.setDynamic(true);
+		portlet.add(getCrowdingChart3());
+		portal.add(portlet, 1);
+				
 		// Portlet for the Information Grid
 		portlet = new Portlet();
-		portlet.setHeadingHtml("Information Grid 2");
+		portlet.setHeadingHtml("Stat. Information");
 		configPanel(portlet);
+		portlet.setHeight(370);
 		portlet.setLayout(new FitLayout());
 		/* FIXME create some grid data to populate this. */
 		portlet.add(createGrid());
-
-		portlet.setHeight(250);
 		r = new Resizable(portlet);
 		r.setDynamic(true);
 
 		portal.add(portlet, 1); // Portlet added to the second column of the
 								// portal
 
-		// Portlet for the Delay Graph
-		portlet = new Portlet();
-		// Layout preferences
-		portlet.setHeadingHtml("Delay by stop");
-		configPanel(portlet);
-		r = new Resizable(portlet);
-		r.setDynamic(true);
-		portlet.add(getPieChart());
-		portal.add(portlet, 1);
-
 		// Portal added to the center region
 		center.add(portal);
-
 		return center;
 	}
 
@@ -367,13 +379,14 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		// Add radio button for North South
 		final Radio northB = new Radio();
-		northB.setBoxLabel("N");
+		northB.setBoxLabel("N/E");
 		final Radio southB = new Radio();
-		southB.setBoxLabel("S");
+		southB.setBoxLabel("S/W");
 		final Radio bothB = new Radio();
 		bothB.setBoxLabel("Both");
-		bothB.setValue(true);
+		northB.setValue(true);
 		rGroup.setFieldLabel("Direction:");
+		rGroup.setSpacing(1);
 		rGroup.add(northB);
 		rGroup.add(southB);
 		rGroup.add(bothB);
@@ -398,7 +411,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		simple.add(timeS, formData);
 		final TimeField timeF = new TimeField();
 		timeF.setFieldLabel("End Time");
-		timeF.setIncrement(30);
+		timeF.setIncrement(60);
 		timeF.setAllowBlank(false);
 		simple.add(timeF, formData);
 		// Submit button
@@ -416,7 +429,9 @@ public class GwtPortalContainer extends LayoutContainer {
 					stopT = timeF.getDateValue().getHours();
 					updateChart1Cmd.execute();
 					updateChart2Cmd.execute();
+					updateChart3Cmd.execute();
 					updateSliderCmd.execute();
+					updateSlider2Cmd.execute();
 				} else {
 					MessageBox.alert("Alert", "Null Values not allowed", null);
 				}
@@ -465,6 +480,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		Button b = new Button("Submit");
 		simple.add(b);
 		simple.add(new Button("Cancel"));
+		simple.setWidth(235);
 
 		vp.add(simple);
 	}
@@ -509,6 +525,7 @@ public class GwtPortalContainer extends LayoutContainer {
 			}
 		});
 		simple.add(resetBtn);
+		simple.setWidth(235);
 
 		vp.add(simple);
 	}
@@ -548,7 +565,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		url = "chart/open-flash-chart.swf";
 		chart = new Chart(url);
 		chart.setBorders(true);
-		chart.setHeight(300);
+		chart.setHeight(310);
 		panel.add(chart);
 		updateChart1Cmd = new Command() {
 			@Override
@@ -557,7 +574,7 @@ public class GwtPortalContainer extends LayoutContainer {
 			}
 		};
 		updateChart1Cmd.execute();
-
+		
 		return panel;
 	}
 
@@ -581,18 +598,18 @@ public class GwtPortalContainer extends LayoutContainer {
 			@Override
 			public void execute() {
 				chart.setChartModel(getLoadAtTime());
+				panel.expand();
 			}
 		};
 		updateChart2Cmd.execute();
-
 		return panel;
 	}
 
-	// Pie Chart
-	private ContentPanel getPieChart() {
+	// Crowding Chart 3
+	private ContentPanel getCrowdingChart3() {
 
 		String url;
-		Chart chart;
+		final Chart chart;
 
 		// Content panel for chart
 		panel = new ContentPanel();
@@ -604,23 +621,29 @@ public class GwtPortalContainer extends LayoutContainer {
 		url = "chart/open-flash-chart.swf";
 		chart = new Chart(url);
 		chart.setBorders(true);
-		chart.setChartModel(getPieChartData());
-
+		updateChart3Cmd = new Command() {
+			@Override
+			public void execute() {
+				chart.setChartModel(getLoadAtStop(stop));
+			}
+		};
+		updateChart3Cmd.execute();
+		chart.setHeight(320);
 		panel.add(chart);
 
 		return panel;
 
 	}
 
-	// Methods to get Center Controls
+	// Center Slider
 	private SliderField getHourControls() {
 		// 24 hrs slider
 		final Slider slider = new Slider();
 		slider.setIncrement(1);
+		//FIXME slider.setStyleName("project-Slider");
 		updateSliderCmd = new Command() {
 			@Override
 			public void execute() {
-				slider.setValue(startT * 2);
 				slider.setMaxValue(stopT * 2);
 				slider.setMinValue(startT * 2);
 			}
@@ -641,16 +664,113 @@ public class GwtPortalContainer extends LayoutContainer {
 
 		return sf;
 	}
-
-	// Grid
-	// FIXME create grid file and populate grid
 	
+	// Bottom Slider
+	private SliderField getHourControls2() {
+		// 24 hrs slider
+		final Slider slider = new Slider();
+		slider.setIncrement(1);
+		slider.addStyleName("sliderStyle");
+		updateSlider2Cmd = new Command() {
+			@Override
+			public void execute() {
+				slider.setMinValue(0);
+				slider.setMaxValue(numStops);
+			}
+		};
+		updateSlider2Cmd.execute();
+
+		final SliderField sf = new SliderField(slider);
+		sf.setFieldLabel("Time:");
+
+		slider.addListener(Events.Change, new Listener<SliderEvent>() {
+			@Override
+			public void handleEvent(SliderEvent be) {
+				slider.setMessage("Stop:"+slider.getValue());
+				stop = be.getNewValue();
+				updateChart3Cmd.execute();
+			}
+		});
+
+		return sf;
+	}
+
+	// Stat. Information Grid
+	private ContentPanel createGrid() {
+		final Grid<MyStats> grid;
+		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
+
+		ColumnConfig stopCol = new ColumnConfig();
+		stopCol.setId("stop");
+		stopCol.setHeaderHtml("Stop");
+		stopCol.setWidth(65);
+		TextField<String> text = new TextField<String>();
+		text.setAllowBlank(false);
+		stopCol.setEditor(new CellEditor(text));
+		configs.add(stopCol);
+
+		ColumnConfig minCol = new ColumnConfig();
+		minCol.setId("min");
+		minCol.setHeaderHtml("Min");
+		minCol.setWidth(65);
+		text = new TextField<String>();
+		text.setAllowBlank(false);
+		minCol.setEditor(new CellEditor(text));
+		configs.add(minCol);
+
+		ColumnConfig meanCol = new ColumnConfig();
+		meanCol.setId("mean");
+		meanCol.setHeaderHtml("Mean");
+		meanCol.setWidth(65);
+		text = new TextField<String>();
+		text.setAllowBlank(false);
+		meanCol.setEditor(new CellEditor(text));
+		configs.add(meanCol);
+
+		ColumnConfig thCol = new ColumnConfig();
+		thCol.setId("th");
+		thCol.setHeaderHtml("75 %");
+		thCol.setWidth(65);
+		text = new TextField<String>();
+		text.setAllowBlank(false);
+		thCol.setEditor(new CellEditor(text));
+		configs.add(thCol);
+
+		ColumnConfig maxCol = new ColumnConfig();
+		maxCol.setId("max");
+		maxCol.setHeaderHtml("Max");
+		maxCol.setWidth(65);
+		text = new TextField<String>();
+		text.setAllowBlank(false);
+		maxCol.setEditor(new CellEditor(text));
+		configs.add(maxCol);
+
+		final ListStore<MyStats> store = new ListStore<MyStats>();
+		store.add(Data.getStats());
+
+		ColumnModel cm = new ColumnModel(configs);
+
+		panel = new ContentPanel();
+		panel.setFrame(false);
+		panel.setHeight(280);
+		panel.setHeaderVisible(false);
+		panel.setLayout(new FitLayout());
+
+		GridSelectionModel<MyStats> select = new GridSelectionModel<MyStats>();
+		grid = new Grid<MyStats>(store, cm);
+		grid.setBorders(true);
+		grid.setSelectionModel(select);
+		select.select(stop, false);
+		panel.add(grid);
+
+		return panel;
+	}
+
 	// -- CHARTS --
 	// Area chart for Load 24hrs
 	private ChartModel getLoad24() {
 		// Create a ChartModel with the Chart Title and some style attributes
-		ChartModel cm = new ChartModel("Max load per hour.  Route: " + route
-				+ "  Time Window: " + startT + "hrs. to " + stopT + "hrs.",
+		ChartModel cm = new ChartModel("Route: "+route+"   Max load per hour, all stops.",
 				"font-size: 14px; font-family:      Verdana; text-align: center;");
 		// Code to add legends and paddings
 		Legend lg = new Legend(Position.TOP, true);
@@ -721,7 +841,7 @@ public class GwtPortalContainer extends LayoutContainer {
 	// Area chart for Load per stop @ TIME
 	public ChartModel getLoadAtTime() {
 		// Create a ChartModel with the Chart Title and some style attributes
-		ChartModel cm = new ChartModel("Max load per stop @ " + time + " hrs.",
+		ChartModel cm = new ChartModel("Time: " +time+"hrs.   Max load per stop ",
 				"font-size: 14px; font-family:      Verdana; text-align: center;");
 		// Code to add legends and paddings
 		Legend lg = new Legend(Position.TOP, true);
@@ -732,7 +852,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		XAxis xa = new XAxis();
 		xa.setOffset(true);
 		// set the labels for the axis
-		for (int i = 0; i < 80; i++) {
+		for (int i = 0; i <= numStops; i++) {
 			if (i % 5 == 0) {
 				xa.addLabels(Integer.toString(i));
 			} else {
@@ -747,12 +867,14 @@ public class GwtPortalContainer extends LayoutContainer {
 		ya.setRange(0, 300, 50);
 		cm.setYAxis(ya);
 
-		// Create a Area Chart object and add points to the object
+		// Create a Line Chart object NORTH
 		LineChart lchart = new LineChart();
+		lchart.setAnimateOnShow(true);
+		lchart.addChartListener(listener); //FIXME use this listener to refresh other plot
 		lchart.setColour("#00aa00");
 		lchart.setTooltip("#val#");
 		lchart.setText("North");
-		for (int n = 0; n <= 80; n++) {
+		for (int n = 0; n <= numStops; n++) {
 			lchart.addValues(Math.floor(Math.abs(Math.sin(time * (Math.PI / 24)
 					+ Math.PI / 24))
 					* Math.abs(Math.cos(Random.nextDouble()) * 220
@@ -762,12 +884,14 @@ public class GwtPortalContainer extends LayoutContainer {
 			cm.addChartConfig(lchart);
 		}
 
-		// Create a Area Chart object and add points to the object
+		// Create a Line Chart object SOUTH
 		lchart = new LineChart();
+		lchart.setAnimateOnShow(true);
+		lchart.addChartListener(listener); //FIXME use this listener to refresh other plot
 		lchart.setColour("#ff0000");
 		lchart.setTooltip("#val#");
 		lchart.setText("South");
-		for (int n = 0; n <= 80; n++) {
+		for (int n = 0; n <= numStops; n++) {
 			lchart.addValues(Math.abs(Math.sin(time * (Math.PI / 24) + Math.PI
 					/ 24))
 					* Math.abs(Math.floor(Math.cos(Random.nextDouble()) * 220
@@ -781,7 +905,7 @@ public class GwtPortalContainer extends LayoutContainer {
 		lchart = new LineChart();
 		lchart.setColour("#0099FF");
 		lchart.setText("Suggested Max Load");
-		for (double n = 0; n <= 80; n++) {
+		for (double n = 0; n <= numStops; n++) {
 			lchart.addValues(220);
 		}
 		cm.addChartConfig(lchart);
@@ -790,33 +914,104 @@ public class GwtPortalContainer extends LayoutContainer {
 		return cm;
 	}
 
-	// Area chart for Delta Times
-	private ChartModel getPieChartData() {
+	// Chart for Load for a stop
+	private ChartModel getLoadAtStop(int s) {
 		// Chart model initialization
-		ChartModel cm = new ChartModel("",
-				"font-size: 10px; font-family: Verdana; text-align: center;");
+		ChartModel cm = new ChartModel("Stop: " + s + "  Load per hour.",
+				"font-size: 14px; font-family: Verdana; text-align: center;");
 		cm.setBackgroundColour("#fffff5");
 		// Code to add legends and paddings
-		// Legend lg = new Legend(Position.RIGHT, true);
-		// lg.setPadding(10);
-		// cm.setLegend(lg);
+		Legend lg = new Legend(Position.TOP, true);
+		lg.setPadding(5);
+		lg.setShadow(false);
+		cm.setLegend(lg);
 
-		// Creation of the pie chart
-		PieChart pie = new PieChart();
+		// Create the X axis
+		XAxis xa = new XAxis();
+		// set the labels for the axis
+		for (double i = startT; i <= stopT; i = i + 0.5) {
+			if (i % 1 == 0) {
+				xa.addLabels(Double.toString(i));
+			} else {
+				xa.addLabels("");
+			}
+		}
+		cm.setXAxis(xa);
+		// Create the Y axis
+		YAxis ya = new YAxis();
+		// Add the labels to the Y axis
+		ya.setRange(0, 300, 50);
+		cm.setYAxis(ya);
+		
+		Double[] dataN = new Double[(int)stopT-startT];
+		Double[] dataNM = new Double[(int)stopT-startT];
+		Double[] dataS = new Double[(int)stopT-startT];
+		Double[] dataSM = new Double[(int)stopT-startT];
+		for (int n = 0 ; n <= (stopT-startT)*2; n++) {
+			dataN[n]=Math.floor(Math.abs(150
+					* Math.sin(n * Math.PI / 24 - Math.PI * 4 / 24)
+					+ Random.nextDouble() * 80));
+			dataNM[n]=dataN[n]*3/4;
+			dataS[n]=Math.floor(Math.abs(150
+					* Math.sin(n * Math.PI / 24 - Math.PI * 4 / 24)
+					+ Random.nextDouble() * 80));
+			dataSM[n]=dataS[n]*3/4;
+		}
+		
+		
+		// Creation of the bar chart NORTH
+		FilledBarChart bchartN = new FilledBarChart();
 		// Layout preferences
-		pie.setAlpha(0.5f);
-		pie.setNoLabels(true);
-		pie.setTooltip("#label# #val#<br>#percent#");
-		pie.setColours("#ff0000", "#00aa00", "#0000ff", "#ff9900", "#ff00ff");
-		// Data
-		pie.addSlices(new PieChart.Slice(5, "Mich/Lad", ""));
-		pie.addSlices(new PieChart.Slice(6.5, "Mich/Ost", ""));
-		pie.addSlices(new PieChart.Slice(2.7, "Mich/Hyd", ""));
-		pie.addSlices(new PieChart.Slice(0.5, "Mich/Ren", ""));
-		pie.addSlices(new PieChart.Slice(1.2, "Mich/Tor", ""));
-		pie.addChartListener(listener);
+		bchartN.setTooltip("#val#");
+		bchartN.setText("North");
+		bchartN.setColour("#00aa00");
+		bchartN.setAnimateOnShow(true);
+		bchartN.addValues(dataN);
+		
+		LineChart lchartN = new LineChart();
+		// Layout preferences
+		lchartN.setTooltip("#val#");
+		lchartN.setText("North Mean");
+		lchartN.setColour("#006600");
+		lchartN.setAnimateOnShow(true);
+		lchartN.addValues(dataNM);
+		
+		if ((north == true || bothDir == true) && route != null) {
+			cm.addChartConfig(bchartN);
+			cm.addChartConfig(lchartN);
+		}
+		
+		// Creation of the bar chart SOUTH
+		FilledBarChart bchartS = new FilledBarChart();
+		// Layout preferences
+		bchartS.setTooltip("#val#");
+		bchartS.setText("South");
+		bchartS.setColour("#ff0000");
+		bchartS.setAnimateOnShow(true);
+		bchartS.addValues(dataS);
+		
+		LineChart lchartS = new LineChart();
+		// Layout preferences
+		lchartS.setTooltip("#val#");
+		lchartS.setText("South Mean");
+		lchartS.setColour("#cc0000");
+		lchartS.setAnimateOnShow(true);
+		lchartS.addValues(dataSM);
+		
+		if ((north == false || bothDir == true) && route != null) {
+			cm.addChartConfig(bchartS);
+			cm.addChartConfig(lchartS);
+		}
+		
+		// Creates the line for max sugested load
+		LineChart lchart = new LineChart();
+		lchart.setColour("#0099FF");
+		lchart.setText("Suggested Max Load");
+		for (double n = startT; n <= stopT; n=n+.5) {
+			lchart.addValues(220);
+		}
+		cm.addChartConfig(lchart);
 
-		cm.addChartConfig(pie);
 		// Returns the Chart Model
 		return cm;
 
@@ -828,67 +1023,24 @@ public class GwtPortalContainer extends LayoutContainer {
 		@Override
 		public void chartClick(ChartEvent ce) {
 			Info.display("Chart Clicked", "You selected {0}.",
-					"" + ce.getValue());
+					""+ce.getValue());
 		}
 	};
-
+	
 	// -- SIMULATION --
 	private void callSimulationServices() {
 		Info.display("Calling simulation services", "");
 	}
 
 	// -- DATA --
-	private ContentPanel createGrid() {
-		final EditorGrid<ModelData> grid;
-		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
-
-		ColumnConfig column = new ColumnConfig();
-		column.setId("name");
-		column.setHeaderHtml("Common Name");
-		column.setWidth(220);
-		TextField<String> text = new TextField<String>();
-		text.setAllowBlank(false);
-		column.setEditor(new CellEditor(text));
-		configs.add(column);
-
-		ColumnConfig column2 = new ColumnConfig();
-		column2.setId("name2");
-		column2.setHeaderHtml("Common Name 2");
-		column2.setWidth(220);
-		TextField<String> text2 = new TextField<String>();
-		text2.setAllowBlank(false);
-		column2.setEditor(new CellEditor(text2));
-		configs.add(column2);
-
-		ModelData mData;
-		mData = new BaseModel();
-		mData.set("StartPattern", new int[] { -1, 0, 0, 0 });
-		mData.set("EndPattern", new int[] { -1, 0, 24, 0 });
-		mData.set("Cls", "");
-
-		final ListStore<ModelData> store = new ListStore<ModelData>();
-
-		ColumnModel cm = new ColumnModel(configs);
-
-		panel = new ContentPanel();
-		panel.setHeadingHtml("Auto Height Edit Plants");
-		panel.setFrame(true);
-		panel.setWidth(600);
-		panel.setLayout(new FitLayout());
-
-		grid = new EditorGrid<ModelData>(store, cm);
-		grid.setAutoExpandColumn("name");
-		grid.setBorders(true);
-		panel.add(grid);
-
-		return panel;
-	}
+	// FIXME create grid file and populate grid
 
 	// Panel configuration method for all center portlets
 	private void configPanel(final ContentPanel panel) {
 		// Layout configuration
 		panel.setCollapsible(true);
 		panel.setAnimCollapse(false);
+		panel.setScrollMode(Scroll.AUTOY);
 		// panel.getHeader().addTool(new ToolButton("x-tool-gear")); //Deleted
 		// the gear button
 		// Close button
