@@ -48,7 +48,6 @@ CREATE EXTERNAL TABLE rcp_detail (
  )
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
---LOCATION 's3n://dssg-cta-data/rcptest/input/train/detail';
 LOCATION '${INPUT}/detail';
 
 
@@ -217,47 +216,45 @@ CREATE EXTERNAL TABLE rcp_master (
  ) 
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
 LINES TERMINATED BY '\n' 
---LOCATION 's3n://dssg-cta-data/rcptest/input/train/master';
 LOCATION '${INPUT}/master';
 
---CREATE EXTERNAL TABLE rcp_join2_apc (
--- serial_number STRING,
--- survey_date STRING,
--- pattern_id STRING,
--- time_actual_arrive STRING,
--- time_actual_depart STRING,
--- passengers_on STRING,
--- passengers_in STRING,
--- passengers_off STRING
--- )
---PARTITIONED BY(taroute STRING, direction_name STRING, stop_id STRING)
---ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
---LINES TERMINATED BY '\n'
---STORED AS TEXTFILE
-----LOCATION 's3n://dssg-cta-data/rcp_join2/train/apc';
---LOCATION '${OUTPUT}/apc';
---
---INSERT OVERWRITE TABLE rcp_join2_apc
---PARTITION(taroute, direction_name, stop_id)
---SELECT
--- master.serial_number,
--- master.survey_date,
--- master.pattern_id,
--- substr(detail.time_actual_arrive,12),
--- substr(detail.time_actual_depart,12),
--- detail.passengers_on,
--- detail.passengers_in,
--- detail.passengers_off,
--- substr(master.route_name,8),
--- master.direction_name,
--- detail.stop_id
---FROM
---rcp_master master
---JOIN
---rcp_detail detail
---ON
---(master.serial_number = detail.serial_number)
---WHERE detail.timepoint = "0";
+CREATE EXTERNAL TABLE rcp_join2_apc (
+ serial_number STRING,
+ survey_date STRING,
+ pattern_id STRING,
+ time_actual_arrive STRING,
+ time_actual_depart STRING,
+ passengers_on STRING,
+ passengers_in STRING,
+ passengers_off STRING
+ )
+PARTITIONED BY(taroute STRING, direction_name STRING, stop_id STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+LOCATION '${OUTPUT}/apc';
+
+INSERT OVERWRITE TABLE rcp_join2_apc
+PARTITION(taroute, direction_name, stop_id)
+SELECT
+ master.serial_number,
+ master.survey_date,
+ master.pattern_id,
+ substr(detail.time_actual_arrive,12),
+ substr(detail.time_actual_depart,12),
+ detail.passengers_on,
+ detail.passengers_in,
+ detail.passengers_off,
+ substr(master.route_name,8),
+ master.direction_name,
+ detail.stop_id
+FROM
+rcp_master master
+JOIN
+rcp_detail detail
+ON
+(master.serial_number = detail.serial_number)
+WHERE detail.timepoint = "0";
 
 CREATE EXTERNAL TABLE rcp_join2_avl (
  serial_number STRING,
