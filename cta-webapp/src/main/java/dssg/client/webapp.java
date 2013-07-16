@@ -17,6 +17,8 @@ public class webapp implements EntryPoint {
    */
   private final SimulationServiceAsync simulationService = GWT
       .create(SimulationService.class);
+  private final S3ComunicationServiceAsync s3ComunicationService = GWT
+	      .create(S3ComunicationService.class);
 
   /**
    * This is the entry point method.
@@ -25,7 +27,7 @@ public class webapp implements EntryPoint {
 	RootPanel rootPanel = RootPanel.get();
     rootPanel.setStyleName("requires-min-width");
     rootPanel.setStyleName("root");
-    rootPanel.add(new GwtPortalContainer());
+    rootPanel.add(new GwtPortalContainer(simulationService, s3ComunicationService));
     
     DOM.removeChild(RootPanel.getBodyElement(),
         DOM.getElementById("loading"));
