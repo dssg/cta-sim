@@ -71,6 +71,7 @@ import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Image;
 import com.extjs.gxt.ui.client.widget.Slider;
@@ -89,6 +90,7 @@ public class GwtPortalContainer extends Viewport {
 	private Command updateChart3Cmd;
 	private Command updateSliderCmd;
 	private Command updateSlider2Cmd;
+	private Command createCenterPanelCmd;
 	private Integer time = 0;
 	private Integer route = null;
 	private Boolean bothDir = true;
@@ -97,9 +99,13 @@ public class GwtPortalContainer extends Viewport {
 	private Integer stopT = 23;
 	private Integer numStops = 80;
 	private Integer stop = 0;
-
+	private S3ComunicationServiceAsync s3ComunicationService;
 	// Main portal container (main window) is a portal container which is
 	// divided into North, South, East and West regions.
+
+	public GwtPortalContainer(SimulationServiceAsync simulationService, S3ComunicationServiceAsync s3ComunicationService) {
+		this.s3ComunicationService = s3ComunicationService;
+	}
 
 	// Elements to add upon rendering
 	@Override
@@ -254,7 +260,7 @@ public class GwtPortalContainer extends Viewport {
 		Portlet portlet;
 
 		// Portal columns created for portlet items (sub-regions)
-		Portal portal = new Portal(2);
+		final Portal portal = new Portal(2);
 		// Layout preferences
 		portal.setBorders(true);
 		portal.setStyleAttribute("backgroundColor", "white");
@@ -263,14 +269,13 @@ public class GwtPortalContainer extends Viewport {
 		portal.setScrollMode(Scroll.AUTOY);
 
 		// Box Layout for the charts and sliders
-		VBoxLayout portletLayout = new VBoxLayout();
+		final VBoxLayout portletLayout = new VBoxLayout();
 		portletLayout.setPadding(new Padding(15));
 		portletLayout.setVBoxLayoutAlign(VBoxLayoutAlign.STRETCH);
 
-		// Portlet for the Crowding charts
 		final Portlet centerPortlet = new Portlet();
 		// Layout preferences
-		centerPortlet.setHeadingHtml("Crowding");
+		centerPortlet.setHeadingHtml("Load");
 		configPanel(centerPortlet);
 		centerPortlet.setHeight(750);
 		centerPortlet.setLayout(portletLayout);
@@ -283,35 +288,36 @@ public class GwtPortalContainer extends Viewport {
 		centerPortlet.add(getCrowdingChart2());
 		centerPortlet.add(getHourControls2(), vBoxData2);
 
-		portal.add(centerPortlet, 0); // Portlet added to the first column of
-										// the
-		// portal
-
-		// Portlet for the Delay Graph
-		portlet = new Portlet();
+		// Portlet for the Load @ stop, time period
+		final Portlet stopPortlet = new Portlet();
 		// Layout preferences
-		portlet.setHeadingHtml("Load @ stop 24 hrs.");
-		configPanel(portlet);
-		portlet.setHeight(370);
-		r = new Resizable(portlet);
+		stopPortlet.setHeadingHtml("Load @ stop.");
+		configPanel(stopPortlet);
+		stopPortlet.setHeight(370);
+		r = new Resizable(stopPortlet);
 		r.setDynamic(true);
-		portlet.add(getCrowdingChart3());
-		portal.add(portlet, 1);
+		stopPortlet.add(getCrowdingChart3());
 
 		// Portlet for the Information Grid
-		portlet = new Portlet();
-		portlet.setHeadingHtml("Stat. Information");
-		configPanel(portlet);
-		portlet.setHeight(370);
-		portlet.setLayout(new FitLayout());
-		/* FIXME create some grid data to populate this. */
-		portlet.add(createGrid());
-		r = new Resizable(portlet);
+		final Portlet gridPortlet = new Portlet();
+		gridPortlet.setHeadingHtml("Stat. Information");
+
+		configPanel(gridPortlet);
+		gridPortlet.setHeight(370);
+		gridPortlet.setLayout(new FitLayout());
+		gridPortlet.add(createGrid());
+		r = new Resizable(gridPortlet);
 		r.setDynamic(true);
 
-		portal.add(portlet, 1); // Portlet added to the second column of the
-								// portal
-
+		// Portlet for the Crowding charts
+		createCenterPanelCmd = new Command() {
+			@Override
+			public void execute() {
+				portal.add(centerPortlet, 0);
+				portal.add(stopPortlet, 1);
+				portal.add(gridPortlet, 1);
+			}
+		};
 		// Portal added to the center region
 		center.add(portal);
 		return center;
@@ -383,14 +389,16 @@ public class GwtPortalContainer extends Viewport {
 				route = routeCmb.getValue().getId();
 				north = northB.getValue();
 				bothDir = bothB.getValue();
-				MessageBox.alert(routeCmb.getValue().getId().toString(),"",null);
-				
-				if (routeCmb.getValue()==null || timeS.getValue() == null || timeF.getValue() == null) {
-					MessageBox.alert("Carefull", "Null values not allowed", null);
-				} else if(timeS.getDateValue().getHours()>timeF.getDateValue().getHours()){
-					MessageBox.alert("Carefull", "Time window is incorrect.", null);
-				}
-				else {
+
+				if (routeCmb.getValue() == null || timeS.getValue() == null
+						|| timeF.getValue() == null) {
+					MessageBox.alert("Carefull", "Null values not allowed",
+							null);
+				} else if (timeS.getDateValue().getHours() > timeF
+						.getDateValue().getHours()) {
+					MessageBox.alert("Carefull", "Time window is incorrect.",
+							null);
+				} else {
 					callSimulationServices();
 					callLoading();
 					startT = timeS.getDateValue().getHours();
@@ -400,6 +408,7 @@ public class GwtPortalContainer extends Viewport {
 					updateChart3Cmd.execute();
 					updateSliderCmd.execute();
 					updateSlider2Cmd.execute();
+					createCenterPanelCmd.execute();
 				}
 			}
 		});
@@ -461,24 +470,23 @@ public class GwtPortalContainer extends Viewport {
 		simple.setHideLabels(true);
 
 		// Upload Fields
-		FileUploadField file = new FileUploadField();
-		file.setAllowBlank(true);
-		file.setEmptyText("GTSF file");
-		file.setData("text", "Choose GTSF file");
-		simple.add(file);
-		file = new FileUploadField();
-		file.setAllowBlank(true);
-		file.setEmptyText("Schedule file");
-		file.setData("text", "Choose Schedule file");
-		simple.add(file);
+		final FileUploadField gtsfFile = new FileUploadField();
+		gtsfFile.setAllowBlank(true);
+		gtsfFile.setEmptyText("GTSF file");
+		gtsfFile.setData("text", "Choose GTSF file");
+		simple.add(gtsfFile);
+		final FileUploadField schedFile = new FileUploadField();
+		schedFile.setAllowBlank(true);
+		schedFile.setEmptyText("Schedule file");
+		schedFile.setData("text", "Choose Schedule file");
+		simple.add(schedFile);
 
 		// Submit Button
 		Button submitBtn = new Button("Submit");
 		submitBtn.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				// FIXME add code to upload a file to S3
-			}
+				callS3(gtsfFile.getValue());			}
 		});
 		simple.add(submitBtn);
 
@@ -492,26 +500,6 @@ public class GwtPortalContainer extends Viewport {
 		});
 		simple.add(resetBtn);
 		simple.setWidth(235);
-
-		vp.add(simple);
-	}
-
-	// Form to display statistical information
-	private void createFormEast() {
-		// Initial panel
-		final FormPanel simple = new FormPanel();
-		// Layout preferences
-		simple.setLayout(new FillLayout());
-		simple.setFrame(false);
-		simple.setHeaderVisible(false);
-
-		// Panel informations
-		simple.addText("Mean: 40");
-		simple.addText("Median: 30");
-		simple.addText("Max: 30");
-		simple.addText("Min: 30");
-		simple.addText("75%: 30");
-		simple.addText(" ");
 
 		vp.add(simple);
 	}
@@ -913,11 +901,11 @@ public class GwtPortalContainer extends Viewport {
 		ya.setRange(0, 300, 50);
 		cm.setYAxis(ya);
 
-		Double[] dataN = new Double[(int) stopT - startT];
-		Double[] dataNM = new Double[(int) stopT - startT];
-		Double[] dataS = new Double[(int) stopT - startT];
-		Double[] dataSM = new Double[(int) stopT - startT];
-		for (int n = 0; n <= (stopT - startT) * 2; n++) {
+		Double[] dataN = new Double[(int) (stopT - startT)*2];
+		Double[] dataNM = new Double[(int) (stopT - startT)*2];
+		Double[] dataS = new Double[(int) (stopT - startT)*2];
+		Double[] dataSM = new Double[(int) (stopT - startT)*2];
+		for (int n = 0; n < (stopT - startT) * 2; n++) {
 			dataN[n] = Math.floor(Math.abs(150
 					* Math.sin(n * Math.PI / 24 - Math.PI * 4 / 24)
 					+ Random.nextDouble() * 80));
@@ -1020,7 +1008,25 @@ public class GwtPortalContainer extends Viewport {
 				}
 			}
 		};
-		t.scheduleRepeating(200);
+		t.scheduleRepeating(150);
+	}
+
+	// -- AWS S3 --
+	private void callS3(final String file) {
+		this.s3ComunicationService.uploadFile(file, new AsyncCallback<Integer>() {
+			
+			@Override
+			public void onSuccess(Integer arg0) {
+				Info.display("Sucess", Integer.toString(arg0));
+				
+			}
+			
+			@Override
+			public void onFailure(Throwable arg0) {
+				Info.display("Failure", file);
+				
+			}
+		});
 	}
 
 	// Panel configuration method for all center portlets
