@@ -99,11 +99,11 @@ public class GwtPortalContainer extends Viewport {
 	private Integer stopT = 23;
 	private Integer numStops = 80;
 	private Integer stop = 0;
-	private S3ComunicationServiceAsync s3ComunicationService;
+	private S3CommunicationServiceAsync s3ComunicationService;
 	// Main portal container (main window) is a portal container which is
 	// divided into North, South, East and West regions.
 
-	public GwtPortalContainer(SimulationServiceAsync simulationService, S3ComunicationServiceAsync s3ComunicationService) {
+	public GwtPortalContainer(SimulationServiceAsync simulationService, S3CommunicationServiceAsync s3ComunicationService) {
 		this.s3ComunicationService = s3ComunicationService;
 	}
 

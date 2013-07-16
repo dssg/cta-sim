@@ -17,8 +17,8 @@ public class webapp implements EntryPoint {
    */
   private final SimulationServiceAsync simulationService = GWT
       .create(SimulationService.class);
-  private final S3ComunicationServiceAsync s3ComunicationService = GWT
-	      .create(S3ComunicationService.class);
+  private final S3CommunicationServiceAsync s3ComunicationService = GWT
+	      .create(S3CommunicationService.class);
 
   /**
    * This is the entry point method.

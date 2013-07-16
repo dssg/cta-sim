@@ -7,13 +7,23 @@
 
   <!-- Servlets -->
   <servlet>
-    <servlet-name>greetServlet</servlet-name>
+    <servlet-name>s3ComServlet</servlet-name>
+    <servlet-class>dssg.server.S3CommunicationServiceImpl</servlet-class>
+  </servlet>
+  
+   <servlet>
+    <servlet-name>simulationServlet</servlet-name>
     <servlet-class>dssg.server.SimulationServiceImpl</servlet-class>
   </servlet>
 
   <servlet-mapping>
-    <servlet-name>greetServlet</servlet-name>
-    <url-pattern>/webapp/greet</url-pattern>
+    <servlet-name>s3ComServlet</servlet-name>
+    <url-pattern>/webapp/s3Com</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>simulationServlet</servlet-name>
+    <url-pattern>/webapp/simulate</url-pattern>
   </servlet-mapping>
 
   <!-- Default page to serve -->
