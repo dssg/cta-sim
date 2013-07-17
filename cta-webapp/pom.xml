@@ -11,10 +11,10 @@
 	<name>GWT Maven Archetype</name>
 
 	<properties>
-		<!-- Convenience property to set the GWT version -->
+    <spring4gwt.version>0.0.1</spring4gwt.version>
+    <spring.version>3.0.5.RELEASE</spring.version>
 		<gwtVersion>2.5.1</gwtVersion>
 		<gxtVersion>2.3.0-gwt22</gxtVersion>
-		<!-- GWT needs at least java 1.5 -->
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -44,9 +44,14 @@
 			<id>public.onebusaway.org</id>
 			<url>http://nexus.onebusaway.org/content/groups/public/</url>
 		</repository>
+<!--     <repository> -->
+<!--       <id>Octo Technology Nexus</id> -->
+<!--       <url>http://forge.octo.com/nexus/content/groups/public</url> -->
+<!--     </repository> -->
 	</repositories>
 
 	<dependencies>
+  
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
@@ -62,7 +67,6 @@
 			<artifactId>jets3t</artifactId>
 			<version>0.9.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
@@ -139,6 +143,42 @@
 			<artifactId>onebusaway-transit-data-federation</artifactId>
 			<version>1.1.10</version>
 		</dependency>
+    <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+        <version>2.5</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>3.0.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-web</artifactId>
+        <version>3.0.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-beans</artifactId>
+        <version>3.0.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>3.0.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-aspects</artifactId>
+        <version>3.0.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.aspectj</groupId>
+        <artifactId>aspectjrt</artifactId>
+        <version>1.6.10</version>
+    </dependency>
 	</dependencies>
 
 	<build>
@@ -146,11 +186,35 @@
 		<outputDirectory>${webappDirectory}/WEB-INF/classes</outputDirectory>
 
 		<plugins>
+
+      <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>aspectj-maven-plugin</artifactId>
+          <configuration>
+              <source>1.6</source>
+              <target>1.6</target>
+              <aspectLibraries>
+                  <aspectLibrary>
+                      <groupId>org.springframework</groupId>
+                      <artifactId>spring-aspects</artifactId>
+                  </aspectLibrary>
+              </aspectLibraries>
+          </configuration>
+          <executions>
+              <execution>
+                  <goals>
+                      <goal>compile</goal>
+                  </goals>
+              </execution>
+          </executions>
+      </plugin>
+
 			<plugin>
 				<groupId>org.mortbay.jetty</groupId>
 				<artifactId>jetty-maven-plugin</artifactId>
 				<version>8.1.10.v20130312</version>
 			</plugin>
+
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
@@ -233,6 +297,22 @@
 					<configuration>
 						<lifecycleMappingMetadata>
 							<pluginExecutions>
+
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                      <groupId>org.codehaus.mojo</groupId>
+                      <artifactId>aspectj-maven-plugin</artifactId>
+                      <versionRange>[1.0,)</versionRange>
+                      <goals>
+                          <goal>test-compile</goal>
+                          <goal>compile</goal>
+                      </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                      <execute />
+                  </action>
+                </pluginExecution>
+              
 								<pluginExecution>
 									<pluginExecutionFilter>
 										<groupId>org.codehaus.mojo</groupId>

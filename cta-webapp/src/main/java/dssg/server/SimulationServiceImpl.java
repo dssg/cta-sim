@@ -12,6 +12,9 @@ import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.serialization.GtfsReader;
+import org.onebusaway.transit_data_federation.services.blocks.BlockCalendarService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 
 import dssg.client.SimulationService;
 import dssg.shared.FieldVerifier;
@@ -21,9 +24,13 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 /**
  * The server side implementation of the RPC service.
  */
+@Configurable
 @SuppressWarnings("serial")
 public class SimulationServiceImpl extends RemoteServiceServlet
     implements SimulationService {
+  
+  @Autowired
+  private BlockCalendarService bcs;
 
   public String submitSimulation(String route, Date date,
     long startTime, long endTime) throws IllegalArgumentException {

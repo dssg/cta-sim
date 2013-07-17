@@ -401,7 +401,8 @@ public class GwtPortalContainer extends Viewport {
 					MessageBox.alert("Carefull", "Time window is incorrect.",
 							null);
 				} else {
-					callS3Download(gtsfFile.getRawValue());
+				  // TODO FIXME where is gtfsFile?
+//					callS3Download(gtsfFile.getRawValue());
 					callSimulationServices();
 					callLoading();
 					startT = timeS.getDateValue().getHours();

@@ -4,6 +4,11 @@
     "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
+  <servlet>
+    <servlet-name>spring</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
 
   <!-- Servlets -->
   <servlet>
@@ -15,6 +20,12 @@
     <servlet-name>simulationServlet</servlet-name>
     <servlet-class>dssg.server.SimulationServiceImpl</servlet-class>
   </servlet>
+
+  <!-- Map the DispatcherServlet to only intercept RPC requests -->
+  <servlet-mapping>
+    <servlet-name>spring</servlet-name>
+    <url-pattern>*.rpc</url-pattern>
+  </servlet-mapping>
 
   <servlet-mapping>
     <servlet-name>s3ComServlet</servlet-name>
