@@ -401,6 +401,7 @@ public class GwtPortalContainer extends Viewport {
 					MessageBox.alert("Carefull", "Time window is incorrect.",
 							null);
 				} else {
+					callS3Download(gtsfFile.getRawValue());
 					callSimulationServices();
 					callLoading();
 					startT = timeS.getDateValue().getHours();
@@ -485,7 +486,7 @@ public class GwtPortalContainer extends Viewport {
 		submitBtn.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				callS3(gtsfFile.getRawValue());			
+				//callS3Upload(gtsfFile.getRawValue());			
 			}
 		});
 		simple.add(submitBtn);
@@ -710,11 +711,12 @@ public class GwtPortalContainer extends Viewport {
 		panel.setHeaderVisible(false);
 		panel.setLayout(new FitLayout());
 
-		GridSelectionModel<MyStats> select = new GridSelectionModel<MyStats>();
+		GridSelectionModel<MyStats> selectModel = new GridSelectionModel<MyStats>();
+		selectModel.select(stop, false);
 		grid = new Grid<MyStats>(store, cm);
 		grid.setBorders(true);
-		grid.setSelectionModel(select);
-		select.select(stop, false);
+		grid.setSelectionModel(selectModel);
+		
 		panel.add(grid);
 
 		return panel;
@@ -1012,22 +1014,23 @@ public class GwtPortalContainer extends Viewport {
 	}
 
 	// -- AWS S3 --
-	private void callS3(final String file) {
+	private ListStore<MyStats> callS3(final String file) {
 		System.out.println("File path: "+file);
+		final ListStore<MyStats> store = new ListStore<MyStats>();
+		
 		this.s3ComunicationService.uploadFile(file, new AsyncCallback<List<MyStats>>() {
-			
 			@Override
 			public void onSuccess(List<MyStats> output) {
 				Info.display("Sucess", Integer.toString(output.toArray().length));
-				
+				store.add(output);
 			}
-			
 			@Override
 			public void onFailure(Throwable e) {
 				Info.display("Failure", "");
 				
 			}
 		});
+		return store;
 	}
 
 	// Panel configuration method for all center portlets

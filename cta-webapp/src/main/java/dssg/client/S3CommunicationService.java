@@ -9,5 +9,6 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface S3CommunicationService extends RemoteService{
 		
 	public List<MyStats> uploadFile(String filename);
+	public List<MyStats> downloadParameters();
 
 }
