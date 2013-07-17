@@ -2,13 +2,14 @@ package dssg.client;
 
 import com.extjs.gxt.ui.client.data.BaseModel;
 
-public class MyStats extends BaseModel {
+public class MyData extends BaseModel {
 	
-	public MyStats() {
+	public MyData() {
 		
 	}
 	
-	public MyStats(String stop, Double min, Double mean, Double th, Double max) {
+	// Temporary usage for stats grid in GwtPortalContainer
+	public MyData(String stop, Double min, Double mean, Double th, Double max) {
 		set("stop",stop);
 		set("min",min);
 		set("mean",mean);
@@ -40,10 +41,18 @@ public class MyStats extends BaseModel {
 	    return open.doubleValue();
 	}
 	
+	//
+	
 	// Usage for hour values for charts
-	public MyStats(Double hour, Double value) {
+	public MyData(Integer route, Double hour, Double value) {
+		set("route", route);
 		set("hour",hour);
 		set("value",value);
+	}
+	
+	public int getRoute() {
+		Integer open = (Integer) get("route");
+		return open.intValue();
 	}
 	
 	public double getHour() {
