@@ -401,8 +401,8 @@ public class GwtPortalContainer extends Viewport {
 					MessageBox.alert("Carefull", "Time window is incorrect.",
 							null);
 				} else {
-					callS3Download(gtsfFile.getRawValue());
-					callSimulationServices();
+					callS3Download();
+					//callSimulationServices();
 					callLoading();
 					startT = timeS.getDateValue().getHours();
 					stopT = timeF.getDateValue().getHours();
@@ -486,7 +486,7 @@ public class GwtPortalContainer extends Viewport {
 		submitBtn.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				//callS3Upload(gtsfFile.getRawValue());			
+				callS3Upload(gtsfFile.getRawValue());			
 			}
 		});
 		simple.add(submitBtn);
@@ -652,7 +652,7 @@ public class GwtPortalContainer extends Viewport {
 
 	// Stat. Information Grid
 	private ContentPanel createGrid() {
-		final Grid<MyStats> grid;
+		final Grid<MyData> grid;
 		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 
 		ColumnConfig stopCol = new ColumnConfig();
@@ -700,7 +700,7 @@ public class GwtPortalContainer extends Viewport {
 		maxCol.setEditor(new CellEditor(text));
 		configs.add(maxCol);
 
-		final ListStore<MyStats> store = new ListStore<MyStats>();
+		final ListStore<MyData> store = new ListStore<MyData>();
 		store.add(Data.getStats());
 
 		ColumnModel cm = new ColumnModel(configs);
@@ -711,9 +711,9 @@ public class GwtPortalContainer extends Viewport {
 		panel.setHeaderVisible(false);
 		panel.setLayout(new FitLayout());
 
-		GridSelectionModel<MyStats> selectModel = new GridSelectionModel<MyStats>();
+		GridSelectionModel<MyData> selectModel = new GridSelectionModel<MyData>();
 		selectModel.select(stop, false);
-		grid = new Grid<MyStats>(store, cm);
+		grid = new Grid<MyData>(store, cm);
 		grid.setBorders(true);
 		grid.setSelectionModel(selectModel);
 		
@@ -739,7 +739,7 @@ public class GwtPortalContainer extends Viewport {
 		// set the labels for the axis
 		for (double i = startT; i <= stopT; i = i + 0.5) {
 			if (i % 1 == 0) {
-				xa.addLabels(Double.toString(i));
+				xa.addLabels(Integer.toString((int)i));
 			} else {
 				xa.addLabels("");
 			}
@@ -752,22 +752,19 @@ public class GwtPortalContainer extends Viewport {
 		ya.setRange(0, 300, 50);
 		cm.setYAxis(ya);
 
-		// Create a Area Chart object NORTH
+		// Create a Line Chart object NORTH
 		LineChart lchart = new LineChart();
 		lchart.setAnimateOnShow(true);
 		lchart.setColour("#00aa00");
 		lchart.setTooltip("#val#");
 		lchart.setText("North");
-		for (double n = startT; n <= stopT; n = n + .5) {
-			lchart.addValues(Math.floor(Math.abs(150
-					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
-					+ Random.nextDouble() * 80)));
-		}
+		lchart.addValues(Data.getLoadData(route, startT, stopT));
+		
 		if ((north == true || bothDir == true) && route != null) {
 			cm.addChartConfig(lchart);
 		}
 
-		// Create a Area Chart object SOUTH
+		// Create a Line Chart object SOUTH
 		lchart = new LineChart();
 		lchart.setAnimateOnShow(true);
 		lchart.setColour("#ff0000");
@@ -891,7 +888,7 @@ public class GwtPortalContainer extends Viewport {
 		// set the labels for the axis
 		for (double i = startT; i <= stopT; i = i + 0.5) {
 			if (i % 1 == 0) {
-				xa.addLabels(Double.toString(i));
+				xa.addLabels(Integer.toString((int)i));
 			} else {
 				xa.addLabels("");
 			}
@@ -1014,24 +1011,32 @@ public class GwtPortalContainer extends Viewport {
 	}
 
 	// -- AWS S3 --
-	private ListStore<MyStats> callS3(final String file) {
-		System.out.println("File path: "+file);
-		final ListStore<MyStats> store = new ListStore<MyStats>();
+	private void callS3Download() {
+		List<MyParameters> data = new ArrayList<MyParameters>();
+		data = Data.getParameters(s3ComunicationService);
+		ListStore<MyParameters> store = new ListStore<MyParameters>();
+		store.add(data);
 		
-		this.s3ComunicationService.uploadFile(file, new AsyncCallback<List<MyStats>>() {
-			@Override
-			public void onSuccess(List<MyStats> output) {
-				Info.display("Sucess", Integer.toString(output.toArray().length));
-				store.add(output);
-			}
-			@Override
-			public void onFailure(Throwable e) {
-				Info.display("Failure", "");
-				
-			}
-		});
-		return store;
+		//return store;
 	}
+	
+	// -- AWS S3 File Upload--
+	// FIXME get this method to work
+		private void callS3Upload(final String file) {
+			System.out.println("File path: "+file);
+			
+			this.s3ComunicationService.uploadFile(file, new AsyncCallback<List<MyData>>() {
+				@Override
+				public void onSuccess(List<MyData> output) {
+					Info.display("Sucess", "");
+				}
+				@Override
+				public void onFailure(Throwable e) {
+					Info.display("Failure", "");
+					
+				}
+			});
+		}
 
 	// Panel configuration method for all center portlets
 	private void configPanel(final ContentPanel panel) {
