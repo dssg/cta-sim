@@ -5,6 +5,7 @@ package dssg.client;
 
 // Imported libraries
 import java.util.ArrayList;
+import java.util.List;
 
 import com.extjs.gxt.charts.client.Chart;
 import com.extjs.gxt.charts.client.event.ChartEvent;
@@ -73,6 +74,7 @@ import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.Image;
 import com.extjs.gxt.ui.client.widget.Slider;
 
@@ -471,14 +473,11 @@ public class GwtPortalContainer extends Viewport {
 
 		// Upload Fields
 		final FileUploadField gtsfFile = new FileUploadField();
-		gtsfFile.setAllowBlank(true);
-		gtsfFile.setEmptyText("GTSF file");
-		gtsfFile.setData("text", "Choose GTSF file");
+		gtsfFile.setName("GTSF");
 		simple.add(gtsfFile);
 		final FileUploadField schedFile = new FileUploadField();
 		schedFile.setAllowBlank(true);
 		schedFile.setEmptyText("Schedule file");
-		schedFile.setData("text", "Choose Schedule file");
 		simple.add(schedFile);
 
 		// Submit Button
@@ -486,7 +485,8 @@ public class GwtPortalContainer extends Viewport {
 		submitBtn.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				callS3(gtsfFile.getValue());			}
+				callS3(gtsfFile.getRawValue());			
+			}
 		});
 		simple.add(submitBtn);
 
@@ -1013,17 +1013,18 @@ public class GwtPortalContainer extends Viewport {
 
 	// -- AWS S3 --
 	private void callS3(final String file) {
-		this.s3ComunicationService.uploadFile(file, new AsyncCallback<Integer>() {
+		System.out.println("File path: "+file);
+		this.s3ComunicationService.uploadFile(file, new AsyncCallback<List<MyStats>>() {
 			
 			@Override
-			public void onSuccess(Integer arg0) {
-				Info.display("Sucess", Integer.toString(arg0));
+			public void onSuccess(List<MyStats> output) {
+				Info.display("Sucess", Integer.toString(output.toArray().length));
 				
 			}
 			
 			@Override
-			public void onFailure(Throwable arg0) {
-				Info.display("Failure", file);
+			public void onFailure(Throwable e) {
+				Info.display("Failure", "");
 				
 			}
 		});
