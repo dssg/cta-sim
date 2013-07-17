@@ -40,4 +40,19 @@ public class MyStats extends BaseModel {
 	    return open.doubleValue();
 	}
 	
+	// Usage for hour values for charts
+	public MyStats(Double hour, Double value) {
+		set("hour",hour);
+		set("value",value);
+	}
+	
+	public double getHour() {
+		Double open = (Double) get("hour");
+		return open.doubleValue();
+	}
+	
+	public double getValue() {
+		Double open = (Double) get("value");
+		return open.doubleValue();
+	}
 }
