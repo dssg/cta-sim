@@ -172,11 +172,17 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-aspects</artifactId>
         <version>${spring.version}</version>
+        <scope>compile</scope>
     </dependency>
     <dependency>
         <groupId>org.aspectj</groupId>
         <artifactId>aspectjrt</artifactId>
         <version>1.6.10</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>14.0.1</version>
     </dependency>
 	</dependencies>
 
@@ -189,22 +195,58 @@
       <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>aspectj-maven-plugin</artifactId>
-          <configuration>
-              <source>1.6</source>
-              <target>1.6</target>
-              <aspectLibraries>
-                  <aspectLibrary>
-                      <groupId>org.springframework</groupId>
-                      <artifactId>spring-aspects</artifactId>
-                  </aspectLibrary>
-              </aspectLibraries>
-          </configuration>
+<!--           <configuration> -->
+<!--               <source>1.6</source> -->
+<!--               <target>1.6</target> -->
+<!--               <aspectLibraries> -->
+<!--                   <aspectLibrary> -->
+<!--                       <groupId>org.springframework</groupId> -->
+<!--                       <artifactId>spring-aspects</artifactId> -->
+<!--                   </aspectLibrary> -->
+<!--               </aspectLibraries> -->
+<!--           </configuration> -->
           <executions>
-              <execution>
-                  <goals>
-                      <goal>compile</goal>
-                  </goals>
-              </execution>
+            <execution>
+                <id>compile</id>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <verbose>false</verbose>
+                    <outxml>true</outxml>
+                    <aspectLibraries>
+                        <aspectLibrary>
+                            <groupId>org.springframework</groupId>
+                            <artifactId>spring-aspects</artifactId>
+                        </aspectLibrary>
+                    </aspectLibraries>
+                </configuration>
+                <goals>
+                    <goal>compile</goal>
+                </goals>
+            </execution>
+            <execution>
+                <id>test-compile</id>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <verbose>false</verbose>
+                    <aspectLibraries>
+                        <aspectLibrary>
+                            <groupId>org.springframework</groupId>
+                            <artifactId>spring-aspects</artifactId>
+                        </aspectLibrary>
+                    </aspectLibraries>
+                </configuration>
+                <goals>
+                    <goal>test-compile</goal>
+                </goals>
+            </execution>
+<!--               <execution> -->
+<!--                   <goals> -->
+<!--                       <goal>compile</goal> -->
+<!--                       <goal>test-compile</goal> -->
+<!--                   </goals> -->
+<!--               </execution> -->
           </executions>
       </plugin>
 
@@ -280,6 +322,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
+          <compilerVersion>1.6</compilerVersion>
+          <fork>true</fork>
 					<source>1.6</source>
 					<target>1.6</target>
 				</configuration>

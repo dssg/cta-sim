@@ -7,18 +7,28 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.Channels;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.serialization.GtfsReader;
 import org.onebusaway.transit_data_federation.services.blocks.BlockCalendarService;
+import org.onebusaway.transit_data_federation.services.blocks.BlockIndexService;
+import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
+import org.onebusaway.transit_data_federation.services.realtime.BlockLocationService;
+import org.onebusaway.transit_data_federation.services.transit_graph.AgencyEntry;
+import org.onebusaway.transit_data_federation.services.transit_graph.TransitGraphDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
 import dssg.client.SimulationService;
 import dssg.shared.FieldVerifier;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
@@ -30,10 +40,25 @@ public class SimulationServiceImpl extends RemoteServiceServlet
     implements SimulationService {
   
   @Autowired
-  private BlockCalendarService bcs;
+  public BlockIndexService bis;
+  
+  @Autowired
+  public BlockLocationService bls;
+
+  @Autowired
+  public BlockCalendarService bcs;
+
+  @Autowired
+  public TransitGraphDao tgd;
 
   public String submitSimulation(String route, Date date,
     long startTime, long endTime) throws IllegalArgumentException {
+    
+    Preconditions.checkNotNull(tgd);
+    Preconditions.checkNotNull(bls);
+    Preconditions.checkNotNull(bcs);
+    Preconditions.checkNotNull(bis);
+    
     /*
      * FIXME Verify that the input is valid.
      */
@@ -49,18 +74,27 @@ public class SimulationServiceImpl extends RemoteServiceServlet
      * FIXME use the arguments to find/produce the GTFS files
      * If it fails, then no-go.
      */
-    String gtfsInputFile = "chicago-transit-authority_20111020_0226.zip";
-    String simName;
-    try {	
 
-      GtfsDaoImpl store = getGtfs(gtfsInputFile);
 
-      simName = createSimulation(store);
+    System.out.println(Iterables.transform(tgd.getAllAgencies(), new Function<AgencyEntry, String> () {
+      @Override
+      public String apply(AgencyEntry entry) {
+        return entry.getId();
+      }
+    }));
 
-    } catch (IOException e) {
-      e.printStackTrace();
-      simName = null;
-    }
+    List<BlockInstance> instances = bcs.getActiveBlocksForAgencyInTimeRange("MTA NYCT", 0, System.currentTimeMillis());
+    System.out.println(instances.toString());
+
+//    String gtfsInputFile = "chicago-transit-authority_20111020_0226.zip";
+    String simName = null;
+//    try {	
+//      GtfsDaoImpl store = getGtfs(gtfsInputFile);
+//
+//      simName = createSimulation(store);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
 
     return simName;
   }
