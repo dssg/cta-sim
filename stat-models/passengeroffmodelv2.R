@@ -138,7 +138,7 @@ model.str <- 'model
 {
 for (i in 1:totalobs) {
     logit(p[i]) <- alpha[bucket[i]]+beta[weekend[i]]+gamma[months[i]]
-    Y[i] ~ dbin(p[i], N[i])
+    Y[i] ~ dbin(p[i], buckets_in[i])
 }
 
 beta[1] <- 0
@@ -171,7 +171,7 @@ model.str <- 'model
 {
 for (i in 1:totalobs) {
     logit(p[i]) <- alpha[bucket[i]]+beta[weekend[i]]+gamma[months[i]]
-    Y[i] ~ dbin(p[i], N[i])
+    Y[i] ~ dbin(p[i], buckets_in[i])
 }
 
 beta[1] <- 0
