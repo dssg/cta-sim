@@ -42,17 +42,21 @@ stop_data$time <- actualtime(stop_data$time_actual_arrive)$time
 
 ### Bucketing By 30 Minute Intervals ###
 
-# Buckets are 30 Minute Intervals and Observations are Per Day so bucket_off[t,d] is number of passengers getting
-# off the bus in the half hour interval.
+# Buckets are 30 Minute Intervals and Observations are Per Day so bucket[t,d] is number of passengers getting on
+# the bus in the half hour interval
+
+# Currently only looks at the Time of Arrival at the Stop
+# Future Iteration will take into account if ToA is in bucket but previous ToA is outside the bucket
+# Will have to Include a Proportional Allotting to the Different Buckets
 
 interval_length = 30/60 # interval length in hours
 N = 24 # numer of hours in day
 days = levels(as.factor(stop_data$survey_date))
 
-num_buckets <- N/interval_length-1
-num_days = length(levels(as.factor(stop_data$survey_date)))
+num_buckets <- N/interval_length-1 # Number of Buckets
+num_days = length(levels(as.factor(stop_data$survey_date))) # Number of Days
 
-buckets_off = matrix(nrow = num_buckets, ncol = num_days)
+buckets = matrix(nrow = num_buckets, ncol = num_days)
 bucket_times <- seq(0,N,interval_length)
 
 print("Done With Functions and pre-bucketing")
@@ -60,32 +64,30 @@ print("Done With Functions and pre-bucketing")
 for (d in 1:num_days) {
   for(t in 1:num_buckets) {
     if(length(which(stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d])) == 0 ) {
-      buckets_off[t,d] <- 0
+      buckets[t,d] <- 0
     }
     if(length(which(stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d])) != 0) {
-      buckets_off[t,d] <- sum(stop_data$passengers_off[stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d]])	
+      buckets[t,d] <- sum(stop_data$passengers_on[stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d]])	
     }
   }
 }
 
-buckets_in = matrix(nrow = num_buckets, ncol = num_days) # Contains the Total Number of People on the Bus at Arrival
+# Removing Days that Have No Observed Counts #
 
-for (d in 1:num_days) {
-  for(t in 1:num_buckets) {
-    if(length(which(stop_data$passengers_in > 0 & stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d])) == 0 ) {
-      buckets_in[t,d] <- 0
-    }
-    if(length(which(stop_data$passengers_in > 0 & stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d])) != 0) {
-      buckets_in[t,d] <- max(sum(stop_data$passengers_in[stop_data$passengers_in > 0 & stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d]]) - sum(stop_data$passengers_on[stop_data$passengers_in > 0 & stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d]]) + sum(stop_data$passengers_off[stop_data$passengers_in > 0 & stop_data$time > bucket_times[t] & stop_data$time <= bucket_times[t+1] & stop_data$survey_date == days[d]]),0)
-    }
-  }
-}
+num_days = dim(buckets)[2]
 
-buckets_in = buckets_in[,-1]
-buckets_off = buckets_off[,-1]
-days = days[-1]
+emptyday = vector(length = num_days)  # Check to see if the Days are NonEmpty
 
-num_days = length(days)
+for(i in 1:num_days) {emptyday[i] <- as.numeric(max(buckets[,i])==0)}
+
+badobs = which(emptyday == 1 | is.na(emptyday))
+
+buckets = buckets[,-badobs]
+days = days[-badobs]
+
+print("Done with Bucketing")
+
+num_days = length(days) # Number of Days
 
 dates <- dateinfo(days)
 
@@ -100,51 +102,29 @@ levels(factor_months) <- strsplit(toString(seq(1,num_months)), ", ")[[1]]
 months <- as.numeric(factor_months) %% 12
 months[months == 0] <- 12
 
+print(levels(as.factor(months)))
+
 day_of_week <- dates$wday
-weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1
-
-empty_days = vector(length = num_days)
-
-for(i in 1:num_days){empty_days[i] <- max(buckets_in[,i])}
-
-### Vectorize the Matrix ###
-Ydata = round(buckets_off,0)
-N = round(buckets_in,0)
-buckets <- seq(1,num_buckets)
-
-badobs <-which(N[,1] == 0 & is.na(N[,1])) 
-obs <- which(N[,1] != 0)
-vector.N <- N[obs,1]
-vector.Y <- Ydata[obs,1]
-vector.bucket <- buckets[obs]  
-vector.weekend <- rep(weekend[1],length(obs))
-vector.month <- rep(months[1], length(obs))
-
-for (d in 2:num_days) {
-  obs <- which(N[,d] != 0)
-  vector.N <- c(vector.N,N[obs,d])
-  vector.Y <- c(vector.Y,Ydata[obs,d])
-  vector.bucket <- c(vector.bucket,buckets[obs])
-  vector.weekend <- c(vector.weekend,rep(weekend[d],length(obs)))
-  vector.month <- c(vector.month,rep(months[d], length(obs)))
-}
-
-totalobs <- length(vector.Y)
+weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend Indicator
 
 ### BUGS CODE ###
+
+# If Number of Months is less than 12, then we have a disconnect in dependency #
 
 if(num_months < 12) {
 model.str <- 'model
 {
-for (i in 1:totalobs) {
-    logit(p[i]) <- alpha[bucket[i]]+beta[weekend[i]]+gamma[months[i]]
-    Y[i] ~ dbin(p[i], buckets_in[i])
+for (m in 1:num_buckets) {
+  for (d in 1:num_days) {
+    log(mu[m,d]) <- alpha[m]+beta[weekend[d]]+gamma[months[d]]
+    Y[m, d] ~ dpois(mu[m, d])
+  }
 }
 
 beta[1] <- 0
 beta[2] ~ dnorm(beta0, itau2.beta)
 
-alpha[1] ~ dnorm(alpha0, itau2.alpha) 
+alpha[1] ~ dnorm(0, itau2.alpha) 
 
 for (m in 2:num_buckets) {
 alpha[m] ~ dnorm(alpha[m-1], itau2.alpha)
@@ -155,9 +135,8 @@ for (i in 2:num_months) {
 gamma[i] ~ dnorm(gamma[i-1], itau2.gamma)
 }
 
-alpha0 ~ dflat()
-beta0 ~ dflat()
-gamma0 ~ dflat()
+beta0 ~ dnorm(0,10)
+gamma0 ~ dnorm(0,10)
 
 itau2.alpha ~ dgamma(1,1)
 itau2.beta ~ dgamma(1,1)
@@ -165,19 +144,27 @@ itau2.gamma ~ dgamma(1,1)
 }'
 }
 
+
+# If the Number of Months is 12, then we need to include a loop in dependency #
+# We assume that Month 0 is Marginally N(0,\sigma), then Month i is conditionally normal N( X_{i-1}, \sigma) 
+# for months i <12, and then for the final month we have it is conditionally normal N( (X_{11} + X_{0})/2, \sigma) 
+# Which creates a loop of dependency.
+
 if (num_months == 12) {
 
 model.str <- 'model
 {
-for (i in 1:totalobs) {
-    logit(p[i]) <- alpha[bucket[i]]+beta[weekend[i]]+gamma[months[i]]
-    Y[i] ~ dbin(p[i], buckets_in[i])
+for (m in 1:num_buckets) {
+  for (d in 1:num_days) {
+    log(mu[m,d]) <- alpha[m]+beta[weekend[d]]+gamma[months[d]]
+    Y[m, d] ~ dpois(mu[m,d])
+  }
 }
 
 beta[1] <- 0
 beta[2] ~ dnorm(beta0, itau2.beta)
 
-alpha[1] ~ dnorm(alpha0, itau2.alpha)
+alpha[1] ~ dnorm(0, itau2.alpha)
 
 for (m in 2:num_buckets) {
 alpha[m] ~ dnorm(alpha[m-1], itau2.alpha)
@@ -190,9 +177,8 @@ gamma[i] ~ dnorm(gamma[i-1], itau2.gamma)
 
 gamma[num_months] ~ dnorm((gamma[num_months-1]+gamma[1])/2, itau2.gamma)
 
-alpha0 ~ dflat()
-beta0 ~ dflat()
-gamma0 ~ dflat()
+beta0 ~ dnorm(0, 10)
+gamma0 ~ dnorm(0, 10)
 
 itau2.alpha ~ dgamma(1,1)
 itau2.beta ~ dgamma(1,1)
@@ -201,28 +187,29 @@ itau2.gamma ~ dgamma(1,1)
 
 }
 
-model.file = file("binomial_model.bug")
+model.file = file("modeltest.bug")
 writeLines(model.str, model.file)
 close(model.file)
 
-data <- list("num_buckets" = num_buckets, "num_days" = num_days, "Y" = vector.Y, "weekend" = vector.weekend, "months" = vector.month, "num_months" = num_months, 
-             "buckets_in" = vector.N, "totalobs" = totalobs, bucket = vector.bucket)
+Ydata = round(buckets,0)
 
-inits <- list(list(alpha0 = rnorm(1,0,0.01), alpha = replicate(num_buckets,rnorm(1,0,0.1)), itau2.alpha=rgamma(1, 0.1, 10),
+data <- list("num_buckets" = num_buckets, "num_days" = num_days, "Y" = Ydata, "weekend" = weekend, "months" = months, "num_months" = num_months)
+
+inits <- list(list(alpha = replicate(num_buckets,rnorm(1,0,0.1)), itau2.alpha=rgamma(1, 0.1, 10),
                    beta0 = rnorm(1,0,0.01), beta = c(NA, rnorm(1,0,0.1)), itau2.beta = rgamma(1,0.1,10),
                    gamma0 = rnorm(1,0,0.01), gamma = replicate(num_months,rnorm(1,0,0.1)), itau2.gamma = rgamma(1, 0.1, 10)
 ))
+parameters <- c("alpha", "itau2.alpha", "beta0", "beta", "itau2.beta", "gamma0", "gamma", "itau2.gamma")
 
-parameters <- c("alpha0", "alpha", "itau2.alpha", "beta0", "beta", "itau2.beta", "gamma0", "gamma", "itau2.gamma")
+print("About to run Rbugs")
 
-print("About to run Jags")
-
-# load.sim <- rbugs(data, inits, parameters, "poisson_model.bug",
+# load.sim <- rbugs(data, inits, parameters, "modeltest.bug",
 #                  verbose=T,
-#                  n.chains=1, n.iter=6000,
+#                  n.chains=1, n.iter=1000,
 #                  bugsWorkingDir="/tmp", cleanBugsWorkingDir = T)
 
-load.sim <- jags(data, inits, parameters, "poisson_model.bug", n.chains=1, n.iter=2000, n.burnin=200, progress.bar="text")
+
+load.sim <- jags(data, inits, parameters, "modeltest.bug", n.chains=1, n.iter=2000, n.burnin=200, progress.bar="text")
 
 load.mcmc <- as.mcmc(load.sim)
 
@@ -269,7 +256,6 @@ for (i in 1:dim(total_df)[2]) {
 # write to file
 write.table(total_df, "totalsim_test.csv", sep=",", row.names = FALSE, col.names = TRUE)
 write.table(avg_values, "avgsim_test.csv", sep=",", row.names = FALSE, col.names = TRUE)
-
 
 
 
