@@ -33,18 +33,21 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 		S3CommunicationService {
 
 	/*
-	 *  --- Upload File to S3 Bucket --- 
+	 * --- UPLOAD File to S3 Bucket ---
 	 */
 	@Override
 	public List<MyData> uploadFile(String filename) {
 		// Read Yaml file with information for S3
-		Reader reader = null;
+		BufferedReader reader = null;
 		try {
-			reader = new FileReader("configFile.yaml");
+			String inputPath = this.getServletContext().getRealPath(
+					"/WEB-INF/classes/configFile.yaml");
+			reader = new BufferedReader(new FileReader(inputPath));
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 			System.err.println("Cannot find YAML file." + e1);
 		}
+		// Create YAML object
 		final Yaml yaml = new Yaml();
 		Map<String, Object> map = (Map<String, Object>) yaml.load(reader);
 
@@ -64,15 +67,16 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 		S3Service s3Service;
 		try {
 			// FIXME get it to work
-//			s3Service = new RestS3Service(awsCredentials);
-//			File fileData = new File(filename);
-//			S3Object fileObject = new S3Object(fileData);
-//			s3Service.putObject(s3Bucket, fileObject);
-			
+			// s3Service = new RestS3Service(awsCredentials);
+			// File fileData = new File(filename);
+			// S3Object fileObject = new S3Object(fileData);
+			// s3Service.putObject(s3Bucket, fileObject);
+
 			// Test example
 			s3Service = new RestS3Service(awsCredentials);
 			S3Bucket[] myBuckets = s3Service.listAllBuckets();
-			System.out.println("How many buckets to I have in S3? " + myBuckets.length);
+			System.out.println("How many buckets to I have in S3? "
+					+ myBuckets.length);
 
 			return stats;
 		} catch (S3ServiceException serviceExcpetion) {
@@ -84,28 +88,24 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 	}
 
 	/*
-	 * --- Download Parameters from S3 Bucket --- 
-	 * Downloads the parameters for
+	 * --- Download Parameters from S3 Bucket --- Downloads the parameters for
 	 * the simulation from a given bucket specified in a Yaml file
 	 */
 	@Override
 	public List<MyParameters> downloadParameters() {
 		// Read Yaml file with information for S3
-		Reader reader = null;
-		
-//		try {
-			InputStream inputStream = 
-			      getClass().getClassLoader().getResourceAsStream("/WEB-INF/classes/configFile.yaml");
-		   BufferedReader reader2 = new BufferedReader(new InputStreamReader(inputStream ));
-//		} catch (FileNotFoundException e1) {
-//			e1.printStackTrace();
-//			System.err.println("Cannot find YAML file." + e1);
-//		} catch (URISyntaxException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		BufferedReader reader2 = null;
+		try {
+			String inputPath = this.getServletContext().getRealPath(
+					"/WEB-INF/classes/configFile.yaml");
+			reader2 = new BufferedReader(new FileReader(inputPath));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+			System.err.println("Cannot find YAML file." + e1);
+		}
+		// Create YAML object
 		final Yaml yaml = new Yaml();
-		Map<String, Object> map = (Map<String, Object>) yaml.load(reader);
+		Map<String, Object> map = (Map<String, Object>) yaml.load(reader2);
 
 		// AWS Credential information
 		String awsAccessKey = (String) map.get("aws_access_key");
@@ -115,7 +115,7 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 
 		// S3 bucket information
 		String s3Bucket = (String) map.get("aws_s3bucket_name");
-		
+
 		// Name of the file with the parameters
 		String file = (String) map.get("parameterFile");
 
@@ -135,6 +135,7 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 			// Read the file and store the values
 			while ((data = reader1.readLine()) != null) {
 				System.out.println(data);
+				//FIXME everything works up to this point, make the rest work.
 				String[] parts = data.split(",");
 				for (int i = 0; i < parts.length; i++) {
 					parameters.add(new MyParameters(i, Double
