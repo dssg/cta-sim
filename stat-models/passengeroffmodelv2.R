@@ -1,27 +1,30 @@
-### Required Libraries
+#!/bin/Rscript
 
-library(rbugs)
+# Type this at command line: Rscript testv2.R s3://dssg-cta-data/rcp_join2/train/apc/taroute=6/direction_name=North/stop_id=17076
+# This will run the code on data inside of the folder.
+
+args <- commandArgs(TRUE)
+pathname <- toString(args[1])
+
+### Required Libraries ###
+
 library(coda)
+library(R2jags)
 
 ### Loading and Cleaning the Data ###
 
-stop_data = read.csv("/home/wdempsey/pickN21_stop831.csv", header = FALSE) # Data For A Specific Stop During A Specific Quarter
+stop_data = read.csv(pipe(paste("bash ../util/catdir-s3.sh", pathname)), header = FALSE)
 
-names(stop_data) <- c("serial_number","survey_date","route_number", "time_actual_arrive","passengers_on","passengers_in","passengers_off")
+names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off")
 
-summary(stop_data)
+# summary(stop_data)
 
-dim(stop_data)
-
-actualtime <- function(x) {
+actualtime <- function(x) { 
   ## Returns Time, Month, Year, and Day of Week from Date Column in Format "time_actual_arrive"
 
-  date_time = strptime(x, format = "%m/%d/%Y %I:%M:%S %p")
+  date_time = strptime(x, format = "%I:%M:%S %p")
   time = date_time$hour + date_time$min/60 + date_time$sec/(60*60)
-  month = date_time$mon
-  year = date_time$year
-  wday = date_time$wday
-  return(list(time = time, month = month, year = year, wday = wday))
+  return(list(time = time))
 }
 
 dateinfo <- function(x) {
@@ -51,6 +54,8 @@ num_days = length(levels(as.factor(stop_data$survey_date)))
 
 buckets_off = matrix(nrow = num_buckets, ncol = num_days)
 bucket_times <- seq(0,N,interval_length)
+
+print("Done With Functions and pre-bucketing")
 
 for (d in 1:num_days) {
   for(t in 1:num_buckets) {
@@ -107,6 +112,7 @@ Ydata = round(buckets_off,0)
 N = round(buckets_in,0)
 buckets <- seq(1,num_buckets)
 
+badobs <-which(N[,1] == 0 & is.na(N[,1])) 
 obs <- which(N[,1] != 0)
 vector.N <- N[obs,1]
 vector.Y <- Ydata[obs,1]
@@ -195,7 +201,7 @@ itau2.gamma ~ dgamma(1,1)
 
 }
 
-model.file = file("poisson_model.bug")
+model.file = file("binomial_model.bug")
 writeLines(model.str, model.file)
 close(model.file)
 
@@ -209,13 +215,61 @@ inits <- list(list(alpha0 = rnorm(1,0,0.01), alpha = replicate(num_buckets,rnorm
 
 parameters <- c("alpha0", "alpha", "itau2.alpha", "beta0", "beta", "itau2.beta", "gamma0", "gamma", "itau2.gamma")
 
-load.sim <- rbugs(data, inits, parameters, "poisson_model.bug",
-                  verbose=T,
-                  n.chains=1, n.iter=6000,
-                  bugsWorkingDir="/tmp", cleanBugsWorkingDir = T)
+print("About to run Jags")
 
-load.mcmc <- rbugs2coda(load.sim)
-summary(load.mcmc)
-effectiveSize(load.mcmc)
+# load.sim <- rbugs(data, inits, parameters, "poisson_model.bug",
+#                  verbose=T,
+#                  n.chains=1, n.iter=6000,
+#                  bugsWorkingDir="/tmp", cleanBugsWorkingDir = T)
+
+load.sim <- jags(data, inits, parameters, "poisson_model.bug", n.chains=1, n.iter=2000, n.burnin=200, progress.bar="text")
+
+load.mcmc <- as.mcmc(load.sim)
+
+df_mcmc <- data.frame(load.mcmc[,1:49])
+
+
+# Re-order month variables #
+
+date <- dates$year + dates$month/12
+actual_months <- dates$month
+num_months <- length(levels(as.factor(actual_months)))
+factor_months <- as.factor(date)
+first_month = round(as.numeric(levels(as.factor(factor_months))[1]) %% 1 * 12,0)
+obs_month = seq(first_month,first_month+num_months-1,1) %% 12
+obs_month[obs_month == 0] = 12
+
+months.mcmc = load.mcmc[,52:(52+num_months-1)]
+
+months.mcmc = data.frame(months.mcmc)
+
+months= matrix(nrow = dim(months.mcmc)[1], ncol = 12)
+
+for (i in 1:12) {
+    if (length(which(obs_month == i)) == 0) {
+       months[,i] = NA
+    }
+    if (length(which(obs_month == i)) != 0) {
+       months[,i] = months.mcmc[,which(obs_month == i)]
+    }
+}
+
+months = data.frame(months)
+
+names(months) = strsplit(toString(seq(1,12)), ", ")[[1]]
+
+total_df = cbind(df_mcmc, months)
+
+avg_values = total_df[1,]
+
+for (i in 1:dim(total_df)[2]) {
+    avg_values[,i] = mean(total_df[,i])
+}
+
+# write to file
+write.table(total_df, "totalsim_test.csv", sep=",", row.names = FALSE, col.names = TRUE)
+write.table(avg_values, "avgsim_test.csv", sep=",", row.names = FALSE, col.names = TRUE)
+
+
 
 
