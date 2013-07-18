@@ -43,6 +43,7 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 			String inputPath = this.getServletContext().getRealPath(
 					"/WEB-INF/classes/configFile.yaml");
 			reader = new BufferedReader(new FileReader(inputPath));
+			
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 			System.err.println("Cannot find YAML file." + e1);
@@ -99,6 +100,7 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 			String inputPath = this.getServletContext().getRealPath(
 					"/WEB-INF/classes/configFile.yaml");
 			reader2 = new BufferedReader(new FileReader(inputPath));
+			System.out.println("Yaml file found");
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 			System.err.println("Cannot find YAML file." + e1);
@@ -130,11 +132,12 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 			S3Object object = s3Service.getObject(s3Bucket, file);
 			BufferedReader reader1 = new BufferedReader(new InputStreamReader(
 					object.getDataInputStream()));
+			System.out.println("Conection to S3 accepted.");
+			
 			String data = null;
-
 			// Read the file and store the values
 			while ((data = reader1.readLine()) != null) {
-				System.out.println(data);
+				System.out.println("Data received:\n"+data);
 				//FIXME everything works up to this point, make the rest work.
 				String[] parts = data.split(",");
 				for (int i = 0; i < parts.length; i++) {
@@ -153,9 +156,8 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 		} catch (IOException e5) {
 			e5.printStackTrace();
 		}
-
-		List<MyParameters> nothing = new ArrayList<MyParameters>();
-		return nothing;
+		
+		return parameters;
 
 	}
 }
