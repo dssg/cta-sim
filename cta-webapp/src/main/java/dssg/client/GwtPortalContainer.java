@@ -5,6 +5,7 @@ package dssg.client;
 
 // Imported libraries
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.extjs.gxt.charts.client.Chart;
@@ -101,12 +102,15 @@ public class GwtPortalContainer extends Viewport {
 	private Integer stopT = 23;
 	private Integer numStops = 80;
 	private Integer stop = 0;
+	private List<Number> loadData = new ArrayList<Number>();
 	private S3CommunicationServiceAsync s3ComunicationService;
+	private SimulationServiceAsync simulationService;
 	// Main portal container (main window) is a portal container which is
 	// divided into North, South, East and West regions.
 
 	public GwtPortalContainer(SimulationServiceAsync simulationService, S3CommunicationServiceAsync s3ComunicationService) {
 		this.s3ComunicationService = s3ComunicationService;
+		this.simulationService = simulationService;
 	}
 
 	// Elements to add upon rendering
@@ -285,9 +289,10 @@ public class GwtPortalContainer extends Viewport {
 		r.setDynamic(true);
 		final VBoxLayoutData vBoxData = new VBoxLayoutData(10, 15, 10, 30);
 		final VBoxLayoutData vBoxData2 = new VBoxLayoutData(10, 10, 10, 25);
-		centerPortlet.add(getCrowdingChart());
+		
+		centerPortlet.add(getLoadChart1());
 		centerPortlet.add(getHourControls(), vBoxData);
-		centerPortlet.add(getCrowdingChart2());
+		centerPortlet.add(getLoadChart2());
 		centerPortlet.add(getHourControls2(), vBoxData2);
 
 		// Portlet for the Load @ stop, time period
@@ -298,7 +303,7 @@ public class GwtPortalContainer extends Viewport {
 		stopPortlet.setHeight(370);
 		r = new Resizable(stopPortlet);
 		r.setDynamic(true);
-		stopPortlet.add(getCrowdingChart3());
+		stopPortlet.add(getLoadChart3());
 
 		// Portlet for the Information Grid
 		final Portlet gridPortlet = new Portlet();
@@ -384,6 +389,8 @@ public class GwtPortalContainer extends Viewport {
 		simple.add(timeF, formData);
 		// Submit button
 		Button b = new Button("Simulate");
+		// Workaround for simulation
+		final GwtPortalContainer portalContainer = this;
 		b.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -401,17 +408,11 @@ public class GwtPortalContainer extends Viewport {
 					MessageBox.alert("Carefull", "Time window is incorrect.",
 							null);
 				} else {
-					callS3Download();
-					//callSimulationServices();
 					callLoading();
 					startT = timeS.getDateValue().getHours();
 					stopT = timeF.getDateValue().getHours();
-					updateChart1Cmd.execute();
-					updateChart2Cmd.execute();
-					updateChart3Cmd.execute();
-					updateSliderCmd.execute();
-					updateSlider2Cmd.execute();
-					createCenterPanelCmd.execute();
+					//Call to simulation
+					Data.getData(simulationService, portalContainer, route, startT, stopT);
 				}
 			}
 		});
@@ -429,7 +430,7 @@ public class GwtPortalContainer extends Viewport {
 
 		vp.add(simple);
 	}
-
+	
 	// Form to display Chart Option
 	private void createCharOptWest() {
 
@@ -507,7 +508,7 @@ public class GwtPortalContainer extends Viewport {
 
 	// -- GET Center Objects --
 	// Crowding Chart
-	private ContentPanel getCrowdingChart() {
+	private ContentPanel getLoadChart1() {
 		// Local variables
 		String url;
 		final Chart chart;
@@ -525,7 +526,7 @@ public class GwtPortalContainer extends Viewport {
 		updateChart1Cmd = new Command() {
 			@Override
 			public void execute() {
-				chart.setChartModel(getLoad24());
+				chart.setChartModel(createLoadChart1());
 			}
 		};
 		updateChart1Cmd.execute();
@@ -534,7 +535,7 @@ public class GwtPortalContainer extends Viewport {
 	}
 
 	// Crowding Chart 2
-	private ContentPanel getCrowdingChart2() {
+	private ContentPanel getLoadChart2() {
 
 		String url;
 		final Chart chart;
@@ -552,7 +553,7 @@ public class GwtPortalContainer extends Viewport {
 		updateChart2Cmd = new Command() {
 			@Override
 			public void execute() {
-				chart.setChartModel(getLoadAtTime());
+				chart.setChartModel(createLoadChart2());
 				panel.expand();
 			}
 		};
@@ -561,7 +562,7 @@ public class GwtPortalContainer extends Viewport {
 	}
 
 	// Crowding Chart 3
-	private ContentPanel getCrowdingChart3() {
+	private ContentPanel getLoadChart3() {
 
 		String url;
 		final Chart chart;
@@ -579,7 +580,7 @@ public class GwtPortalContainer extends Viewport {
 		updateChart3Cmd = new Command() {
 			@Override
 			public void execute() {
-				chart.setChartModel(getLoadAtStop(stop));
+				chart.setChartModel(createLoadChart3(stop));
 			}
 		};
 		updateChart3Cmd.execute();
@@ -723,8 +724,20 @@ public class GwtPortalContainer extends Viewport {
 	}
 
 	// -- CHARTS --
+	// Update all charts
+	public void updateCharts(List<Number> data){
+		Info.display("Sucess in getting data @PORTAL.", "Number of data points:"+Integer.toString(data.toArray().length));
+		loadData=data;
+		updateChart1Cmd.execute();
+		updateChart2Cmd.execute();
+		updateChart3Cmd.execute();
+		updateSliderCmd.execute();
+		updateSlider2Cmd.execute();
+		createCenterPanelCmd.execute();
+		
+	}
 	// Area chart for Load 24hrs
-	private ChartModel getLoad24() {
+	private ChartModel createLoadChart1() {
 		// Create a ChartModel with the Chart Title and some style attributes
 		ChartModel cm = new ChartModel("Route: " + route
 				+ "   Max load per hour, all stops.",
@@ -749,7 +762,7 @@ public class GwtPortalContainer extends Viewport {
 		// Create the Y axis
 		YAxis ya = new YAxis();
 		// Add the labels to the Y axis
-		ya.setRange(0, 300, 50);
+		ya.setRange(0, getMax(loadData)*1.1, 10);
 		cm.setYAxis(ya);
 
 		// Create a Line Chart object NORTH
@@ -758,7 +771,7 @@ public class GwtPortalContainer extends Viewport {
 		lchart.setColour("#00aa00");
 		lchart.setTooltip("#val#");
 		lchart.setText("North");
-		lchart.addValues(Data.getLoadData(route, startT, stopT));
+		lchart.addValues(loadData);
 		
 		if ((north == true || bothDir == true) && route != null) {
 			cm.addChartConfig(lchart);
@@ -793,7 +806,7 @@ public class GwtPortalContainer extends Viewport {
 	}
 
 	// Area chart for Load per stop @ TIME
-	public ChartModel getLoadAtTime() {
+	public ChartModel createLoadChart2() {
 		// Create a ChartModel with the Chart Title and some style attributes
 		ChartModel cm = new ChartModel("Time: " + time
 				+ "hrs.   Max load per stop ",
@@ -872,7 +885,7 @@ public class GwtPortalContainer extends Viewport {
 	}
 
 	// Chart for Load for a stop
-	private ChartModel getLoadAtStop(int s) {
+	private ChartModel createLoadChart3(int s) {
 		// Chart model initialization
 		ChartModel cm = new ChartModel("Stop: " + s + "  Load per hour.",
 				"font-size: 14px; font-family: Verdana; text-align: center;");
@@ -1009,16 +1022,6 @@ public class GwtPortalContainer extends Viewport {
 		};
 		t.scheduleRepeating(150);
 	}
-
-	// -- AWS S3 --
-	private void callS3Download() {
-		List<MyParameters> data = new ArrayList<MyParameters>();
-		data = Data.getParameters(s3ComunicationService);
-		ListStore<MyParameters> store = new ListStore<MyParameters>();
-		store.add(data);
-		
-		//return store;
-	}
 	
 	// -- AWS S3 File Upload--
 	// FIXME get this method to work
@@ -1057,5 +1060,15 @@ public class GwtPortalContainer extends Viewport {
 							}
 
 						}));
+	}
+
+	public int getMax(List<Number>list){
+	    int max = Integer.MIN_VALUE;
+	    for(int i=0; i<list.size(); i++){
+	        if(list.get(i).intValue() > max){
+	            max = list.get(i).intValue();
+	        }
+	    }
+	    return max;
 	}
 }
