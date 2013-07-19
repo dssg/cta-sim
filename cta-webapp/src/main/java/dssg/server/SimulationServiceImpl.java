@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.Channels;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -25,6 +27,7 @@ import org.springframework.beans.factory.annotation.Configurable;
 
 import dssg.client.SimulationService;
 import dssg.shared.FieldVerifier;
+import dssg.simulator.SimulationInstance;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -75,26 +78,21 @@ public class SimulationServiceImpl extends RemoteServiceServlet
      * If it fails, then no-go.
      */
 
+    //System.out.println(Iterables.transform(tgd.getAllAgencies(), new Function<AgencyEntry, String> () {
+    //  @Override
+    //  public String apply(AgencyEntry entry) {
+    //    return entry.getId();
+    //  }
+    //}));
 
-    System.out.println(Iterables.transform(tgd.getAllAgencies(), new Function<AgencyEntry, String> () {
-      @Override
-      public String apply(AgencyEntry entry) {
-        return entry.getId();
-      }
-    }));
+    // List<BlockInstance> instances = bcs.getActiveBlocksForAgencyInTimeRange("Chicago Transit Authority", 0, System.currentTimeMillis());
+    //System.out.println("All blocks:");
+    //System.out.println(instances.toString());
 
-    List<BlockInstance> instances = bcs.getActiveBlocksForAgencyInTimeRange("MTA NYCT", 0, System.currentTimeMillis());
-    System.out.println(instances.toString());
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+    String simName = sdf.toString();
 
-//    String gtfsInputFile = "chicago-transit-authority_20111020_0226.zip";
-    String simName = null;
-//    try {	
-//      GtfsDaoImpl store = getGtfs(gtfsInputFile);
-//
-//      simName = createSimulation(store);
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
+    SimulationInstance simInst = new SimulationInstance(this, simName, route, date, startTime, endTime);
 
     return simName;
   }
