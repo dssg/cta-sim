@@ -81,9 +81,9 @@ for (d in 1:num_days) {
   }
 }
 
-buckets_in = buckets_in[,-1]
-buckets_off = buckets_off[,-1]
-days = days[-1]
+# buckets_in = buckets_in[,-1]
+# buckets_off = buckets_off[,-1]
+# days = days[-1]
 
 num_days = length(days)
 
@@ -131,11 +131,15 @@ for (d in 2:num_days) {
   vector.month <- c(vector.month,rep(months[d], length(obs)))
 }
 
+badobs = which(vector.N < vector.Y)
 
+vector.N = vector.N[-badobs]
+vector.Y = vector.Y[-badobs]
+vector.bucket = vector.bucket[-badobs]
+vector.weekend = vector.weekend[-badobs]
+vector.month = vector.month[-badobs]
 
-
-summary(vector.Y)
-summary(vector.N)
+which(vector.N < vector.Y)
 
 totalobs <- length(vector.Y)
 
@@ -213,19 +217,9 @@ model.file = file("binomial_model.bug")
 writeLines(model.str, model.file)
 close(model.file)
 
-print(vector.Y[118])
+check = cbind(vector.Y,vector.N,vector.bucket,vector.weekend,vector.month)
 
-print(vector.N[118])
-
-print(vector.bucket[118])
-
-print(num_buckets)
-
-print(vector.weekend[118])
-
-print(vector.month[118])
-
-print(num_months)
+print(check[116:119,])
 
 data <- list("num_buckets" = num_buckets, "Y" = vector.Y, "weekend" = vector.weekend, "months" = vector.month, "num_months" = num_months, 
              "buckets_in" = vector.N, "totalobs" = totalobs, bucket = vector.bucket)
@@ -246,10 +240,15 @@ print("About to run Jags")
 
 load.sim <- jags(data, inits, parameters, "binomial_model.bug", n.chains=1, n.iter=2000, n.burnin=200, progress.bar="text")
 
+print(load.sim)
+
 load.mcmc <- as.mcmc(load.sim)
 
-df_mcmc <- data.frame(load.mcmc[,1:49])
+df_mcmc <- data.frame(load.mcmc[,c(1:47,49:50)])
 
+# df_mcmc <- data.frame(load.mcmc)
+
+names(df_mcmc)
 
 # Re-order month variables #
 
@@ -261,7 +260,7 @@ first_month = round(as.numeric(levels(as.factor(factor_months))[1]) %% 1 * 12,0)
 obs_month = seq(first_month,first_month+num_months-1,1) %% 12
 obs_month[obs_month == 0] = 12
 
-months.mcmc = load.mcmc[,52:(52+num_months-1)]
+months.mcmc = load.mcmc[,53:(53+num_months-1)]
 
 months.mcmc = data.frame(months.mcmc)
 
@@ -289,8 +288,8 @@ for (i in 1:dim(total_df)[2]) {
 }
 
 # write to file
-write.table(total_df, "totalsim_test.csv", sep=",", row.names = FALSE, col.names = TRUE)
-write.table(avg_values, "avgsim_test.csv", sep=",", row.names = FALSE, col.names = TRUE)
+write.table(total_df, "totalsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
+write.table(avg_values, "avgsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
 
 
 
