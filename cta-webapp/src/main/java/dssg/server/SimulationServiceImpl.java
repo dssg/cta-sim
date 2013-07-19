@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
 import dssg.client.MyParameters;
+import dssg.client.S3CommunicationService;
 import dssg.client.SimulationService;
 import dssg.shared.FieldVerifier;
 import dssg.simulator.SimulationInstance;
@@ -102,6 +103,70 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
   
   private Map<String, SimulationInstance> simulations = Maps.newHashMap();
 
+	private	S3CommunicationService s3ComunicationService = new S3CommunicationServiceImpl();
+
+  public BlockIndexService getBis() {
+    return bis;
+  }
+
+  public void setBis(BlockIndexService bis) {
+    this.bis = bis;
+  }
+
+  public BlockLocationService getBls() {
+    return bls;
+  }
+
+  public void setBls(BlockLocationService bls) {
+    this.bls = bls;
+  }
+
+  public BlockCalendarService getBcs() {
+    return bcs;
+  }
+
+  public void setBcs(BlockCalendarService bcs) {
+    this.bcs = bcs;
+  }
+
+  public TransitGraphDao getTgd() {
+    return tgd;
+  }
+
+  public void setTgd(TransitGraphDao tgd) {
+    this.tgd = tgd;
+  }
+
+  public Map<String, SimulationInstance> getSimulations() {
+    return simulations;
+  }
+
+  public void
+      setSimulations(Map<String, SimulationInstance> simulations) {
+    this.simulations = simulations;
+  }
+
+  public S3CommunicationService getS3ComunicationService() {
+    return s3ComunicationService;
+  }
+
+  public void setS3ComunicationService(
+    S3CommunicationService s3ComunicationService) {
+    this.s3ComunicationService = s3ComunicationService;
+  }
+
+  public static int getThreadCount() {
+    return THREAD_COUNT;
+  }
+
+  public static ExecutorService getExecutor() {
+    return executor;
+  }
+
+  public static int getNumSimulations() {
+    return NUM_SIMULATIONS;
+  }
+
   public String submitSimulation(String route, Date date, long startTime,
 			long endTime) throws IllegalArgumentException {
 
@@ -109,7 +174,6 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 		 * Get simulation parameters from S3 model output file
 		 */
 		List<MyParameters> parameters = new ArrayList<MyParameters>();
-		S3CommunicationServiceImpl s3ComunicationService = new S3CommunicationServiceImpl();
 		parameters = s3ComunicationService.downloadParameters();
 		System.out.println("Number of parameters: "
 				+ parameters.toArray().length);
