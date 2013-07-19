@@ -113,21 +113,29 @@ N = round(buckets_in,0)
 buckets <- seq(1,num_buckets)
 
 badobs <-which(N[,1] == 0 & is.na(N[,1])) 
-obs <- which(N[,1] != 0)
+obs <- which(N[,1] != 0 & is.na(N[,1]) == FALSE)
 vector.N <- N[obs,1]
 vector.Y <- Ydata[obs,1]
 vector.bucket <- buckets[obs]  
 vector.weekend <- rep(weekend[1],length(obs))
 vector.month <- rep(months[1], length(obs))
 
+
+
 for (d in 2:num_days) {
-  obs <- which(N[,d] != 0)
+  obs <- which(N[,d] != 0 & is.na(N[,1]) == FALSE)
   vector.N <- c(vector.N,N[obs,d])
   vector.Y <- c(vector.Y,Ydata[obs,d])
   vector.bucket <- c(vector.bucket,buckets[obs])
   vector.weekend <- c(vector.weekend,rep(weekend[d],length(obs)))
   vector.month <- c(vector.month,rep(months[d], length(obs)))
 }
+
+
+
+
+summary(vector.Y)
+summary(vector.N)
 
 totalobs <- length(vector.Y)
 
@@ -141,7 +149,7 @@ for (i in 1:totalobs) {
     Y[i] ~ dbin(p[i], buckets_in[i])
 }
 
-beta[1] <- 0
+beta[1] ~ dnorm(beta0, itau2.beta)
 beta[2] ~ dnorm(beta0, itau2.beta)
 
 alpha[1] ~ dnorm(alpha0, itau2.alpha) 
@@ -155,9 +163,9 @@ for (i in 2:num_months) {
 gamma[i] ~ dnorm(gamma[i-1], itau2.gamma)
 }
 
-alpha0 ~ dflat()
-beta0 ~ dflat()
-gamma0 ~ dflat()
+alpha0 ~ dnorm(0,10)
+beta0 ~ dnorm(0,10)
+gamma0 ~ dnorm(0,10)
 
 itau2.alpha ~ dgamma(1,1)
 itau2.beta ~ dgamma(1,1)
@@ -174,7 +182,7 @@ for (i in 1:totalobs) {
     Y[i] ~ dbin(p[i], buckets_in[i])
 }
 
-beta[1] <- 0
+beta[1] ~ dnorm((beta0, itau2.beta)
 beta[2] ~ dnorm(beta0, itau2.beta)
 
 alpha[1] ~ dnorm(alpha0, itau2.alpha)
@@ -190,9 +198,9 @@ gamma[i] ~ dnorm(gamma[i-1], itau2.gamma)
 
 gamma[num_months] ~ dnorm((gamma[num_months-1]+gamma[1])/2, itau2.gamma)
 
-alpha0 ~ dflat()
-beta0 ~ dflat()
-gamma0 ~ dflat()
+alpha0 ~ dnorm(0,10)
+beta0 ~ dnorm(0,10)
+gamma0 ~ dnorm(0,10)
 
 itau2.alpha ~ dgamma(1,1)
 itau2.beta ~ dgamma(1,1)
@@ -205,11 +213,25 @@ model.file = file("binomial_model.bug")
 writeLines(model.str, model.file)
 close(model.file)
 
-data <- list("num_buckets" = num_buckets, "num_days" = num_days, "Y" = vector.Y, "weekend" = vector.weekend, "months" = vector.month, "num_months" = num_months, 
+print(vector.Y[118])
+
+print(vector.N[118])
+
+print(vector.bucket[118])
+
+print(num_buckets)
+
+print(vector.weekend[118])
+
+print(vector.month[118])
+
+print(num_months)
+
+data <- list("num_buckets" = num_buckets, "Y" = vector.Y, "weekend" = vector.weekend, "months" = vector.month, "num_months" = num_months, 
              "buckets_in" = vector.N, "totalobs" = totalobs, bucket = vector.bucket)
 
 inits <- list(list(alpha0 = rnorm(1,0,0.01), alpha = replicate(num_buckets,rnorm(1,0,0.1)), itau2.alpha=rgamma(1, 0.1, 10),
-                   beta0 = rnorm(1,0,0.01), beta = c(NA, rnorm(1,0,0.1)), itau2.beta = rgamma(1,0.1,10),
+                   beta0 = rnorm(1,0,0.01), beta = rnorm(2,0,0.1), itau2.beta = rgamma(1,0.1,10),
                    gamma0 = rnorm(1,0,0.01), gamma = replicate(num_months,rnorm(1,0,0.1)), itau2.gamma = rgamma(1, 0.1, 10)
 ))
 
@@ -222,7 +244,7 @@ print("About to run Jags")
 #                  n.chains=1, n.iter=6000,
 #                  bugsWorkingDir="/tmp", cleanBugsWorkingDir = T)
 
-load.sim <- jags(data, inits, parameters, "poisson_model.bug", n.chains=1, n.iter=2000, n.burnin=200, progress.bar="text")
+load.sim <- jags(data, inits, parameters, "binomial_model.bug", n.chains=1, n.iter=2000, n.burnin=200, progress.bar="text")
 
 load.mcmc <- as.mcmc(load.sim)
 
