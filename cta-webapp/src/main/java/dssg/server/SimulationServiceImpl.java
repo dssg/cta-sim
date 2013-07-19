@@ -7,6 +7,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.Channels;
 import java.net.URL;
 import java.util.ArrayList;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -28,6 +30,7 @@ import org.springframework.beans.factory.annotation.Configurable;
 import dssg.client.MyParameters;
 import dssg.client.SimulationService;
 import dssg.shared.FieldVerifier;
+import dssg.simulator.SimulationInstance;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
