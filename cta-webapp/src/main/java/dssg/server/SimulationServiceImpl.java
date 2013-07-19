@@ -11,7 +11,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
@@ -35,6 +38,7 @@ import dssg.simulator.SimulationInstance;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
@@ -44,6 +48,26 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 @SuppressWarnings("serial")
 public class SimulationServiceImpl extends RemoteServiceServlet implements
 		SimulationService {
+
+  static public class SimulationRunnable implements Runnable {
+
+    SimulationInstance simInst;
+
+    public SimulationRunnable(SimulationInstance simInst) {
+      this.simInst = simInst;
+    }
+
+    @Override
+    public void run() {
+      while (simInst.step()) {
+        /*
+         * TODO FIXME compute stats or put them in whatever format is needed.
+         */
+      }
+
+    }
+
+  }
 
   @Autowired
 	public BlockIndexService bis;
@@ -56,6 +80,27 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 
   @Autowired
   public TransitGraphDao tgd;
+  
+  
+  static public final int THREAD_COUNT;
+
+  static {
+    final int numProcessors =
+        Runtime.getRuntime().availableProcessors();
+
+    if (numProcessors <= 2) {
+      THREAD_COUNT = numProcessors;
+    } else {
+      THREAD_COUNT = numProcessors - 1;
+    }
+  }
+
+  private static final ExecutorService executor = Executors
+      .newFixedThreadPool(THREAD_COUNT);
+
+  private static final int NUM_SIMULATIONS = 100;
+  
+  private Map<String, SimulationInstance> simulations = Maps.newHashMap();
 
   public String submitSimulation(String route, Date date, long startTime,
 			long endTime) throws IllegalArgumentException {
@@ -69,105 +114,40 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 		System.out.println("Number of parameters: "
 				+ parameters.toArray().length);
 
-		/*
-		 * FIXME Verify that the input is valid.
-		 */
-		// if (!FieldVerifier.isValidName(input)) {
-		// // If the input is not valid, throw an IllegalArgumentException back
-		// to
-		// // the client.
-		// throw new IllegalArgumentException(
-		// "Name must be at least 4 characters long");
-		// }
+		SimulationInstance simInst = createSimulation(route, date, startTime, endTime, parameters);
 
-		/*
-		 * We need to read a GTFS file for the simulation. FIXME use the
-		 * arguments to find/produce the GTFS files If it fails, then no-go.
-		 */
-		String gtfsInputFile = "chicago-transit-authority_20111020_0226.zip";
-		String simName;
-		try {
+    for (int i = 0; i < NUM_SIMULATIONS; i++) {
+      executor.execute(new SimulationRunnable(simInst));
+    }
 
-			GtfsDaoImpl store = getGtfs(gtfsInputFile);
-
-			simName = createSimulation(store);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-			simName = null;
-		}
-
-		return simName;
+		return simInst.getSimulationId();
 	}
 
-	/**
-	 * Create and queue simulations (also check if we're already running the
-	 * same one).
-	 * 
-	 * @param store
-	 * @return
-	 */
-	private String createSimulation(GtfsDaoImpl store) {
-		/*
-		 * FIXME: run a simulation! create a simulation instance, spawn a thread
-		 * to step through the simulation, add the thread's future object to
-		 * some queue/list of * running/run simulations, etc.
-		 */
-		return null;
-	}
+	private SimulationInstance createSimulation(String route, Date date,
+    long startTime, long endTime, List<MyParameters> parameters) {
+	  String simId = route + date + startTime + endTime;
+	  
+    SimulationInstance simulation = simulations.get(simId);
+    if (simulation == null) {
+      simulation = new SimulationInstance(this, simId, route, date, startTime, endTime, parameters);
+      simulations.put(simId, simulation);
+    }
+    
+    return simulation;
+    
+  }
 
 	/**
-	 * Retrieve/create/cache the GTFS DAO object needed to run through a
-	 * schedule.
-	 * 
-	 * @param gtfsFileName
-	 * @return
-	 * @throws IOException
+	 * Return simulation results to client side for display.
 	 */
-	private GtfsRelationalDaoImpl getGtfs(String gtfsFileName)
-			throws IOException {
-
-		GtfsReader reader = new GtfsReader();
-		String currentDir = System.getProperty("user.dir");
-		File tmpDir = new File(currentDir, "tmp");
-		File gtfsFile = new File(tmpDir, gtfsFileName);
-		if (!gtfsFile.exists()) {
-			URL s3url = new URL("http://gtfs.s3.amazonaws.com/" + gtfsFileName);
-			ReadableByteChannel rbc = Channels.newChannel(s3url.openStream());
-			FileOutputStream fos = new FileOutputStream(gtfsFile);
-			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-		}
-		reader.setInputLocation(gtfsFile);
-
-		GtfsRelationalDaoImpl store = new GtfsRelationalDaoImpl();
-		reader.setEntityStore(store);
-
-		reader.run();
-
-		return store;
-	}
-
-	/**
-	 * Escape an html string. Escaping data received from the client helps to
-	 * prevent cross-site script vulnerabilities.
-	 * 
-	 * @param html
-	 *            the html string to escape
-	 * @return the escaped string
-	 */
-	private String escapeHtml(String html) {
-		if (html == null) {
-			return null;
-		}
-		return html.replaceAll("&", "&amp;").replaceAll("<", "&lt;")
-				.replaceAll(">", "&gt;");
-	}
-
-	/**
-	 * Return simulation results to client side for display
-	 * 
-	 */
-	public List<Number> getResults(Integer route, Integer startT, Integer stopT){
+	public List<Number> getResults(String simId){
+	  
+    SimulationInstance simulation = simulations.get(simId);
+    
+    if (simulation != null) {
+      // TODO implement!  
+    }
+	  
 		int[] dummyData = {30,9,10,12,10,10,11,3,8,11,
 				16,25,29,35,55,54,48,49,48,36,
 				33,41,43,42,49,44,49,50,51,52,
@@ -175,7 +155,7 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 				48,46,44,43,35,33,31};
 		List<Number> data = new ArrayList<Number>();
 		Random generator = new Random();
-		for (double n = startT; n <= stopT; n = n + .5) {
+		for (double n = 1; n <= 100; n = n + .5) {
 //			data.add(Math.floor(Math.abs(150
 //					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
 //					+ generator.nextDouble() * 80)));

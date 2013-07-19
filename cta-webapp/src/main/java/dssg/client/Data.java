@@ -1,6 +1,7 @@
 package dssg.client;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.extjs.gxt.ui.client.widget.Info;
@@ -37,13 +38,15 @@ public class Data {
 	 * for the LOAD at a given time window
 	 */
 	public static void getData(SimulationServiceAsync simulationService,
-			final GwtPortalContainer gwtPortalContainer, Integer route,
-			Integer startT, Integer stopT) {
-		simulationService.getResults(route, startT, stopT,
+			final GwtPortalContainer gwtPortalContainer, String route,
+			Date date, Integer startT, Integer stopT) {
+	  String simId = route + date + startT + stopT;
+		simulationService.getResults(simId,
 				new AsyncCallback<List<Number>>() {
 					@Override
 					public void onSuccess(List<Number> output) {
-						Info.display("Sucess in getting data @DATA.", "Number of data points:"+Integer.toString(output.toArray().length));;
+						Info.display("Sucess in getting data @DATA.", "Number of data points:" 
+    					+ Integer.toString(output.toArray().length));;
 						gwtPortalContainer.updateCharts(output);
 					}
 

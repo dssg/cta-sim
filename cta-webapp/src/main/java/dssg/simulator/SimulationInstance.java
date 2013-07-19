@@ -18,6 +18,7 @@ import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TransitGraphDao;
 
+import dssg.client.MyParameters;
 import dssg.server.SimulationServiceImpl;
 
 /**
@@ -41,7 +42,50 @@ public class SimulationInstance {
   final protected Date startDate;
   final protected long startTime;
   final protected long endTime;
+  
+  final protected List<MyParameters> parameters;
 
+
+  public StopTime getCurrentStopTime() {
+    return currentStopTime;
+  }
+
+  public void setCurrentStopTime(StopTime currentStopTime) {
+    this.currentStopTime = currentStopTime;
+  }
+
+  public double getCurrentDistanceAlongBlock() {
+    return currentDistanceAlongBlock;
+  }
+
+  public void setCurrentDistanceAlongBlock(
+    double currentDistanceAlongBlock) {
+    this.currentDistanceAlongBlock = currentDistanceAlongBlock;
+  }
+
+  public String getSimulationId() {
+    return simulationId;
+  }
+
+  public RouteEntry getRoute() {
+    return route;
+  }
+
+  public String getRouteId() {
+    return routeId;
+  }
+
+  public Date getStartDate() {
+    return startDate;
+  }
+
+  public long getStartTime() {
+    return startTime;
+  }
+
+  public long getEndTime() {
+    return endTime;
+  }
 
   /*
    * Simulation's running properties
@@ -50,7 +94,7 @@ public class SimulationInstance {
   double currentDistanceAlongBlock;
 
   public SimulationInstance(SimulationServiceImpl simService, String simulationId,
-    String routeId, Date startDate, long startTime, long endTime) {
+    String routeId, Date startDate, long startTime, long endTime, List<MyParameters> parameters) {
     this.bis = simService.bis;
     this.bls = simService.bls;
     this.bcs = simService.bcs;
@@ -60,6 +104,7 @@ public class SimulationInstance {
     this.startDate = startDate;
     this.startTime = startTime;
     this.endTime = endTime;
+    this.parameters = parameters;
 
     AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString("Chicago Transit Authority_" + routeId);
     this.route = tgd.getRouteForId(routeAgencyAndId);
@@ -78,26 +123,25 @@ public class SimulationInstance {
         for(BlockStopTimeEntry bstEntry : blockInst.getBlock().getStopTimes())
             stopTimeEntryQueue.add(bstEntry.getStopTime());
 
-    for(StopTimeEntry stEntry : stopTimeEntryQueue) {
-        System.out.println(stEntry.getTrip().getBlock().getId());
-        System.out.println(stEntry.getTrip().getId());
-        System.out.println(stEntry.getStop().getId());
-        System.out.println(stEntry.getSequence());
-        System.out.println(stEntry.getArrivalTime());
-        System.out.println(stEntry.getDepartureTime());
-        System.out.println();
-    }
+//    for(StopTimeEntry stEntry : stopTimeEntryQueue) {
+//        System.out.println(stEntry.getTrip().getBlock().getId());
+//        System.out.println(stEntry.getTrip().getId());
+//        System.out.println(stEntry.getStop().getId());
+//        System.out.println(stEntry.getSequence());
+//        System.out.println(stEntry.getArrivalTime());
+//        System.out.println(stEntry.getDepartureTime());
+//        System.out.println();
+//    }
     
-    // FIXME get the first stop in the route from the GTFS DAO
     this.currentStopTime = null;
     
   }
 
   /**
-   * Increment the simulation in time, or stop sequence for the route...
-   * FIXME TODO which one?
+   * Increment the simulation in time along the block.
+   * @return false for finished, true for in-progress
    */
-  public void step() {
-
+  public boolean step() {
+    return false;
   }
 }
