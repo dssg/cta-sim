@@ -45,7 +45,19 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 public class SimulationServiceImpl extends RemoteServiceServlet implements
 		SimulationService {
 
-	public String submitSimulation(String route, Date date, long startTime,
+  @Autowired
+	public BlockIndexService bis;
+
+  @Autowired
+  public BlockLocationService bls;
+
+  @Autowired
+  public BlockCalendarService bcs;
+
+  @Autowired
+  public TransitGraphDao tgd;
+
+  public String submitSimulation(String route, Date date, long startTime,
 			long endTime) throws IllegalArgumentException {
 
 		/*
