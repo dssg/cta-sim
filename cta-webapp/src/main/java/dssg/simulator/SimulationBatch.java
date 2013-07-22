@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import dssg.client.MyParameters;
 import dssg.server.SimulationServiceImpl;
@@ -33,7 +34,7 @@ public class SimulationBatch {
     }
   }
 
-  private static final ExecutorService executor = Executors
+  private final ExecutorService executor = Executors
       .newFixedThreadPool(THREAD_COUNT);
 
   private final int NUM_RUNS = 1;
@@ -44,16 +45,17 @@ public class SimulationBatch {
     this.batchId = batchId;
     
     for (int i = 0; i < NUM_RUNS; i++) {
-      executor.execute(new SimulationRun(this, i, routeId, startDate, startTime, endTime, parameters));
+      this.executor.execute(new SimulationRun(this, i, routeId, startDate, startTime, endTime, parameters));
     }
+    this.executor.shutdown();
+  }
+  
+  public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+    return this.executor.awaitTermination(timeout, unit);
   }
 
   public static int getThreadCount() {
     return THREAD_COUNT;
-  }
-
-  public static ExecutorService getExecutor() {
-    return executor;
   }
 
   public int getNumRuns() {

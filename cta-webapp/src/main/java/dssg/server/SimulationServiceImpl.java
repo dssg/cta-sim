@@ -89,6 +89,10 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
     return simulations;
   }
 
+  public SimulationBatch getSimulation(String batchId) {
+    return simulations.get(batchId);
+  }
+
   public S3CommunicationService getS3ComunicationService() {
     return s3ComunicationService;
   }

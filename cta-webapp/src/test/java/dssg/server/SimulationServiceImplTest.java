@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +18,7 @@ import com.google.common.collect.Lists;
 
 import dssg.client.MyParameters;
 import dssg.client.S3CommunicationService;
+import dssg.simulator.SimulationBatch;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:dssg/application-context-webapp.xml")
@@ -32,7 +34,17 @@ public class SimulationServiceImplTest {
     Calendar testCal = GregorianCalendar.getInstance();
     testCal.set(2013, Calendar.FEBRUARY,11);
     Date testDate = testCal.getTime();
-    simService.submitSimulation("6", testDate, 3*60*60, 27*60*60);
+    String batchId = simService.submitSimulation("6", testDate, 3*60*60, 27*60*60);
+    
+    SimulationBatch simBatch = simService.getSimulation(batchId);
+    try {
+      while(!simBatch.awaitTermination(1, TimeUnit.SECONDS)) {
+        // check again
+      };
+    } catch (InterruptedException e) {
+      System.err.println("Simulation batch interrupted:");
+      e.printStackTrace();
+    }
 
     fail("Not yet implemented");
   }
