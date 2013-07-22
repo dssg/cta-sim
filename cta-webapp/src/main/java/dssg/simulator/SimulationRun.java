@@ -27,7 +27,7 @@ import dssg.server.SimulationServiceImpl;
  * @author bwillard
  * 
  */
-public class SimulationInstance {
+public class SimulationRun implements Runnable {
 
   /*
    * Simulation static properties
@@ -36,7 +36,7 @@ public class SimulationInstance {
   final BlockLocationService bls;
   final BlockCalendarService bcs;
   final TransitGraphDao tgd;
-  final protected String simulationId;
+  final protected int runId;
   final RouteEntry route;
   final protected String routeId;
   final protected Date startDate;
@@ -45,61 +45,19 @@ public class SimulationInstance {
   
   final protected List<MyParameters> parameters;
 
-
-  public StopTime getCurrentStopTime() {
-    return currentStopTime;
-  }
-
-  public void setCurrentStopTime(StopTime currentStopTime) {
-    this.currentStopTime = currentStopTime;
-  }
-
-  public double getCurrentDistanceAlongBlock() {
-    return currentDistanceAlongBlock;
-  }
-
-  public void setCurrentDistanceAlongBlock(
-    double currentDistanceAlongBlock) {
-    this.currentDistanceAlongBlock = currentDistanceAlongBlock;
-  }
-
-  public String getSimulationId() {
-    return simulationId;
-  }
-
-  public RouteEntry getRoute() {
-    return route;
-  }
-
-  public String getRouteId() {
-    return routeId;
-  }
-
-  public Date getStartDate() {
-    return startDate;
-  }
-
-  public long getStartTime() {
-    return startTime;
-  }
-
-  public long getEndTime() {
-    return endTime;
-  }
-
   /*
    * Simulation's running properties
    */
   StopTime currentStopTime;
   double currentDistanceAlongBlock;
 
-  public SimulationInstance(SimulationServiceImpl simService, String simulationId,
+  public SimulationRun(SimulationBatch simBatch, int runId,
     String routeId, Date startDate, long startTime, long endTime, List<MyParameters> parameters) {
-    this.bis = simService.bis;
-    this.bls = simService.bls;
-    this.bcs = simService.bcs;
-    this.tgd = simService.tgd;
-    this.simulationId = simulationId;
+    this.bis = simBatch.simService.bis;
+    this.bls = simBatch.simService.bls;
+    this.bcs = simBatch.simService.bcs;
+    this.tgd = simBatch.simService.tgd;
+    this.runId = runId;
     this.routeId = routeId;
     this.startDate = startDate;
     this.startTime = startTime;
@@ -144,4 +102,56 @@ public class SimulationInstance {
   public boolean step() {
     return false;
   }
+  
+  @Override
+  public void run() {
+    while (step()) {
+      /*
+       * TODO FIXME compute stats or put them in whatever format is needed.
+       */
+    }
+
+  }
+
+  public StopTime getCurrentStopTime() {
+    return currentStopTime;
+  }
+
+  public void setCurrentStopTime(StopTime currentStopTime) {
+    this.currentStopTime = currentStopTime;
+  }
+
+  public double getCurrentDistanceAlongBlock() {
+    return currentDistanceAlongBlock;
+  }
+
+  public void setCurrentDistanceAlongBlock(
+    double currentDistanceAlongBlock) {
+    this.currentDistanceAlongBlock = currentDistanceAlongBlock;
+  }
+
+  public int getRunId() {
+    return runId;
+  }
+
+  public RouteEntry getRoute() {
+    return route;
+  }
+
+  public String getRouteId() {
+    return routeId;
+  }
+
+  public Date getStartDate() {
+    return startDate;
+  }
+
+  public long getStartTime() {
+    return startTime;
+  }
+
+  public long getEndTime() {
+    return endTime;
+  }
+
 }

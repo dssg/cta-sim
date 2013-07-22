@@ -34,7 +34,8 @@ import dssg.client.MyParameters;
 import dssg.client.S3CommunicationService;
 import dssg.client.SimulationService;
 import dssg.shared.FieldVerifier;
-import dssg.simulator.SimulationInstance;
+import dssg.simulator.SimulationBatch;
+import dssg.simulator.SimulationBatch;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -50,26 +51,6 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 public class SimulationServiceImpl extends RemoteServiceServlet implements
 		SimulationService {
 
-  static public class SimulationRunnable implements Runnable {
-
-    SimulationInstance simInst;
-
-    public SimulationRunnable(SimulationInstance simInst) {
-      this.simInst = simInst;
-    }
-
-    @Override
-    public void run() {
-      while (simInst.step()) {
-        /*
-         * TODO FIXME compute stats or put them in whatever format is needed.
-         */
-      }
-
-    }
-
-  }
-
   @Autowired
 	public BlockIndexService bis;
 
@@ -83,25 +64,8 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
   public TransitGraphDao tgd;
   
   
-  static public final int THREAD_COUNT;
-
-  static {
-    final int numProcessors =
-        Runtime.getRuntime().availableProcessors();
-
-    if (numProcessors <= 2) {
-      THREAD_COUNT = numProcessors;
-    } else {
-      THREAD_COUNT = numProcessors - 1;
-    }
-  }
-
-  private static final ExecutorService executor = Executors
-      .newFixedThreadPool(THREAD_COUNT);
-
-  private static final int NUM_SIMULATIONS = 100;
   
-  private Map<String, SimulationInstance> simulations = Maps.newHashMap();
+  private Map<String, SimulationBatch> simulations = Maps.newHashMap();
 
 	private	S3CommunicationService s3ComunicationService = new S3CommunicationServiceImpl();
 
@@ -109,41 +73,20 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
     return bis;
   }
 
-  public void setBis(BlockIndexService bis) {
-    this.bis = bis;
-  }
-
   public BlockLocationService getBls() {
     return bls;
-  }
-
-  public void setBls(BlockLocationService bls) {
-    this.bls = bls;
   }
 
   public BlockCalendarService getBcs() {
     return bcs;
   }
 
-  public void setBcs(BlockCalendarService bcs) {
-    this.bcs = bcs;
-  }
-
   public TransitGraphDao getTgd() {
     return tgd;
   }
 
-  public void setTgd(TransitGraphDao tgd) {
-    this.tgd = tgd;
-  }
-
-  public Map<String, SimulationInstance> getSimulations() {
+  public Map<String, SimulationBatch> getSimulations() {
     return simulations;
-  }
-
-  public void
-      setSimulations(Map<String, SimulationInstance> simulations) {
-    this.simulations = simulations;
   }
 
   public S3CommunicationService getS3ComunicationService() {
@@ -153,18 +96,6 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
   public void setS3ComunicationService(
     S3CommunicationService s3ComunicationService) {
     this.s3ComunicationService = s3ComunicationService;
-  }
-
-  public static int getThreadCount() {
-    return THREAD_COUNT;
-  }
-
-  public static ExecutorService getExecutor() {
-    return executor;
-  }
-
-  public static int getNumSimulations() {
-    return NUM_SIMULATIONS;
   }
 
   public String submitSimulation(String route, Date date, long startTime,
@@ -178,35 +109,23 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 		System.out.println("Number of parameters: "
 				+ parameters.toArray().length);
 
-		SimulationInstance simInst = createSimulation(route, date, startTime, endTime, parameters);
+	  String batchId = route + date + startTime + endTime;
 
-    for (int i = 0; i < NUM_SIMULATIONS; i++) {
-      executor.execute(new SimulationRunnable(simInst));
+    SimulationBatch simBatch = simulations.get(batchId);
+    if (simBatch == null) {
+      simBatch = new SimulationBatch(this, batchId, route, date, startTime, endTime, parameters);
+      simulations.put(batchId, simBatch);
     }
 
-		return simInst.getSimulationId();
+		return simBatch.getBatchId();
 	}
-
-	private SimulationInstance createSimulation(String route, Date date,
-    long startTime, long endTime, List<MyParameters> parameters) {
-	  String simId = route + date + startTime + endTime;
-	  
-    SimulationInstance simulation = simulations.get(simId);
-    if (simulation == null) {
-      simulation = new SimulationInstance(this, simId, route, date, startTime, endTime, parameters);
-      simulations.put(simId, simulation);
-    }
-    
-    return simulation;
-    
-  }
 
 	/**
 	 * Return simulation results to client side for display.
 	 */
-	public List<Number> getResults(String simId){
+	public List<Number> getResults(String batchId){
 	  
-    SimulationInstance simulation = simulations.get(simId);
+    SimulationBatch simulation = simulations.get(batchId);
     
     if (simulation != null) {
       // TODO implement!  
