@@ -94,7 +94,9 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 	 */
 	@Override
 	public List<MyParameters> downloadParameters() {
+		
 		// Read Yaml file with information for S3
+		System.out.println("Reading yamil configuration file.");
 		BufferedReader reader2 = null;
 		try {
 			String inputPath = this.getServletContext().getRealPath(
@@ -103,13 +105,14 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 			System.out.println("Yaml file found");
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
-			System.err.println("Cannot find YAML file." + e1);
+			System.err.println("/nCannot find yaml file. " + e1);
 		}
 		// Create YAML object
 		final Yaml yaml = new Yaml();
 		Map<String, Object> map = (Map<String, Object>) yaml.load(reader2);
 
 		// AWS Credential information
+		System.out.println("Getting AWS credentials.");
 		String awsAccessKey = (String) map.get("aws_access_key");
 		String awsSecretKey = (String) map.get("aws_secret_access_key");
 		AWSCredentials awsCredentials = new AWSCredentials(awsAccessKey,
@@ -126,6 +129,7 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 
 		// -- DOWNLOAD SERVICE --
 		S3Service s3Service;
+		System.out.println("Connecting to S3.");
 		try {
 			s3Service = new RestS3Service(awsCredentials);
 			// FIXME change testText.txt to actual value for the parameter file
@@ -145,6 +149,7 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 							.parseDouble(parts[i])));
 				}
 			}
+			System.out.println("Returning file.");
 			return parameters;
 
 		} catch (S3ServiceException e2) {
