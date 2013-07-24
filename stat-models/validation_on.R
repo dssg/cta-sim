@@ -41,8 +41,9 @@ dateinfo <- function(x) {
 test_data$time <- actualtime(test_data$time_actual_arrive)$time
 
 ### Remove NAs ###
-
-test_data = test_data[-which(is.na(test_data$time)),]
+if( length(which(is.na(test_data$time))) != 0) {
+    test_data = test_data[-which(is.na(test_data$time)),]
+}
 
 # summary(test_data$time)
 
@@ -79,6 +80,8 @@ print("We made it to the MSE Calc")
 
 MSE = 0
 
+result = c(0,0)
+
 for (k in 2:length(weekend)) {
 
     obs_halfhour = as.numeric(halfhr_bucket(time[k]))
@@ -91,6 +94,8 @@ for (k in 2:length(weekend)) {
     guess = exp(rate)*halfhr_headway
     truth = test_data$passengers_on[k]
 
+    result = rbind(result,c(guess,truth))
+
     if( is.na(guess) == FALSE | is.na(truth) == FALSE) {
     	if (halfhr_headway < 2) {
             MSE = MSE + (guess - truth)^2
@@ -99,6 +104,8 @@ for (k in 2:length(weekend)) {
 }
 
 norm_MSE = MSE / length(weekend)
+
+print(result[-1,])
 
 print(norm_MSE)
 
