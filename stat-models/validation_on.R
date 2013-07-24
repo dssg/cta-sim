@@ -57,6 +57,11 @@ weekend <- as.numeric(date$wday == 0 | date$wday == 6) + 1
 timeorder <- order(year,month, day, time) 
 
 test_data = test_data[timeorder,]
+year = year[timeorder]
+month = month[timeorder]
+day = day[timeorder]
+time = time[timeorder]
+weekend = weekend[timeorder]
 
 total_obs = length(test_data$time)
 
@@ -94,9 +99,10 @@ for (k in 2:length(weekend)) {
     guess = exp(rate)*halfhr_headway
     truth = test_data$passengers_on[k]
 
-    result = rbind(result,c(guess,truth))
-
-    if( is.na(guess) == FALSE | is.na(truth) == FALSE) {
+    if( is.na(guess) | is.na(truth)) {
+      result = rbind(result,c(guess,truth))
+    }
+    if( is.na(guess) == FALSE & is.na(truth) == FALSE) {
     	if (halfhr_headway < 2) {
             MSE = MSE + (guess - truth)^2
     	}
@@ -105,8 +111,8 @@ for (k in 2:length(weekend)) {
 
 norm_MSE = MSE / length(weekend)
 
-print(result[-1,])
+# print(result[-1,])
 
 print(norm_MSE)
 
-write.table(norm_MSE, "norm_MSE.csv", sep=",", row.names = FALSE, col.names = FALSE)
+# write.table(norm_MSE, "norm_MSE.csv", sep=",", row.names = FALSE, col.names = FALSE)
