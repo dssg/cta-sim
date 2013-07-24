@@ -14,5 +14,5 @@ public interface SimulationService extends RemoteService {
   String submitSimulation(String route, Date date, long startTime,
     long endTime) throws IllegalArgumentException;
   
-  public List<Number> getResults(Integer route, Integer startT, Integer stopT);
+  public List<Number> getResults(String simId);
 }

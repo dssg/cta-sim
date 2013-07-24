@@ -95,7 +95,7 @@ public class GwtPortalContainer extends Viewport {
 	private Command updateSlider2Cmd;
 	private Command createCenterPanelCmd;
 	private Integer time = 0;
-	private Integer route = null;
+	private String route = null;
 	private Boolean bothDir = true;
 	private Boolean north = true;
 	private Integer startT = 0;
@@ -373,7 +373,7 @@ public class GwtPortalContainer extends Viewport {
 		simple.add(routeCmb, formData);
 
 		// Date field
-		DateField date = new DateField();
+		final DateField date = new DateField();
 		date.setFieldLabel("Date");
 		simple.add(date, formData);
 		// Time field
@@ -395,7 +395,12 @@ public class GwtPortalContainer extends Viewport {
 			@Override
 			public void onClick(ClickEvent event) {
 
-				route = routeCmb.getValue().getId();
+			  /*
+			   *  TODO FIXME need to map the combo id number to
+			   *  the actual route ids.
+			   */
+				route = routeCmb.getValue().getId().toString();
+
 				north = northB.getValue();
 				bothDir = bothB.getValue();
 
@@ -413,7 +418,7 @@ public class GwtPortalContainer extends Viewport {
 					startT = timeS.getDateValue().getHours();
 					stopT = timeF.getDateValue().getHours();
 					//Call to simulation
-					Data.getData(simulationService, portalContainer, route, startT, stopT);
+					Data.getData(simulationService, portalContainer, route, date.getDatePicker().getValue(), startT, stopT);
 				}
 			}
 		});
