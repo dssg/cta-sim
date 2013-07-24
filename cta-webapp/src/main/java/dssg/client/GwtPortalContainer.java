@@ -408,6 +408,7 @@ public class GwtPortalContainer extends Viewport {
 					MessageBox.alert("Carefull", "Time window is incorrect.",
 							null);
 				} else {
+					Data.testS3(s3ComunicationService);
 					callLoading();
 					startT = timeS.getDateValue().getHours();
 					stopT = timeF.getDateValue().getHours();
