@@ -78,12 +78,24 @@ num_days = dim(buckets)[2]
 
 emptyday = vector(length = num_days)  # Check to see if the Days are NonEmpty
 
+distr_buckets = matrix(nrow = num_buckets, ncol = 3)  # Mean Values for Various Buckets
+
 for(i in 1:num_days) {emptyday[i] <- as.numeric(max(buckets[,i])==0)}
 
 badobs = which(emptyday == 1 | is.na(emptyday))
 
-buckets = buckets[,-badobs]
-days = days[-badobs]
+if(length(badobs) != 0 ) {
+    buckets = buckets[,-badobs]
+    days = days[-badobs]
+}
+
+for(i in 1:num_buckets) {
+    distr_buckets[i,2] <- mean(buckets[i,])
+    distr_buckets[i,1] <- quantile(buckets[i,],0.25)
+    distr_buckets[i,3] <- quantile(buckets[i,],0.75)
+}
+
+write.table(distr_buckets, "data_distr_on.csv", sep=",", row.names = FALSE, col.names = FALSE)
 
 print("Done with Bucketing")
 
@@ -104,8 +116,6 @@ months[months == 0] <- 12
 
 day_of_week <- dates$wday
 weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend Indicator
-
-print(summary(cbind(weekend,months)))
 
 ### BUGS CODE ###
 
@@ -211,8 +221,6 @@ print("About to run Rbugs")
 
 load.sim <- jags(data, inits, parameters, "model_poisson.bug", n.chains=1, n.iter=2000, n.burnin=200, progress.bar="text")
 
-print(load.sim)
-
 load.mcmc <- as.mcmc(load.sim)
 
 df_mcmc <- data.frame(load.mcmc[,1:49])
@@ -225,7 +233,6 @@ actual_months <- dates$month
 num_months <- length(levels(as.factor(actual_months)))
 factor_months <- as.factor(date)
 first_month = round(as.numeric(levels(as.factor(factor_months))[1]) %% 1 * 12,0)+1
-print(paste("First month is",first_month))
 obs_month = seq(first_month,first_month+num_months-1,1) %% 12
 obs_month[obs_month == 0] = 12
 
