@@ -1,10 +1,17 @@
 #!/bin/Rscript
 
-# Type this at command line: Rscript passengeron_negbin_model.R s3://dssg-cta-data/rcp_join2/train/apc/taroute=6/direction_name=North/stop_id=17076
+# Type each of the following in the same line of the terminal:
+# Rscript passengeron_negbin_model.R 
+# s3://dssg-cta-data/rcp_join2/train/apc/taroute=6/direction_name=South/stop_id=1984
+# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv
+# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/totalsim_negbinom_on.csv
+
 # This will run the code on data inside of the folder.
 
 args <- commandArgs(TRUE)
 pathname <- toString(args[1])
+totaloutput <- toString(args[2])
+avgoutput <- toString(args[3])
 
 ### Required Libraries ###
 
@@ -283,8 +290,11 @@ for (i in 1:dim(total_df)[2]) {
 }
 
 # write to file
-write.table(total_df, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/totalsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
-write.table(avg_values, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
+write.table(total_df, totaloutput, sep=",", row.names = FALSE, col.names = TRUE)
+write.table(avg_values, avgoutput, sep=",", row.names = FALSE, col.names = TRUE)
+
+# write.table(total_df, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/totalsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
+# write.table(avg_values, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
 
 
 
