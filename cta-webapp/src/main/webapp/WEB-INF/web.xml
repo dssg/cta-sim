@@ -8,6 +8,10 @@
     <servlet-name>spring</servlet-name>
     <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
+    <init-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>/WEB-INF/classes/dssg/application-context-webapp.xml</param-value>
+    </init-param>
   </servlet>
 
   <!-- Servlets -->
