@@ -20,7 +20,7 @@ library(R2jags)
 
 ### Loading and Cleaning the Data ###
 
-stop_data = read.csv(pipe(paste("bash ../util/catdir-s3.sh", pathname)), header = FALSE)
+stop_data = read.csv(pipe(paste("bash ../../../util/catdir-s3.sh", pathname)), header = FALSE)
 
 names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off")
 
