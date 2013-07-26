@@ -264,8 +264,8 @@ for (i in 1:dim(total_df)[2]) {
 }
 
 # write to file
-write.table(total_df, "totalsim_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
-write.table(avg_values, "avgsim_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
+write.table(total_df, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/totalsim_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
+write.table(avg_values, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
 
 
 
