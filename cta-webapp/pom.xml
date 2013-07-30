@@ -214,6 +214,12 @@
       <version>2.2.4</version>
       <scope>compile</scope>
     </dependency>
+    <!-- Stochastic Simulation in Java -->
+    <dependency>
+      <groupId>ca.umontreal.iro</groupId>
+        <artifactId>ssj</artifactId>
+      <version>2.5</version>
+    </dependency>
 	</dependencies>
 
 	<build>

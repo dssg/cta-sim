@@ -1,22 +1,23 @@
 package dssg.simulator;
 
-import umontreal.iro.lecuyer.probdist.PoissonDist;
+import umontreal.iro.lecuyer.probdist.NegativeBinomialDist;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
-public class PassengerOnModelPoisson implements PassengerOnModel {
+public class PassengerOnModelNegBinom implements PassengerOnModel {
   private final RandomStream rand;
 
-  public PassengerOnModelPoisson() {
+  public PassengerOnModelNegBinom() {
     this.rand = new MRG32k3a();
   }
 
   @Override
   public int sample(BusState bus, StopState stop) {
-    double lambda = 1;
+    double n = 1;
+    double p = 1;
     double u = this.rand.nextDouble();
-    int s = PoissonDist.inverseF(lambda,u); 
-    return s;
+    int s = NegativeBinomialDist.inverseF(n,p,u);
+    return s; 
   }
 
 }
