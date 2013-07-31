@@ -207,6 +207,19 @@
       <artifactId>guava</artifactId>
       <version>14.0.1</version>
     </dependency>
+    <!--  Gson: Java to Json conversion -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.2.4</version>
+      <scope>compile</scope>
+    </dependency>
+    <!-- Stochastic Simulation in Java -->
+    <dependency>
+      <groupId>ca.umontreal.iro</groupId>
+        <artifactId>ssj</artifactId>
+      <version>2.5</version>
+    </dependency>
 	</dependencies>
 
 	<build>
