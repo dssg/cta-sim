@@ -8,28 +8,47 @@
 
 # This will run the code on data inside of the folder.
 
+
+### Redshift Connect ###
+
+library(RODBC)
+
+conn <- odbcConnect("dssg_cta_redshift")
+
+stop_data<-sqlQuery(conn,"select * from rcp_join_dn1_train_apc where taroute='6' and dir_group=0 and tageoid='1423'")
+
+print(stop_data[1:5,])
+
+names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
+
+### Command Line Arguments ###
+
 args <- commandArgs(TRUE)
 pathname <- toString(args[1])
 totaloutput <- toString(args[2])
 avgoutput <- toString(args[3])
 
+input_months <- as.numeric(args[4])
+input_weekend <- as.numeric(args[5])
+
 ### Required Libraries ###
 
 library(coda)
 library(R2jags)
+library(rjson)
 
 ### Loading and Cleaning the Data ###
 
-stop_data = read.csv(pipe(paste("bash ../../../util/catdir-s3.sh", pathname)), header = FALSE)
+# stop_data = read.csv(pipe(paste("bash ../../../util/catdir-s3.sh", pathname)), header = FALSE)
 
-names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off")
+# names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off")
 
 # summary(stop_data)
 
 actualtime <- function(x) { 
   ## Returns Time, Month, Year, and Day of Week from Date Column in Format "time_actual_arrive"
 
-  date_time = strptime(x, format = "%I:%M:%S %p")
+  date_time = strptime(x, format = "%H:%M:%S")
   time = date_time$hour + date_time$min/60 + date_time$sec/(60*60)
   return(list(time = time))
 }
@@ -37,7 +56,7 @@ actualtime <- function(x) {
 dateinfo <- function(x) {
   ## Returns Day, Month, Year, and Day of Week from Date Column in Format "survey_date"
 
-  date_time = strptime(x, format = "%m/%d/%Y")
+  date_time = strptime(x, format = "%Y-%m-%d")
   day = date_time$mday
   month = date_time$mon
   year = date_time$year
@@ -96,14 +115,6 @@ if(length(badobs) != 0 ) {
     days = days[-badobs]
 }
 
-for(i in 1:num_buckets) {
-    distr_buckets[i,2] <- mean(buckets[i,])
-    distr_buckets[i,1] <- quantile(buckets[i,],0.25)
-    distr_buckets[i,3] <- quantile(buckets[i,],0.75)
-}
-
-write.table(distr_buckets, "data_distr_on.csv", sep=",", row.names = FALSE, col.names = FALSE)
-
 print("Done with Bucketing")
 
 num_days = length(days) # Number of Days
@@ -124,7 +135,23 @@ months[months == 0] <- 12
 day_of_week <- dates$wday
 weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend Indicator
 
+### Calculate Distr for Input_month and Input_weekend ###
+
+distr_obs = which(months == input_months & weekend == input_weekend)
+
+print(distr_obs)
+
+for(i in 1:num_buckets) {
+    distr_buckets[i,2] <- mean(buckets[i,distr_obs])
+    distr_buckets[i,1] <- quantile(buckets[i,distr_obs],0.25)
+    distr_buckets[i,3] <- quantile(buckets[i,distr_obs],0.75)
+}
+
+write.table(distr_buckets, "data_distr_on.csv", sep=",", row.names = FALSE, col.names = FALSE)
+
 ### BUGS CODE ###
+
+# if(file.exists('mcmc_output/totalsim_negbinom_on.csv') == FALSE) {
 
 # If Number of Months is less than 12, then we have a disconnect in dependency #
 
@@ -242,7 +269,7 @@ print("About to run Rbugs")
 
 print(paste("Number of observations is ", num_buckets*num_days))
 
-load.sim <- jags(data, inits, parameters, "model_negbinom.bug", n.chains=1, n.iter=3000, n.burnin=200, progress.bar="text")
+load.sim <- jags(data, inits, parameters, "model_negbinom.bug", n.chains=1, n.iter=6000, n.burnin=200, progress.bar="text")
 
 print(load.sim)
 
@@ -289,6 +316,61 @@ for (i in 1:dim(total_df)[2]) {
     avg_values[,i] = mean(total_df[,i])
 }
 
+### JSON OUTPUT ### 
+
+if(length(unique(stop_data$taroute))==1){
+  taroute=unique(stop_data$taroute)
+}else{
+  print("ERROR: route not unique")
+}
+if(length(unique(stop_data$dir_group))==1){
+  dir_group=unique(stop_data$dir_group)
+}else{
+  print("ERROR: dir_group not unique")
+}
+if(length(unique(stop_data$tageoid))==1){
+  tageoid=unique(stop_data$tageoid)
+}else{
+  print("ERROR: tageoid not unique")
+}
+
+#PARAMETERS
+values = as.vector(as.matrix(avg_values))
+
+nTimeOfDay=list(values[1:47])
+names(nTimeOfDay)=c("nTimeOfDay")
+nDayType=list(values[48:49])
+names(nDayType)=c("nDayType")
+rhoTimeOfDay=list(values[50:96])
+names(rhoTimeOfDay)=c("rhoTimeOfDay")
+nMonth=list(values[97:108])
+names(nMonth)= c("nMonth")
+
+param_list = c(nTimeOfDay, nDayType, rhoTimeOfDay, nMonth)
+
+#TAGEOID
+cL=list(param_list)
+names(cL)=c(tageoid)
+
+#DIR_GROUP
+bL=list(cL)
+names(bL)=c(dir_group)
+
+#TAROUTE
+aL=list(bL)
+names(aL)=c(taroute)
+
+#FIT DATE
+final=list(aL)
+names(aL)=c(Sys.Date())
+
+json = toJSON(aL)
+
+# setwd("cta-webapp/src/main/resources/")
+sink("boardParams.json")
+cat(json)
+sink()
+
 # write to file
 write.table(total_df, totaloutput, sep=",", row.names = FALSE, col.names = TRUE)
 write.table(avg_values, avgoutput, sep=",", row.names = FALSE, col.names = TRUE)
@@ -296,5 +378,5 @@ write.table(avg_values, avgoutput, sep=",", row.names = FALSE, col.names = TRUE)
 # write.table(total_df, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/totalsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
 # write.table(avg_values, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
 
-
+# }
 
