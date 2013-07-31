@@ -62,13 +62,13 @@ public class Data {
 				new AsyncCallback<List<MyParameters>>() {
 					@Override
 					public void onSuccess(List<MyParameters> output) {
-						Info.display("TEST\nSucess in getting data @DATA.", "Number of data points:"+Integer.toString(output.toArray().length));;
+						Info.display("TEST S3\nSucess in getting data @DATA.", "Number of data points:"+Integer.toString(output.toArray().length));;
 						
 					}
 
 					@Override
 					public void onFailure(Throwable e) {
-						Info.display("TEST\nFailure in getting data", "");
+						Info.display("TEST S3\nFailure in getting data", "");
 					}
 				});
 	}

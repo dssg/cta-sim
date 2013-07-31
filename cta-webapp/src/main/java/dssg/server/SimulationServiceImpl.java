@@ -51,58 +51,56 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 public class SimulationServiceImpl extends RemoteServiceServlet implements
 		SimulationService {
 
-  @Autowired
+	@Autowired
 	public BlockIndexService bis;
 
-  @Autowired
-  public BlockLocationService bls;
+	@Autowired
+	public BlockLocationService bls;
 
-  @Autowired
-  public BlockCalendarService bcs;
+	@Autowired
+	public BlockCalendarService bcs;
 
-  @Autowired
-  public TransitGraphDao tgd;
-  
-  
-  
-  private Map<String, SimulationBatch> simulations = Maps.newHashMap();
+	@Autowired
+	public TransitGraphDao tgd;
 
-	private	S3CommunicationService s3ComunicationService = new S3CommunicationServiceImpl();
+	private Map<String, SimulationBatch> simulations = Maps.newHashMap();
 
-  public BlockIndexService getBis() {
-    return bis;
-  }
+	private S3CommunicationService s3ComunicationService = new S3CommunicationServiceImpl();
 
-  public BlockLocationService getBls() {
-    return bls;
-  }
+	public BlockIndexService getBis() {
+		return bis;
+	}
 
-  public BlockCalendarService getBcs() {
-    return bcs;
-  }
+	public BlockLocationService getBls() {
+		return bls;
+	}
 
-  public TransitGraphDao getTgd() {
-    return tgd;
-  }
+	public BlockCalendarService getBcs() {
+		return bcs;
+	}
 
-  public Map<String, SimulationBatch> getSimulations() {
-    return simulations;
-  }
+	public TransitGraphDao getTgd() {
+		return tgd;
+	}
 
-  public SimulationBatch getSimulation(String batchId) {
-    return simulations.get(batchId);
-  }
+	public Map<String, SimulationBatch> getSimulations() {
+		return simulations;
+	}
 
-  public S3CommunicationService getS3ComunicationService() {
-    return s3ComunicationService;
-  }
+	public SimulationBatch getSimulation(String batchId) {
+		return simulations.get(batchId);
+	}
 
-  public void setS3ComunicationService(
-    S3CommunicationService s3ComunicationService) {
-    this.s3ComunicationService = s3ComunicationService;
-  }
+	public S3CommunicationService getS3ComunicationService() {
+		return s3ComunicationService;
+	}
 
-  public String submitSimulation(String route, Date date, long startTime,
+	public void setS3ComunicationService(
+			S3CommunicationService s3ComunicationService) {
+		this.s3ComunicationService = s3ComunicationService;
+	}
+
+	public String submitSimulation(String route, Date date, long startTime,
 			long endTime) throws IllegalArgumentException {
 
 		/*
@@ -113,13 +111,14 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 		System.out.println("Number of parameters: "
 				+ parameters.toArray().length);
 
-	  String batchId = route + date + startTime + endTime;
+		String batchId = route + date + startTime + endTime;
 
-    SimulationBatch simBatch = simulations.get(batchId);
-    if (simBatch == null) {
-      simBatch = new SimulationBatch(this, batchId, route, date, startTime, endTime, parameters);
-      simulations.put(batchId, simBatch);
-    }
+		SimulationBatch simBatch = simulations.get(batchId);
+		if (simBatch == null) {
+			simBatch = new SimulationBatch(this, batchId, route, date,
+					startTime, endTime, parameters);
+			simulations.put(batchId, simBatch);
+		}
 
 		return simBatch.getBatchId();
 	}
@@ -127,26 +126,21 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 	/**
 	 * Return simulation results to client side for display.
 	 */
-	public List<Number> getResults(String batchId){
-	  
-    SimulationBatch simulation = simulations.get(batchId);
-    
-    if (simulation != null) {
-      // TODO implement!  
-    }
-	  
-		int[] dummyData = {30,9,10,12,10,10,11,3,8,11,
-				16,25,29,35,55,54,48,49,48,36,
-				33,41,43,42,49,44,49,50,51,52,
-				53,50,51,52,50,55,53,50,48,52,
-				48,46,44,43,35,33,31};
+	public List<Number> getResults(String batchId) {
+
+		SimulationBatch simulation = simulations.get(batchId);
+
+		if (simulation != null) {
+			// TODO implement!
+		}
+
+		int[] dummyData = { 30, 9, 10, 12, 10, 10, 11, 3, 8, 11, 16, 25, 29,
+				35, 55, 54, 48, 49, 48, 36, 33, 41, 43, 42, 49, 44, 49, 50, 51,
+				52, 53, 50, 51, 52, 50, 55, 53, 50, 48, 52, 48, 46, 44, 43, 35,
+				33, 31 };
 		List<Number> data = new ArrayList<Number>();
-		Random generator = new Random();
-		for (double n = 1; n <= 100; n = n + .5) {
-//			data.add(Math.floor(Math.abs(150
-//					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
-//					+ generator.nextDouble() * 80)));
-			data.add(dummyData[(int) (n*2)]);
+		for (int n = 0; n <= 46; n++) {
+			data.add(dummyData[n]);
 		}
 		return data;
 	}
