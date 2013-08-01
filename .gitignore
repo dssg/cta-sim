@@ -7,3 +7,4 @@ target/
 src/main/gwt-unitCache
 bin/
 *.yaml
+*.json
