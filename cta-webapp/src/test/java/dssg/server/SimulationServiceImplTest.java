@@ -51,9 +51,6 @@ public class SimulationServiceImplTest {
     } catch (IllegalArgumentException e1) {
       e1.printStackTrace();
       fail("Illegal argument exception on submitting simulation");
-    } catch (FileNotFoundException e1) {
-      e1.printStackTrace();
-      fail("File not found exception on submitting simultion");
     }
 
     fail("Not yet implemented");

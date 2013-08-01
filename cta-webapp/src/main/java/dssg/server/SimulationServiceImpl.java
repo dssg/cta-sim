@@ -92,14 +92,20 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 	}
 
   public String submitSimulation(String route, Date startTime,
-			Date endTime) throws IllegalArgumentException, FileNotFoundException {
+			Date endTime) throws IllegalArgumentException {
 
 	  String batchId = route + startTime + endTime;
 
     SimulationBatch simBatch = simulations.get(batchId);
     if (simBatch == null) {
-      simBatch = new SimulationBatch(this, batchId, route, startTime, endTime);
-      simulations.put(batchId, simBatch);
+      try {
+        simBatch = new SimulationBatch(this, batchId, route, startTime, endTime);
+        simulations.put(batchId, simBatch);
+      }
+      catch(FileNotFoundException e) {
+        e.printStackTrace();
+        return null;
+      }
     }
 
 		return simBatch.getBatchId();
