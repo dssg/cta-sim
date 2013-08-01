@@ -11,6 +11,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import dssg.client.MyParameters;
 import dssg.server.SimulationServiceImpl;
 import dssg.shared.S3Communication;
@@ -23,6 +26,10 @@ import dssg.shared.S3Communication;
  */
 
 public class SimulationBatch {
+  static public final String AGENCY_TIMEZONE = "America/Chicago";
+  static public final String AGENCY_NAME = "Chicago Transit Authority";
+  static public final DateTimeZone TIMEZONE = DateTimeZone.forID(AGENCY_TIMEZONE);
+
   static private final int THREAD_COUNT;
   static {
     final int numProcessors =
@@ -63,9 +70,12 @@ public class SimulationBatch {
     this.boardModel = new PassengerOnModelNegBinom(boardParamReader); 
     this.alightModel = null;
     
+    // switch to Joda time internally
+    DateTime jStartTime = new DateTime(startTime.getTime(),TIMEZONE);
+    DateTime jEndTime = new DateTime(endTime.getTime(),TIMEZONE);
     
     for (int i = 0; i < NUM_RUNS; i++) {
-      this.executor.execute(new SimulationRun(this, i, routeId, startTime, endTime));
+      this.executor.execute(new SimulationRun(this, i, routeId, jStartTime, jEndTime));
     }
     this.executor.shutdown();
   }

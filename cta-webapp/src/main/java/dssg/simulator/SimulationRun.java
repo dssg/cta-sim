@@ -1,34 +1,26 @@
 package dssg.simulator;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.TimeZone;
 
-import org.onebusaway.gtfs.impl.GtfsDaoImpl;
+import org.joda.time.DateMidnight;
+import org.joda.time.DateTime;
+
 import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.gtfs.model.Route;
-import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.transit_data_federation.services.blocks.BlockCalendarService;
 import org.onebusaway.transit_data_federation.services.blocks.BlockIndexService;
 import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
 import org.onebusaway.transit_data_federation.services.realtime.BlockLocationService;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockConfigurationEntry;
-import org.onebusaway.transit_data_federation.services.transit_graph.BlockEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TransitGraphDao;
-import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
-
-import dssg.client.MyParameters;
-import dssg.server.SimulationServiceImpl;
 
 /**
  * This class holds the state/result of a single simulation.
@@ -37,8 +29,6 @@ import dssg.server.SimulationServiceImpl;
  * 
  */
 public class SimulationRun implements Runnable {
-
-  private final static TimeZone TIMEZONE = TimeZone.getTimeZone("America/Chicago");
   
   /*
    * Simulation static properties
@@ -53,8 +43,9 @@ public class SimulationRun implements Runnable {
   final int runId;
   final RouteEntry route;
   final String routeId;
-  final Date startTime;
-  final Date endTime;
+  final DateTime startTime;
+  final DateTime endTime;
+  final DateMidnight day;
 
   final PriorityQueue<BlockStopTimeEntry> stopTimes;
   final List<StopEvent> events;
@@ -63,7 +54,7 @@ public class SimulationRun implements Runnable {
   
 
   public SimulationRun(SimulationBatch simBatch, int runId,
-    String routeId, Date startTime, Date endTime) {
+    String routeId, DateTime startTime, DateTime endTime) {
     this.bis = simBatch.simService.bis;
     this.bls = simBatch.simService.bls;
     this.bcs = simBatch.simService.bcs;
@@ -75,14 +66,15 @@ public class SimulationRun implements Runnable {
     this.routeId = routeId;
     this.startTime = startTime;
     this.endTime = endTime;
-    
+    this.day = startTime.toDateMidnight();
+
     this.events = new ArrayList<StopEvent>();
     this.buses = new HashMap<String,BusState>();
     this.stops = new HashMap<String,StopState>();
     
-    AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString("Chicago Transit Authority_" + routeId);
+    AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(SimulationBatch.AGENCY_NAME + "_" + routeId);
     this.route = tgd.getRouteForId(routeAgencyAndId);
-    List<BlockInstance> blocks = bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId, startTime.getTime(), endTime.getTime());
+    List<BlockInstance> blocks = bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId, startTime.getMillis(), endTime.getMillis());
 
     stopTimes = new PriorityQueue<BlockStopTimeEntry>(1000,
 	    new Comparator<BlockStopTimeEntry>() {
@@ -139,10 +131,8 @@ public class SimulationRun implements Runnable {
 
     int alight = this.alightModel.sample(busStopId, arrivingLoad);
     int prevLeftBehind = stop.getLeftBehind(routeId);
-    // TODO: add day field, switch to Joda time
-    Calendar day = Calendar.getInstance(TIMEZONE);
-    day.setTime(startTime);
-    int attemptBoard = this.boardModel.sample(busStopId, day, lastDepartureTime, actualDepartureTime) + prevLeftBehind;
+
+    int attemptBoard = this.boardModel.sample(busStopId, this.day, lastDepartureTime, actualDepartureTime) + prevLeftBehind;
     int actualBoard = bus.update(alight, attemptBoard);
     int leftBehind = attemptBoard - actualBoard;
     stop.update(routeId, actualDepartureTime, leftBehind);
@@ -164,26 +154,6 @@ public class SimulationRun implements Runnable {
        * TODO FIXME compute stats or put them in whatever format is needed.
        */
     }
-  }
-
-  public int getRunId() {
-    return runId;
-  }
-
-  public RouteEntry getRoute() {
-    return route;
-  }
-
-  public String getRouteId() {
-    return routeId;
-  }
-
-  public Date getStartTime() {
-    return startTime;
-  }
-
-  public Date getEndTime() {
-    return endTime;
   }
 
 }

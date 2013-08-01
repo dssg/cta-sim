@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.joda.time.DateMidnight;
+import org.joda.time.DateTimeConstants;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -70,15 +73,14 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
    * @return the number of passengers who want to board the bus
    */
   @Override
-  public int sample(String busStopId, Calendar day, int lastDepart, int thisDepart) {
+  public int sample(String busStopId, DateMidnight day, int lastDepart, int thisDepart) {
     ModelParams params = this.busStopToParams.get(busStopId);
     // TODO: allow sample across midnight
 
-    // TODO: switch to Joda time?
     int dayIdx = WEEKDAY;
-    int dayId = day.get(Calendar.DAY_OF_WEEK);
-    if (dayId == Calendar.SATURDAY || dayId == Calendar.SUNDAY) dayIdx = WEEKEND;
-    int monthIdx = day.get(Calendar.MONTH);
+    int dayId = day.getDayOfWeek();
+    if (dayId == DateTimeConstants.SATURDAY || dayId == DateTimeConstants.SUNDAY) dayIdx = WEEKEND;
+    int monthIdx = day.getMonthOfYear() - 1;
 
     double llDayTypeFactor = params.lambdaDayType[dayIdx];
     double llMonthFactor = params.lambdaMonth[monthIdx];
