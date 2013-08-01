@@ -1,12 +1,14 @@
 package dssg.simulator;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.TimeZone;
 
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -16,6 +18,7 @@ import org.onebusaway.transit_data_federation.services.blocks.BlockCalendarServi
 import org.onebusaway.transit_data_federation.services.blocks.BlockIndexService;
 import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
 import org.onebusaway.transit_data_federation.services.realtime.BlockLocationService;
+import org.onebusaway.transit_data_federation.services.transit_graph.BlockConfigurationEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
@@ -35,65 +38,62 @@ import dssg.server.SimulationServiceImpl;
  */
 public class SimulationRun implements Runnable {
 
+  private final static TimeZone TIMEZONE = TimeZone.getTimeZone("America/Chicago");
+  
   /*
    * Simulation static properties
    */
-  final BlockIndexService bis;
-  final BlockLocationService bls;
-  final BlockCalendarService bcs;
-  final TransitGraphDao tgd;
-  final protected int runId;
+  final private BlockIndexService bis;
+  final private BlockLocationService bls;
+  final private BlockCalendarService bcs;
+  final private TransitGraphDao tgd;
+  final private PassengerOnModel boardModel;
+  final private PassengerOffModel alightModel;
+
+  final int runId;
   final RouteEntry route;
-  final protected String routeId;
-  final protected Date startDate;
-  final protected long startTime;
-  final protected long endTime;
-  final protected List<MyParameters> parameters;
+  final String routeId;
+  final Date startTime;
+  final Date endTime;
+
+  final PriorityQueue<BlockStopTimeEntry> stopTimes;
+  final List<StopEvent> events;
+  final Map<String,BusState> buses; // Map GTFS block id to bus state object
+  final Map<String,StopState> stops; // Map GTFS stop id to stop state object
   
-  final protected PriorityQueue<StopTimeEntry> stopTimes;
-  final protected List<StopEvent> events;
-  final protected Map<String,BusState> buses; // Map GTFS block id to bus state object
-  final protected Map<String,StopState> stops; // Map GTFS stop id to stop state object
-  
-  final protected BoardingModel boardingModel;
-  final protected AlightingModel alightingModel;
 
   public SimulationRun(SimulationBatch simBatch, int runId,
-    String routeId, Date startDate, long startTime, long endTime, List<MyParameters> parameters) {
+    String routeId, Date startTime, Date endTime) {
     this.bis = simBatch.simService.bis;
     this.bls = simBatch.simService.bls;
     this.bcs = simBatch.simService.bcs;
     this.tgd = simBatch.simService.tgd;
+    this.boardModel = simBatch.boardModel;
+    this.alightModel = simBatch.alightModel;
+
     this.runId = runId;
     this.routeId = routeId;
-    this.startDate = startDate;
     this.startTime = startTime;
     this.endTime = endTime;
-    this.parameters = parameters;
     
     this.events = new ArrayList<StopEvent>();
     this.buses = new HashMap<String,BusState>();
     this.stops = new HashMap<String,StopState>();
     
-    this.boardingModel = new BoardingModel();
-    this.alightingModel = new AlightingModel();
-
     AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString("Chicago Transit Authority_" + routeId);
     this.route = tgd.getRouteForId(routeAgencyAndId);
-    long dateTime = startDate.getTime();
-    List<BlockInstance> blocks = bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId, dateTime+startTime, dateTime+endTime);
+    List<BlockInstance> blocks = bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId, startTime.getTime(), endTime.getTime());
 
-    stopTimes = new PriorityQueue<StopTimeEntry>(1000,
-	    new Comparator<StopTimeEntry>() {
+    stopTimes = new PriorityQueue<BlockStopTimeEntry>(1000,
+	    new Comparator<BlockStopTimeEntry>() {
 	      @Override
-	      public int compare(StopTimeEntry st1, StopTimeEntry st2) {
-	        return st1.getDepartureTime() - st2.getDepartureTime();
+	      public int compare(BlockStopTimeEntry st1, BlockStopTimeEntry st2) {
+	        return st1.getStopTime().getDepartureTime() - st2.getStopTime().getDepartureTime();
 	      }
 	    });
 
     for(BlockInstance blockInst : blocks)
-      for(BlockStopTimeEntry bstEntry : blockInst.getBlock().getStopTimes())
-        stopTimes.add(bstEntry.getStopTime());
+        stopTimes.add(blockInst.getBlock().getStopTimes().get(0));
     
   }
 
@@ -105,16 +105,17 @@ public class SimulationRun implements Runnable {
     if(this.stopTimes.isEmpty()) {
       return false;
     }
-    StopTimeEntry stopTimeEntry = this.stopTimes.remove();
-    TripEntry tripEntry = stopTimeEntry.getTrip();
-    RouteEntry routeEntry = tripEntry.getRoute();
-    BlockEntry blockEntry = tripEntry.getBlock();
-    String blockId = blockEntry.getId().getId();
+    BlockStopTimeEntry bste = this.stopTimes.remove();
+
+    BlockConfigurationEntry bce = bste.getTrip().getBlockConfiguration();
+    String blockId = bce.getBlock().getId().getId();
+    StopTimeEntry stopTimeEntry = bste.getStopTime();
     BusState bus = this.buses.get(blockId);
     if(bus == null) {
-      bus = new BusState(routeEntry,blockEntry);
+      bus = new BusState(bste);
       this.buses.put(blockId, bus);
     }
+
     StopEntry stopEntry = stopTimeEntry.getStop();
     String stopId = stopEntry.getId().getId();
     StopState stop = this.stops.get(stopId);
@@ -122,22 +123,38 @@ public class SimulationRun implements Runnable {
       stop = new StopState(stopEntry);
       this.stops.put(stopId, stop);
     }
-    StopEvent event = makeStopEvent(stopTimeEntry, bus, stop);
+    StopEvent event = makeStopEvent(bste, bus, stop);
     this.events.add(event);
     return true;
   }
   
-  public StopEvent makeStopEvent(StopTimeEntry ste, BusState bus, StopState stop) {
-    String routeId = bus.getRouteId();
-    int alight = this.alightingModel.getNumberAlighting(bus, stop);
+  public StopEvent makeStopEvent(BlockStopTimeEntry bste, BusState bus, StopState stop) {
+    String taroute = bus.getCurrentRouteId();
+    String tageoid = stop.getStopId();
+    String busStopId = taroute + "," + tageoid;
+
+    int lastDepartureTime = stop.getTimeOfLastBus(taroute);
+    int actualDepartureTime = bste.getStopTime().getDepartureTime(); // TODO: replace with service model
+    int arrivingLoad = bus.getLoad();
+
+    int alight = this.alightModel.sample(busStopId, arrivingLoad);
     int prevLeftBehind = stop.getLeftBehind(routeId);
-    int attemptBoard = this.boardingModel.getNumberBoarding(bus, stop) + prevLeftBehind;
+    // TODO: add day field, switch to Joda time
+    Calendar day = Calendar.getInstance(TIMEZONE);
+    day.setTime(startTime);
+    int attemptBoard = this.boardModel.sample(busStopId, day, lastDepartureTime, actualDepartureTime) + prevLeftBehind;
     int actualBoard = bus.update(alight, attemptBoard);
     int leftBehind = attemptBoard - actualBoard;
-    stop.update(routeId, ste.getDepartureTime(), leftBehind);
-    int load = bus.getLoad();
+    stop.update(routeId, actualDepartureTime, leftBehind);
+    int departingLoad = bus.getLoad();
     
-    return new StopEvent(ste, bus, stop, alight, actualBoard, leftBehind, load);
+    BlockStopTimeEntry nextStopTime = bus.depart();
+    if(nextStopTime != null)
+      this.stopTimes.add(nextStopTime);
+    
+    System.out.println(attemptBoard + " attempting to board at stop " + tageoid);
+
+    return new StopEvent(bste, alight, actualBoard, leftBehind, departingLoad);
   }
   
   @Override
@@ -161,15 +178,11 @@ public class SimulationRun implements Runnable {
     return routeId;
   }
 
-  public Date getStartDate() {
-    return startDate;
-  }
-
-  public long getStartTime() {
+  public Date getStartTime() {
     return startTime;
   }
 
-  public long getEndTime() {
+  public Date getEndTime() {
     return endTime;
   }
 

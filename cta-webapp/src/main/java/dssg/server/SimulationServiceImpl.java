@@ -1,6 +1,7 @@
 package dssg.server;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.FileOutputStream;
 import java.nio.channels.ReadableByteChannel;
@@ -9,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -60,12 +62,10 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 	@Autowired
 	public BlockCalendarService bcs;
 
-	@Autowired
-	public TransitGraphDao tgd;
-
-	private Map<String, SimulationBatch> simulations = Maps.newHashMap();
-
-	private S3CommunicationService s3ComunicationService = new S3CommunicationServiceImpl();
+  @Autowired
+  public TransitGraphDao tgd;
+  
+  private Map<String, SimulationBatch> simulations = Maps.newHashMap();
 
 	public BlockIndexService getBis() {
 		return bis;
@@ -91,34 +91,16 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 		return simulations.get(batchId);
 	}
 
-	public S3CommunicationService getS3ComunicationService() {
-		return s3ComunicationService;
-	}
+  public String submitSimulation(String route, Date startTime,
+			Date endTime) throws IllegalArgumentException, FileNotFoundException {
 
-	public void setS3ComunicationService(
-			S3CommunicationService s3ComunicationService) {
-		this.s3ComunicationService = s3ComunicationService;
-	}
+	  String batchId = route + startTime + endTime;
 
-	public String submitSimulation(String route, Date date, long startTime,
-			long endTime) throws IllegalArgumentException {
-
-		/*
-		 * Get simulation parameters from S3 model output file
-		 */
-		List<MyParameters> parameters = new ArrayList<MyParameters>();
-		parameters = s3ComunicationService.downloadParameters();
-		System.out.println("Number of parameters: "
-				+ parameters.toArray().length);
-
-		String batchId = route + date + startTime + endTime;
-
-		SimulationBatch simBatch = simulations.get(batchId);
-		if (simBatch == null) {
-			simBatch = new SimulationBatch(this, batchId, route, date,
-					startTime, endTime, parameters);
-			simulations.put(batchId, simBatch);
-		}
+    SimulationBatch simBatch = simulations.get(batchId);
+    if (simBatch == null) {
+      simBatch = new SimulationBatch(this, batchId, route, startTime, endTime);
+      simulations.put(batchId, simBatch);
+    }
 
 		return simBatch.getBatchId();
 	}

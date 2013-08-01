@@ -1,5 +1,7 @@
 package dssg.client;
 
+import java.io.FileNotFoundException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -11,8 +13,8 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("simulate")
 public interface SimulationService extends RemoteService {
-  String submitSimulation(String route, Date date, long startTime,
-    long endTime) throws IllegalArgumentException;
+  String submitSimulation(String route, Date startTime,
+    Date endTime) throws IllegalArgumentException, FileNotFoundException;
   
   public List<Number> getResults(String simId);
 }

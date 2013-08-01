@@ -1,5 +1,5 @@
 package dssg.simulator;
 
 public interface PassengerOffModel {
-  public int sample(BusState bus, StopState stop);
+  public int sample(String busStopId, int arrivingLoad);
 }

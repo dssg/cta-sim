@@ -1,33 +1,53 @@
 package dssg.simulator;
 
+import org.onebusaway.transit_data_federation.services.transit_graph.BlockConfigurationEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockEntry;
+import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
+import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
+import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
+import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
 
 public class BusState {
-  final RouteEntry route;
-  final String routeId;
-  final BlockEntry block;
-  final String blockId;
-	final int max_capacity;
-	private int passengers_in;
+  final private String blockId;
+	final private int maxCapacity;
+
+	private int passengersIn;
+  private BlockStopTimeEntry nextStop;
+  private String currentRouteId;
+  private String currentDirectionId;
 	
-	public BusState(RouteEntry route, BlockEntry block) {
-	  this.route = route;
-	  this.routeId = route.getId().getId();
-	  this.block = block;
-	  this.blockId = block.getId().getId();
-		this.max_capacity = 80; 
-		this.passengers_in = 0;
+	public BusState(BlockStopTimeEntry bste) {
+	  BlockTripEntry bte = bste.getTrip();
+    TripEntry tripEntry = bte.getTrip();
+    RouteEntry routeEntry = tripEntry.getRoute();
+    BlockEntry blockEntry = tripEntry.getBlock();
+
+	  this.blockId = blockEntry.getId().getId();
+	  this.currentRouteId = routeEntry.getId().getId();
+    this.currentDirectionId = tripEntry.getDirectionId();
+	  this.nextStop = bste;
+
+		this.maxCapacity = 80;
+		this.passengersIn = 0;
 	}
 
   public int getLoad() {
-    return this.passengers_in;
+    return this.passengersIn;
   }
-  
-  public String getRouteId() {
-    return this.routeId;
+
+  public String getBlockId() {
+    return this.blockId;
   }
-  
+
+  public String getCurrentRouteId() {
+    return this.currentRouteId;
+  }
+
+  public String getCurrentDirectionId() {
+    return this.currentDirectionId;
+  }
+
   /**
    * Updates the bus state after making a stop.
    * @param alighting the number of passengers who get off the bus
@@ -36,22 +56,37 @@ public class BusState {
    */
   public int update(int alighting, int boarding) {
 
-    if(alighting > this.passengers_in) {
+    if(alighting > this.passengersIn) {
       // TODO: should this be an exception?
       System.err.println("Warning: attempting to alight more passengers than in bus");
-      alighting = this.passengers_in;
+      alighting = this.passengersIn;
     }
-    this.passengers_in -= alighting;
+    this.passengersIn -= alighting;
     
-    this.passengers_in += boarding;
+    this.passengersIn += boarding;
     int left_behind = 0;
     int actual_board = boarding;
-    if(this.passengers_in > this.max_capacity) {
-      left_behind = this.passengers_in - this.max_capacity;
+    if(this.passengersIn > this.maxCapacity) {
+      left_behind = this.passengersIn - this.maxCapacity;
       actual_board = boarding - left_behind;
-      this.passengers_in = this.max_capacity;
+      this.passengersIn = this.maxCapacity;
     }
 
     return actual_board;
+  }
+
+  public BlockStopTimeEntry depart() {
+    if(this.nextStop.hasNextStop()) {
+      BlockStopTimeEntry prevStop = this.nextStop;
+      BlockStopTimeEntry stop = prevStop.getNextStop();
+      TripEntry trip = stop.getTrip().getTrip();
+
+      this.currentRouteId = trip.getRoute().getId().getId();
+      this.currentDirectionId = trip.getDirectionId();
+      this.nextStop = stop;
+
+      return stop;
+    }
+    else return null;
   }
 }

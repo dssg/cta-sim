@@ -1,33 +1,34 @@
 package dssg.simulator;
 
+import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
+import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
 
 public class StopEvent {
   final StopTimeEntry ste;
-  final BusState bus;
-  final StopState stop;
+  final String tripId;
+  final String routeId;
+  final String directionId;
+  final String blockId;
   
   final int alight;
   final int board;
   final int leftBehind;
   final int departingLoad;
 
-  public StopEvent(StopTimeEntry ste, BusState bus, StopState stop, int alight,
+  public StopEvent(BlockStopTimeEntry bste, int alight,
       int board, int leftBehind, int departingLoad) {
-    this.ste = ste;
-    this.bus = bus;
-    this.stop = stop;
+    this.ste = bste.getStopTime();
+    TripEntry trip = this.ste.getTrip();
+    this.tripId = trip.getId().getId();
+    this.routeId = trip.getRoute().getId().getId();
+    this.directionId = trip.getDirectionId();
+    this.blockId = trip.getBlock().getId().getId();
+
     this.alight = alight;
     this.board = board;
     this.leftBehind = leftBehind;
     this.departingLoad = departingLoad;
-    
-    System.out.print("Bus running block " + bus.getRouteId());
-    System.out.print(" stops at stop " + stop.getStopId());
-    System.out.print(", drops off " + alight);
-    System.out.print(" passengers, picks up " + board);
-    System.out.print(" passengers, and leaves behind " + leftBehind);
-    System.out.println(" with a departing load of " + departingLoad);
   }
 
   public int getActualArrivalTime() {

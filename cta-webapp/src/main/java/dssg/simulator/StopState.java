@@ -6,7 +6,6 @@ import java.util.Map;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 
 public class StopState {
-	private final StopEntry stop;
 	private final String stopId;
 	
 	/**
@@ -21,7 +20,6 @@ public class StopState {
 	private Map<String,Integer> leftBehindByRoute;
 
 	public StopState(StopEntry stop) {
-	  this.stop = stop;
 	  this.stopId = stop.getId().getId();
 	  this.timeOfLastBusByRoute = new HashMap<String,Integer>();
 	  this.leftBehindByRoute = new HashMap<String,Integer>();
@@ -32,12 +30,7 @@ public class StopState {
 	}
 	
 	public int getTimeOfLastBus(String routeId) {
-	  if(this.timeOfLastBusByRoute.containsKey(routeId)) {
-  	  return this.timeOfLastBusByRoute.get(routeId);
-	  }
-	  else {
-	    return 30*60;
-	  }
+	  return this.timeOfLastBusByRoute.get(routeId);
 	}
 	
 	public int getLeftBehind(String routeId) {

@@ -3,6 +3,7 @@ package dssg.server;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.io.FileNotFoundException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -27,23 +28,32 @@ public class SimulationServiceImplTest {
   @Test
   public void test() {
     SimulationServiceImpl simService = new SimulationServiceImpl();
-    S3CommunicationService mockService = mock(S3CommunicationServiceImpl.class);
-    when(mockService.downloadParameters()).thenReturn(Lists.newArrayList(
-        new MyParameters(1, 1.8d)));
-    simService.setS3ComunicationService(mockService);
+
     Calendar testCal = GregorianCalendar.getInstance();
     testCal.set(2013, Calendar.FEBRUARY,11);
-    Date testDate = testCal.getTime();
-    String batchId = simService.submitSimulation("6", testDate, 3*60*60, 27*60*60);
+    Date day = testCal.getTime();
+
+    Date startTime = new Date(day.getTime() + 3*60*60*1000);
+    Date endTime = new Date(day.getTime() + 27*60*60*1000);
     
-    SimulationBatch simBatch = simService.getSimulation(batchId);
+    String batchId;
     try {
-      while(!simBatch.awaitTermination(1, TimeUnit.SECONDS)) {
-        // check again
-      };
-    } catch (InterruptedException e) {
-      System.err.println("Simulation batch interrupted:");
-      e.printStackTrace();
+      batchId = simService.submitSimulation("6", startTime, endTime);
+      SimulationBatch simBatch = simService.getSimulation(batchId);
+      try {
+        while(!simBatch.awaitTermination(1, TimeUnit.SECONDS)) {
+          // check again
+        };
+      } catch (InterruptedException e) {
+        System.err.println("Simulation batch interrupted:");
+        e.printStackTrace();
+      }
+    } catch (IllegalArgumentException e1) {
+      e1.printStackTrace();
+      fail("Illegal argument exception on submitting simulation");
+    } catch (FileNotFoundException e1) {
+      e1.printStackTrace();
+      fail("File not found exception on submitting simultion");
     }
 
     fail("Not yet implemented");
