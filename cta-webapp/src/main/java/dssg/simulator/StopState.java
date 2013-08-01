@@ -29,7 +29,13 @@ public class StopState {
 	  return stopId;
 	}
 	
-	public int getTimeOfLastBus(String routeId) {
+  /**
+   * Updates the bus state after making a stop.
+   * @param alighting the number of passengers who get off the bus
+   * @return          the number of passengers who actually board the bus
+   *                  this is null if it's the first bus of the day
+   */
+	public Integer getTimeOfLastBus(String routeId) {
 	  return this.timeOfLastBusByRoute.get(routeId);
 	}
 	

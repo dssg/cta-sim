@@ -125,8 +125,12 @@ public class SimulationRun implements Runnable {
     String tageoid = stop.getStopId();
     String busStopId = taroute + "," + tageoid;
 
-    int lastDepartureTime = stop.getTimeOfLastBus(taroute);
     int actualDepartureTime = bste.getStopTime().getDepartureTime(); // TODO: replace with service model
+    Integer lastDepartureTime = stop.getTimeOfLastBus(taroute);
+    // TODO: better way of handling first bus of day?
+    if(lastDepartureTime == null) {
+      lastDepartureTime = actualDepartureTime - 60*15; // passengers arriving 15min ahead
+    }
     int arrivingLoad = bus.getLoad();
 
     int alight = this.alightModel.sample(busStopId, arrivingLoad);
