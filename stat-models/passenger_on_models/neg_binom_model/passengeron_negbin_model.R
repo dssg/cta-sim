@@ -9,27 +9,19 @@
 # This will run the code on data inside of the folder.
 
 
-### Redshift Connect ###
-
-library(RODBC)
-
-conn <- odbcConnect("dssg_cta_redshift")
-
-stop_data<-sqlQuery(conn,"select * from rcp_join_dn1_train_apc where taroute='6' and dir_group=0 and tageoid='1423'")
-
-print(stop_data[1:5,])
-
-names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
-
 ### Command Line Arguments ###
 
 args <- commandArgs(TRUE)
-pathname <- toString(args[1])
-totaloutput <- toString(args[2])
-avgoutput <- toString(args[3])
 
-input_months <- as.numeric(args[4])
-input_weekend <- as.numeric(args[5])
+input_taroute <- toString(args[1])
+input_dir_group <- toString(args[2])
+input_tageoid <- toString(args[3])
+
+totaloutput <- toString(args[3])
+avgoutput <- toString(args[4])
+
+input_months <- as.numeric(args[5])
+input_weekend <- as.numeric(args[6])
 
 ### Required Libraries ###
 
@@ -39,11 +31,17 @@ library(rjson)
 
 ### Loading and Cleaning the Data ###
 
-# stop_data = read.csv(pipe(paste("bash ../../../util/catdir-s3.sh", pathname)), header = FALSE)
+### Redshift Connect ###
 
-# names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off")
+library(RODBC)
 
-# summary(stop_data)
+conn <- odbcConnect("dssg_cta_redshift")
+
+stop_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_train_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'")
+
+names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
+
+### Cleaning ###
 
 actualtime <- function(x) { 
   ## Returns Time, Month, Year, and Day of Week from Date Column in Format "time_actual_arrive"
@@ -367,9 +365,7 @@ names(aL)=c(Sys.Date())
 json = toJSON(aL)
 
 # setwd("cta-webapp/src/main/resources/")
-sink("boardParams.json")
-cat(json)
-sink()
+write(json, file="boardParams.json", append = TRUE)
 
 # write to file
 write.table(total_df, totaloutput, sep=",", row.names = FALSE, col.names = TRUE)
