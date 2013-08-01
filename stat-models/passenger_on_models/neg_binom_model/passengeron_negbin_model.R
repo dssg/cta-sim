@@ -2,9 +2,9 @@
 
 # Type each of the following in the same line of the terminal:
 # Rscript passengeron_negbin_model.R 
-# s3://dssg-cta-data/rcp_join2/train/apc/taroute=6/direction_name=South/stop_id=1984
-# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv
+# 6 0 1423
 # /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/totalsim_negbinom_on.csv
+# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv
 
 # This will run the code on data inside of the folder.
 
@@ -17,11 +17,11 @@ input_taroute <- toString(args[1])
 input_dir_group <- toString(args[2])
 input_tageoid <- toString(args[3])
 
-totaloutput <- toString(args[3])
-avgoutput <- toString(args[4])
+totaloutput <- toString(args[4])
+avgoutput <- toString(args[5])
 
-input_months <- as.numeric(args[5])
-input_weekend <- as.numeric(args[6])
+# input_months <- as.numeric(args[6])
+# input_weekend <- as.numeric(args[7])
 
 ### Required Libraries ###
 
@@ -37,7 +37,8 @@ library(RODBC)
 
 conn <- odbcConnect("dssg_cta_redshift")
 
-stop_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_train_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'")
+print( paste("select * from rcp_join_dn1_train_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
+stop_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_train_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
 
 names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
 
@@ -77,7 +78,7 @@ interval_length = 30/60 # interval length in hours
 N = 24 # numer of hours in day
 days = levels(as.factor(stop_data$survey_date))
 
-num_buckets <- N/interval_length-1 # Number of Buckets
+num_buckets <- N/interval_length # Number of Buckets
 num_days = length(levels(as.factor(stop_data$survey_date))) # Number of Days
 
 buckets = matrix(nrow = num_buckets, ncol = num_days)
@@ -135,17 +136,34 @@ weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend I
 
 ### Calculate Distr for Input_month and Input_weekend ###
 
-distr_obs = which(months == input_months & weekend == input_weekend)
+print("About to Calc Distributions")
 
-print(distr_obs)
+print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
 
-for(i in 1:num_buckets) {
-    distr_buckets[i,2] <- mean(buckets[i,distr_obs])
-    distr_buckets[i,1] <- quantile(buckets[i,distr_obs],0.25)
-    distr_buckets[i,3] <- quantile(buckets[i,distr_obs],0.75)
+for (i in 1:12) {
+for (j in 1:2) {
+
+distr_obs = which(actual_months == i-1 & weekend == j)
+
+if (length(distr_obs) != 0 ){
+
+distr_buckets = matrix(ncol = 3, nrow = num_buckets)
+
+print(c(i,j))
+
+for(k in 1:num_buckets) {
+    distr_buckets[k,2] <- mean(buckets[k,distr_obs])
+    distr_buckets[k,1] <- quantile(buckets[k,distr_obs],0.25)
+    distr_buckets[k,3] <- quantile(buckets[k,distr_obs],0.75)
 }
 
-write.table(distr_buckets, "data_distr_on.csv", sep=",", row.names = FALSE, col.names = FALSE)
+write.table(distr_buckets, paste("distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
+
+}
+}
+}
+
+print("Finished Calcing Distributions")
 
 ### BUGS CODE ###
 
@@ -283,7 +301,7 @@ first_month = round(as.numeric(levels(as.factor(factor_months))[1]) %% 1 * 12,0)
 obs_month = seq(first_month,first_month+num_months-1,1) %% 12
 obs_month[obs_month == 0] = 12
 
-months.mcmc = load.mcmc[,52:(52+num_months-1)]
+months.mcmc = load.mcmc[,53:(53+num_months-1)]
 
 months.mcmc = data.frame(months.mcmc)
 
@@ -302,9 +320,9 @@ months = data.frame(months)
 
 names(months) = strsplit(toString(seq(1,12)), ", ")[[1]]
 
-start = 52 + num_months + 5
+start = 53 + num_months + 5
 
-df_mcmc <- data.frame(load.mcmc[,c(1:49,start:(start+46))])
+df_mcmc <- data.frame(load.mcmc[,c(1:50,start:(start+47))])
 
 total_df = cbind(df_mcmc, months)
 
@@ -335,13 +353,13 @@ if(length(unique(stop_data$tageoid))==1){
 #PARAMETERS
 values = as.vector(as.matrix(avg_values))
 
-nTimeOfDay=list(values[1:47])
+nTimeOfDay=list(values[1:48])
 names(nTimeOfDay)=c("nTimeOfDay")
-nDayType=list(values[48:49])
+nDayType=list(values[49:50])
 names(nDayType)=c("nDayType")
-rhoTimeOfDay=list(values[50:96])
+rhoTimeOfDay=list(values[51:97])
 names(rhoTimeOfDay)=c("rhoTimeOfDay")
-nMonth=list(values[97:108])
+nMonth=list(values[98:109])
 names(nMonth)= c("nMonth")
 
 param_list = c(nTimeOfDay, nDayType, rhoTimeOfDay, nMonth)

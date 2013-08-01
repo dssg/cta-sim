@@ -1,28 +1,40 @@
 # Turn Command Line Arguments On
 
-# Command Line: Rscript validation_negbinom_on.R /home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_negbinom_on.csv
-#  	  	s3://dssg-cta-data/rcp_join2/test/apc/taroute=6/direction_name=North/stop_id=17076
+# Command Line: Rscript validation_negbinom_on.R /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv 6 0 1423
 
+
+# Necessary Libraries #
+library(R2jags)
+library(rjson)
+library(RODBC)
+
+#Command Line Arguments Needed #
 
 args <- commandArgs(TRUE)
 parameter_pathname <- toString(args[1]) # Model Parameters
-datafile_pathname <- toString(args[2]) # Location of Test Data
+
+# Location of Route Info
+
+input_taroute <- toString(args[2])
+input_dir_group <- toString(args[3])
+input_tageoid <- toString(args[4])
 
 ### Loading and Cleaning the Data and Parameter Estimates ###
 
 params = read.csv(parameter_pathname, header = TRUE)
 
-test_data = read.csv(pipe(paste("bash ../../../util/catdir-s3.sh", datafile_pathname)), header = FALSE)
+conn <- odbcConnect("dssg_cta_redshift")
 
-names(test_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive",
-		    "time_actual_depart", "passengers_on","passengers_in","passengers_off")
+print( paste("select * from rcp_join_dn1_test_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
 
-# summary(test_data)
+test_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_test_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
+
+names(test_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
 
 actualtime <- function(x) {
   ## Returns Time, Month, Year, and Day of Week from Date Column in Format "time_actual_arrive"
 
-  date_time = strptime(x, format = "%I:%M:%S %p")
+  date_time = strptime(x, format = "%H:%M:%S")
   time = date_time$hour + date_time$min/60 + date_time$sec/(60*60)
   return(list(time = time))
 }
@@ -30,7 +42,7 @@ actualtime <- function(x) {
 dateinfo <- function(x) {
   ## Returns Day, Month, Year, and Day of Week from Date Column in Format "survey_date"
 
-  date_time = strptime(x, format = "%m/%d/%Y")
+  date_time = strptime(x, format = "%Y-%m-%d")
   day = date_time$mday
   month = date_time$mon
   year = date_time$year
@@ -69,10 +81,12 @@ test_data$headway = c(0,test_data$time[2:total_obs] - test_data$time[1:(total_ob
 
 ### Construct Explanatory Variables for Given Observation ###
 
-alpha = params[1:47]
-beta = params[48:49]
-rho = params[50:96]
-gamma = params[97:108]
+print("Constructing Explanatory Variables")
+
+alpha = params[1:48]
+beta = params[49:50]
+rho = params[51:98]
+gamma = params[99:110]
 
 halfhr_bucket <- function(t) {
     halfhr = seq(0,24,0.5)
