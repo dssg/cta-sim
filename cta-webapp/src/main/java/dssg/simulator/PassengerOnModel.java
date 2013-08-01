@@ -1,7 +1,7 @@
 package dssg.simulator;
 
-import java.util.Calendar;
+import org.joda.time.DateMidnight;
 
 public interface PassengerOnModel {
-  public int sample(String busStopId, Calendar day, int lastDepart, int thisDepart);
+  public int sample(String busStopId, DateMidnight day, int lastDepart, int thisDepart);
 }

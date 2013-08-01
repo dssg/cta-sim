@@ -1,6 +1,6 @@
 package dssg.simulator;
 
-import java.util.Calendar;
+import org.joda.time.DateMidnight;
 
 import umontreal.iro.lecuyer.probdist.PoissonDist;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
@@ -14,7 +14,7 @@ public class PassengerOnModelPoisson implements PassengerOnModel {
   }
 
   @Override
-  public int sample(String busStopId, Calendar day, int lastDepart, int thisDepart) {
+  public int sample(String busStopId, DateMidnight day, int lastDepart, int thisDepart) {
     double lambda = 1;
     double u = this.rand.nextDouble();
     int s = PoissonDist.inverseF(lambda,u); 
