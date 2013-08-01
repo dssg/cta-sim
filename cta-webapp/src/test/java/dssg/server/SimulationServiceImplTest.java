@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -29,8 +30,9 @@ public class SimulationServiceImplTest {
   public void test() {
     SimulationServiceImpl simService = new SimulationServiceImpl();
 
-    Calendar testCal = GregorianCalendar.getInstance();
-    testCal.set(2013, Calendar.FEBRUARY,11);
+    Calendar testCal = GregorianCalendar.getInstance(TimeZone.getTimeZone(SimulationBatch.AGENCY_TIMEZONE));
+    testCal.clear(Calendar.MILLISECOND);
+    testCal.set(2013, Calendar.FEBRUARY,11,0,0,0);
     Date day = testCal.getTime();
 
     Date startTime = new Date(day.getTime() + 3*60*60*1000);
