@@ -130,6 +130,37 @@ empty_days = vector(length = num_days)
 
 for(i in 1:num_days){empty_days[i] <- max(buckets_in[,i])}
 
+### Calculate Distr for Input_month and Input_weekend ###
+
+print("About to Calc Distributions")
+
+print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
+
+for (i in 1:12) {
+for (j in 1:2) {
+
+distr_obs = which(actual_months == i-1 & weekend == j)
+
+if (length(distr_obs) != 0 ){
+
+distr_buckets = matrix(ncol = 3, nrow = num_buckets)
+
+print(c(i,j))
+
+for(k in 1:num_buckets) {
+    distr_buckets[k,2] <- mean(buckets_off[k,distr_obs])
+    distr_buckets[k,1] <- quantile(buckets_off[k,distr_obs],0.25)
+    distr_buckets[k,3] <- quantile(buckets_off[k,distr_obs],0.75)
+}
+
+write.table(distr_buckets, paste("mcmc_output/distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
+
+}
+}
+}
+
+print("Finished Calcing Distributions")
+
 ### Vectorize the Matrix ###
 Ydata = round(buckets_off,0)
 N = round(buckets_in,0)
