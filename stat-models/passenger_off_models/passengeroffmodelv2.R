@@ -1,8 +1,7 @@
 #!/bin/Rscript
 
 # Type each of the following in the same line of the terminal:
-# Rscript passengeron_negbin_model.R 
-# 6 0 1423
+# Rscript passengeroffmodelv2.R 6 0 1423
 # /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/totalsim_negbinom_on.csv
 # /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv
 
@@ -17,8 +16,8 @@ input_taroute <- toString(args[1])
 input_dir_group <- toString(args[2])
 input_tageoid <- toString(args[3])
 
-totaloutput <- toString(args[4])
-avgoutput <- toString(args[5])
+# totaloutput <- toString(args[4])
+# avgoutput <- toString(args[5])
 
 # input_months <- as.numeric(args[6])
 # input_weekend <- as.numeric(args[7])
@@ -270,19 +269,25 @@ df_mcmc <- data.frame(load.mcmc[,c(1:48,50:51)])
 
 # df_mcmc <- data.frame(load.mcmc)
 
-names(df_mcmc)
-
 # Re-order month variables #
 
 date <- dates$year + dates$month/12
 actual_months <- dates$month
 num_months <- length(levels(as.factor(actual_months)))
 factor_months <- as.factor(date)
-first_month = round(as.numeric(levels(as.factor(factor_months))[1]) %% 1 * 12,0)
+first_month = round(as.numeric(levels(as.factor(factor_months))[1]) %% 1 * 12,0)+1
+
+print(paste("First Month is",first_month))
+
 obs_month = seq(first_month,first_month+num_months-1,1) %% 12
 obs_month[obs_month == 0] = 12
 
-months.mcmc = load.mcmc[,53:(53+num_months-1)]
+print(paste("Observed Months are",obs_month))
+
+months.mcmc = load.mcmc[,54:(54+num_months-1)]
+
+dim(load.mcmc)
+print(months.mcmc[1,])
 
 months.mcmc = data.frame(months.mcmc)
 
