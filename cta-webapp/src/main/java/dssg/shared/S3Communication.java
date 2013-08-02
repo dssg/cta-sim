@@ -20,8 +20,7 @@ import org.jets3t.service.security.AWSCredentials;
 import org.yaml.snakeyaml.Yaml;
 
 
-import dssg.client.MyData;
-import dssg.client.MyParameters;
+import dssg.client.DataStats;
 import dssg.client.S3CommunicationService;
 
 public class S3Communication implements S3CommunicationService {
@@ -37,7 +36,7 @@ public class S3Communication implements S3CommunicationService {
 	 * --- UPLOAD File to S3 Bucket ---
 	 */
 	@Override
-	public List<MyData> uploadFile(String filename) {
+	public List<DataStats> uploadFile(String filename) {
 		// Read Yaml file with information for S3
 		BufferedReader reader = null;
 		try {
@@ -61,7 +60,7 @@ public class S3Communication implements S3CommunicationService {
 		String s3Bucket = (String) map.get("aws_s3bucket_name");
 
 		// Data type
-		List<MyData> stats = new ArrayList<MyData>();
+		List<DataStats> stats = new ArrayList<DataStats>();
 
 		// UPLOAD FILE SERVICE
 		S3Service s3Service;
@@ -92,7 +91,7 @@ public class S3Communication implements S3CommunicationService {
 	 * the simulation from a given bucket specified in a Yaml file
 	 */
 	@Override
-	public List<MyParameters> downloadParameters() {
+	public List<String> downloadParameters() {
 		
 		// Read Yaml file with information for S3
 		System.out.println("Reading yamil configuration file.");
@@ -122,7 +121,7 @@ public class S3Communication implements S3CommunicationService {
 		String file = (String) map.get("parameterFile");
 
 		// Data type
-		List<MyParameters> parameters = new ArrayList<MyParameters>();
+		List<String> parameters = new ArrayList<String>();
 
 		// -- DOWNLOAD SERVICE --
 		S3Service s3Service;
@@ -142,8 +141,7 @@ public class S3Communication implements S3CommunicationService {
 				//FIXME everything works up to this point, make the rest work.
 				String[] parts = data.split(",");
 				for (int i = 0; i < parts.length; i++) {
-					parameters.add(new MyParameters(i, Double
-							.parseDouble(parts[i])));
+					parameters.add(parts[i].toString());
 				}
 			}
 			System.out.println("Returning file.");

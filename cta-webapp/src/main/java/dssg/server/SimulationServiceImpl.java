@@ -32,7 +32,6 @@ import org.onebusaway.transit_data_federation.services.transit_graph.TransitGrap
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
-import dssg.client.MyParameters;
 import dssg.client.S3CommunicationService;
 import dssg.client.SimulationService;
 import dssg.shared.FieldVerifier;

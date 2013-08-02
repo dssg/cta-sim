@@ -2,13 +2,13 @@ package dssg.client;
 
 import com.extjs.gxt.ui.client.data.BaseModel;
 
-public class MyRoutes extends BaseModel{
+public class DataRoutes extends BaseModel{
 	
-	public MyRoutes(){
+	public DataRoutes(){
 		
 	}
 	
-	public MyRoutes(Integer id, String name) {
+	public DataRoutes(Integer id, String name) {
 		setId(id);
 		setName(name);
 	}

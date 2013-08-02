@@ -18,7 +18,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.google.common.collect.Lists;
 
-import dssg.client.MyParameters;
 import dssg.client.S3CommunicationService;
 import dssg.simulator.SimulationBatch;
 

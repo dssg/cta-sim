@@ -360,10 +360,10 @@ public class GwtPortalContainer extends Viewport {
 		simple.add(rGroup);
 
 		// Text fields for route number
-		ListStore<MyRoutes> routes = new ListStore<MyRoutes>();
-		routes.add(Data.getRoutes());
+		ListStore<DataRoutes> routes = new ListStore<DataRoutes>();
+		routes.add(GetData.getRoutes());
 
-		final ComboBox<MyRoutes> routeCmb = new ComboBox<MyRoutes>();
+		final ComboBox<DataRoutes> routeCmb = new ComboBox<DataRoutes>();
 		routeCmb.setFieldLabel("Route");
 		routeCmb.setEmptyText("Select a route");
 		routeCmb.setAllowBlank(false);
@@ -413,12 +413,12 @@ public class GwtPortalContainer extends Viewport {
 					MessageBox.alert("Carefull", "Time window is incorrect.",
 							null);
 				} else {
-					Data.testS3(s3ComunicationService);
+					//Data.testS3(s3ComunicationService);
 					callLoading();
 					startT = timeS.getDateValue().getHours();
 					stopT = timeF.getDateValue().getHours();
 					//Call to simulation
-					Data.getData(simulationService, portalContainer, route, date.getDatePicker().getValue(), startT, stopT);
+					GetData.getData(simulationService, portalContainer, route, date.getDatePicker().getValue(), startT, stopT);
 				}
 			}
 		});
@@ -659,7 +659,7 @@ public class GwtPortalContainer extends Viewport {
 
 	// Stat. Information Grid
 	private ContentPanel createGrid() {
-		final Grid<MyData> grid;
+		final Grid<DataStats> grid;
 		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 
 		ColumnConfig stopCol = new ColumnConfig();
@@ -707,8 +707,8 @@ public class GwtPortalContainer extends Viewport {
 		maxCol.setEditor(new CellEditor(text));
 		configs.add(maxCol);
 
-		final ListStore<MyData> store = new ListStore<MyData>();
-		store.add(Data.getStats());
+		final ListStore<DataStats> store = new ListStore<DataStats>();
+		store.add(GetData.getStats());
 
 		ColumnModel cm = new ColumnModel(configs);
 
@@ -718,9 +718,9 @@ public class GwtPortalContainer extends Viewport {
 		panel.setHeaderVisible(false);
 		panel.setLayout(new FitLayout());
 
-		GridSelectionModel<MyData> selectModel = new GridSelectionModel<MyData>();
+		GridSelectionModel<DataStats> selectModel = new GridSelectionModel<DataStats>();
 		selectModel.select(stop, false);
-		grid = new Grid<MyData>(store, cm);
+		grid = new Grid<DataStats>(store, cm);
 		grid.setBorders(true);
 		grid.setSelectionModel(selectModel);
 		
@@ -1034,9 +1034,9 @@ public class GwtPortalContainer extends Viewport {
 		private void callS3Upload(final String file) {
 			System.out.println("File path: "+file);
 			
-			this.s3ComunicationService.uploadFile(file, new AsyncCallback<List<MyData>>() {
+			this.s3ComunicationService.uploadFile(file, new AsyncCallback<List<DataStats>>() {
 				@Override
-				public void onSuccess(List<MyData> output) {
+				public void onSuccess(List<DataStats> output) {
 					Info.display("Sucess", "");
 				}
 				@Override

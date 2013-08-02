@@ -5,29 +5,28 @@ import java.util.Date;
 import java.util.List;
 
 import com.extjs.gxt.ui.client.widget.Info;
-import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class Data {
+public class GetData {
 
 	// TEMP
-	public static List<MyData> getStats() {
-		List<MyData> stats = new ArrayList<MyData>();
+	public static List<DataStats> getStats() {
+		List<DataStats> stats = new ArrayList<DataStats>();
 		for (int i = 0; i <= 80; i++)
-			stats.add(new MyData(Integer.toString(i), Math.random() * 200, Math
+			stats.add(new DataStats(Integer.toString(i), Math.random() * 200, Math
 					.random() * 5, Math.random() * 3, Math.random() * 4 + 20));
 
 		return stats;
 
 	}
 
-	public static List<MyRoutes> getRoutes() {
-		List<MyRoutes> routes = new ArrayList<MyRoutes>();
-		routes.add(new MyRoutes(2, "2.Hyde-Park-Exp"));
-		routes.add(new MyRoutes(3, "3.King Drive"));
-		routes.add(new MyRoutes(6, "6.Jack-Park-Exp"));
-		routes.add(new MyRoutes(7, "7.Harrison"));
-		routes.add(new MyRoutes(9, "9.Ashland"));
+	public static List<DataRoutes> getRoutes() {
+		List<DataRoutes> routes = new ArrayList<DataRoutes>();
+		routes.add(new DataRoutes(2, "2.Hyde-Park-Exp"));
+		routes.add(new DataRoutes(3, "3.King Drive"));
+		routes.add(new DataRoutes(6, "6.Jack-Park-Exp"));
+		routes.add(new DataRoutes(7, "7.Harrison"));
+		routes.add(new DataRoutes(9, "9.Ashland"));
 
 		return routes;
 
@@ -59,9 +58,9 @@ public class Data {
 	
 	public static void testS3(S3CommunicationServiceAsync s3ComunicationService) {
 		s3ComunicationService.downloadParameters(
-				new AsyncCallback<List<MyParameters>>() {
+				new AsyncCallback<List<String>>() {
 					@Override
-					public void onSuccess(List<MyParameters> output) {
+					public void onSuccess(List<String> output) {
 						Info.display("TEST S3\nSucess in getting data @DATA.", "Number of data points:"+Integer.toString(output.toArray().length));;
 						
 					}
