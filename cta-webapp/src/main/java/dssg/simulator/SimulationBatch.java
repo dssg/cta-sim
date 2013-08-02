@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import dssg.client.MyParameters;
 import dssg.server.SimulationServiceImpl;
 import dssg.shared.S3Communication;
 

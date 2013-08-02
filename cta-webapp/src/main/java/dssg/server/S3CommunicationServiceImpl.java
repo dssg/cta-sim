@@ -5,8 +5,7 @@ import java.util.List;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
-import dssg.client.MyData;
-import dssg.client.MyParameters;
+import dssg.client.DataStats;
 import dssg.client.S3CommunicationService;
 import dssg.shared.S3Communication;
 
@@ -34,7 +33,7 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 	 * --- UPLOAD File to S3 Bucket ---
 	 */
 	@Override
-	public List<MyData> uploadFile(String filename) {
+	public List<DataStats> uploadFile(String filename) {
 	  return this.s3c.uploadFile(filename);
 	}
 
@@ -43,7 +42,7 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 	 * the simulation from a given bucket specified in a Yaml file
 	 */
 	@Override
-	public List<MyParameters> downloadParameters() {
+	public List<String> downloadParameters() {
 	  return this.s3c.downloadParameters();
 	}
 }
