@@ -148,9 +148,9 @@ distr_buckets = matrix(ncol = 3, nrow = num_buckets)
 print(c(i,j))
 
 for(k in 1:num_buckets) {
-    distr_buckets[k,2] <- mean(buckets_off[k,distr_obs])
-    distr_buckets[k,1] <- quantile(buckets_off[k,distr_obs],0.25)
-    distr_buckets[k,3] <- quantile(buckets_off[k,distr_obs],0.75)
+    distr_buckets[k,2] <- mean(buckets_in[k,distr_obs] / buckets_off[k,distr_obs])
+    distr_buckets[k,1] <- quantile(buckets_in[k,distr_obs] / buckets_off[k,distr_obs],0.25)
+    distr_buckets[k,3] <- quantile(buckets_in[k,distr_obs] / buckets_off[k,distr_obs],0.75)
 }
 
 write.table(distr_buckets, paste("mcmc_output/distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
