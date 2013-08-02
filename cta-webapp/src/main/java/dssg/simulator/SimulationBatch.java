@@ -68,7 +68,7 @@ public class SimulationBatch {
 
     BufferedReader boardParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_BOARD_PARAM_PATH)));
     this.boardModel = new PassengerOnModelNegBinom(boardParamReader); 
-    this.alightModel = null;
+    this.alightModel = new PassengerOffModelBinom();
     
     // switch to Joda time internally
     DateTime jStartTime = new DateTime(startTime.getTime(),TIMEZONE);
