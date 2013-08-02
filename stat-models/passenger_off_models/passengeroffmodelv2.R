@@ -1,28 +1,52 @@
 #!/bin/Rscript
 
-# Type this at command line: Rscript testv2.R s3://dssg-cta-data/rcp_join2/train/apc/taroute=6/direction_name=North/stop_id=17076
+# Type each of the following in the same line of the terminal:
+# Rscript passengeron_negbin_model.R 
+# 6 0 1423
+# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/totalsim_negbinom_on.csv
+# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv
+
 # This will run the code on data inside of the folder.
 
+
+### Command Line Arguments ###
+
 args <- commandArgs(TRUE)
-pathname <- toString(args[1])
+
+input_taroute <- toString(args[1])
+input_dir_group <- toString(args[2])
+input_tageoid <- toString(args[3])
+
+totaloutput <- toString(args[4])
+avgoutput <- toString(args[5])
+
+# input_months <- as.numeric(args[6])
+# input_weekend <- as.numeric(args[7])
 
 ### Required Libraries ###
 
 library(coda)
 library(R2jags)
+library(rjson)
 
 ### Loading and Cleaning the Data ###
 
-stop_data = read.csv(pipe(paste("bash ../util/catdir-s3.sh", pathname)), header = FALSE)
+### Redshift Connect ###
 
-names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off")
+library(RODBC)
 
-# summary(stop_data)
+conn <- odbcConnect("dssg_cta_redshift")
+
+stop_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_train_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
+
+names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
+
+### Cleaning ###
 
 actualtime <- function(x) { 
   ## Returns Time, Month, Year, and Day of Week from Date Column in Format "time_actual_arrive"
 
-  date_time = strptime(x, format = "%I:%M:%S %p")
+  date_time = strptime(x, format = "%H:%M:%S")
   time = date_time$hour + date_time$min/60 + date_time$sec/(60*60)
   return(list(time = time))
 }
@@ -30,7 +54,7 @@ actualtime <- function(x) {
 dateinfo <- function(x) {
   ## Returns Day, Month, Year, and Day of Week from Date Column in Format "survey_date"
 
-  date_time = strptime(x, format = "%m/%d/%Y")
+  date_time = strptime(x, format = "%Y-%m-%d")
   day = date_time$mday
   month = date_time$mon
   year = date_time$year
@@ -49,7 +73,7 @@ interval_length = 30/60 # interval length in hours
 N = 24 # numer of hours in day
 days = levels(as.factor(stop_data$survey_date))
 
-num_buckets <- N/interval_length-1
+num_buckets <- N/interval_length
 num_days = length(levels(as.factor(stop_data$survey_date)))
 
 buckets_off = matrix(nrow = num_buckets, ncol = num_days)
@@ -217,9 +241,7 @@ model.file = file("binomial_model.bug")
 writeLines(model.str, model.file)
 close(model.file)
 
-check = cbind(vector.Y,vector.N,vector.bucket,vector.weekend,vector.month)
-
-print(check[116:119,])
+# check = cbind(vector.Y,vector.N,vector.bucket,vector.weekend,vector.month)
 
 data <- list("num_buckets" = num_buckets, "Y" = vector.Y, "weekend" = vector.weekend, "months" = vector.month, "num_months" = num_months, 
              "buckets_in" = vector.N, "totalobs" = totalobs, bucket = vector.bucket)
@@ -244,7 +266,7 @@ print(load.sim)
 
 load.mcmc <- as.mcmc(load.sim)
 
-df_mcmc <- data.frame(load.mcmc[,c(1:47,49:50)])
+df_mcmc <- data.frame(load.mcmc[,c(1:48,50:51)])
 
 # df_mcmc <- data.frame(load.mcmc)
 
@@ -288,8 +310,8 @@ for (i in 1:dim(total_df)[2]) {
 }
 
 # write to file
-write.table(total_df, "totalsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
-write.table(avg_values, "avgsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
+write.table(total_df, "mcmc_output/totalsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
+write.table(avg_values, "mcmc_output/avgsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
 
 
 
