@@ -36,13 +36,13 @@
 			<name>Old GXT</name>
 			<url>http://repo2.maven.org/maven2/</url>
 		</repository>
+<!-- 		<repository> -->
+<!-- 			<name>jets3t</name> -->
+<!-- 			<id>jets3t</id> -->
+<!-- 			<url>http://www.jets3t.org/maven2</url> -->
+<!-- 		</repository> -->
 		<repository>
-			<name>jets3t</name>
-			<id>jets3t</id>
-			<url>http://www.jets3t.org/maven2</url>
-		</repository>
-		<repository>
-			<id>Sonatype-public</id>
+			<id>snakeyaml</id>
 			<name>SnakeYAML repository</name>
 			<url>http://oss.sonatype.org/content/groups/public/</url>
 		</repository>
