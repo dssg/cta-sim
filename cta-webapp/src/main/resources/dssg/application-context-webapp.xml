@@ -11,7 +11,7 @@
 
   <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
       <property name="driverClassName" value="org.hsqldb.jdbcDriver" />
-      <property name="url" value="jdbc:hsqldb:file:/var/lib/obacta/oba-bundle/pruneToRoute6_gtfs20130208" />
+      <property name="url" value="jdbc:hsqldb:file:src/main/resources/oba-bundle/pruneToRoute6_gtfs20130208" />
       <property name="username" value="sa" />
       <property name="password" value="" />
   </bean>
@@ -22,7 +22,7 @@
       <property name="order" value="-2" />
       <property name="properties">
           <props>
-              <prop key="bundlePath">/var/lib/obacta/oba-bundle/pruneToRoute6_gtfs20130208</prop>
+              <prop key="bundlePath">src/main/resources/oba-bundle/pruneToRoute6_gtfs20130208</prop>
           </props>
       </property>
   </bean>
