@@ -12,6 +12,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -50,85 +51,87 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 @Configurable
 @SuppressWarnings("serial")
 public class SimulationServiceImpl extends RemoteServiceServlet implements
-		SimulationService {
+    SimulationService {
 
-	@Autowired
-	public BlockIndexService bis;
+  @Autowired
+  public BlockIndexService bis;
 
-	@Autowired
-	public BlockLocationService bls;
+  @Autowired
+  public BlockLocationService bls;
 
-	@Autowired
-	public BlockCalendarService bcs;
+  @Autowired
+  public BlockCalendarService bcs;
 
   @Autowired
   public TransitGraphDao tgd;
-  
+
   private Map<String, SimulationBatch> simulations = Maps.newHashMap();
 
-	public BlockIndexService getBis() {
-		return bis;
-	}
+  public BlockIndexService getBis() {
+    return bis;
+  }
 
-	public BlockLocationService getBls() {
-		return bls;
-	}
+  public BlockLocationService getBls() {
+    return bls;
+  }
 
-	public BlockCalendarService getBcs() {
-		return bcs;
-	}
+  public BlockCalendarService getBcs() {
+    return bcs;
+  }
 
-	public TransitGraphDao getTgd() {
-		return tgd;
-	}
+  public TransitGraphDao getTgd() {
+    return tgd;
+  }
 
-	public Map<String, SimulationBatch> getSimulations() {
-		return simulations;
-	}
+  public Map<String, SimulationBatch> getSimulations() {
+    return simulations;
+  }
 
-	public SimulationBatch getSimulation(String batchId) {
-		return simulations.get(batchId);
-	}
+  public SimulationBatch getSimulation(String batchId) {
+    return simulations.get(batchId);
+  }
 
-  public String submitSimulation(String route, Date startTime,
-			Date endTime) throws IllegalArgumentException {
+  public String submitSimulation(String route, Date startTime, Date endTime)
+      throws IllegalArgumentException {
 
-	  String batchId = route + startTime + endTime;
+    String batchId = route + startTime + endTime;
 
     SimulationBatch simBatch = simulations.get(batchId);
     if (simBatch == null) {
       try {
         simBatch = new SimulationBatch(this, batchId, route, startTime, endTime);
         simulations.put(batchId, simBatch);
-      }
-      catch(FileNotFoundException e) {
+      } catch (FileNotFoundException e) {
         e.printStackTrace();
         return null;
       }
     }
 
-		return simBatch.getBatchId();
-	}
+    return simBatch.getBatchId();
+  }
 
-	/**
-	 * Return simulation results to client side for display.
-	 */
-	public List<Number> getResults(String batchId) {
+  /**
+   * Return simulation results to client side for display.
+   */
+  public Map<String, Integer[]> getResults(String batchId) {
 
-		SimulationBatch simulation = simulations.get(batchId);
+    SimulationBatch simulation = simulations.get(batchId);
 
-		if (simulation != null) {
-			// TODO implement!
-		}
+    if (simulation != null) {
+      // TODO implement!
+    }
+    Map<String, Integer[]> results = new HashMap<String, Integer[]>();
+    Integer[] dummyData = { 30, 9, 10, 12, 10, 10, 11, 3, 8, 11, 16, 25, 29,
+        35, 55, 54, 48, 49, 48, 36, 33, 41, 43, 42, 49, 44, 49, 50, 51, 52, 53,
+        50, 51, 52, 50, 55, 53, 50, 48, 52, 48, 46, 44, 43, 35, 33, 31 };
 
-		int[] dummyData = { 30, 9, 10, 12, 10, 10, 11, 3, 8, 11, 16, 25, 29,
-				35, 55, 54, 48, 49, 48, 36, 33, 41, 43, 42, 49, 44, 49, 50, 51,
-				52, 53, 50, 51, 52, 50, 55, 53, 50, 48, 52, 48, 46, 44, 43, 35,
-				33, 31 };
-		List<Number> data = new ArrayList<Number>();
-		for (int n = 0; n <= 46; n++) {
-			data.add(dummyData[n]);
-		}
-		return data;
-	}
+    Integer[] dummyData2 = { 15, 9, 11, 10, 8, 6, 3, 8, 12, 17, 27, 30, 36, 59,
+        56, 54, 50, 48, 50, 48, 48, 38, 43, 42, 49, 40, 40, 49, 35, 41, 38, 36,
+        37, 36, 44, 42, 33, 36, 41, 42, 48, 47, 26, 25, 24, 25, 10 };
+
+    results.put("max_load_N", dummyData);
+    results.put("max_load_S", dummyData2);
+
+    return results;
+  }
 }
