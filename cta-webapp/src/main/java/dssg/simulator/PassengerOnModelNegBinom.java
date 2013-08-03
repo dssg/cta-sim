@@ -17,9 +17,9 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
   private transient final RandomStream rand;
   
   class ModelParams {
-    double[] lambdaTimeOfDay;
-    double[] lambdaDayType;
-    double[] lambdaMonth;
+    double[] llTimeOfDay;
+    double[] llDayType;
+    double[] llMonth;
     double[] rhoTimeOfDay;
   }
   Map<String, ModelParams> busStopToParams;
@@ -52,8 +52,8 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
       dayIdx = ModelConstants.DAYTYPE_WEEKEND;
     int monthIdx = day.getMonthOfYear() - 1;
 
-    double llDayTypeFactor = params.lambdaDayType[dayIdx];
-    double llMonthFactor = params.lambdaMonth[monthIdx];
+    double llDayTypeFactor = params.llDayType[dayIdx];
+    double llMonthFactor = params.llMonth[monthIdx];
     
     int beginTimeIdx = lastDepart / BUCKET_SIZE;
     double beginBucketFraction = (BUCKET_SIZE - (lastDepart % BUCKET_SIZE)) / (double) BUCKET_SIZE;
@@ -67,7 +67,7 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
       if(timeIdx == endTimeIdx) bucketFraction = endBucketFraction;
       int mTimeIdx = timeIdx % NUM_BUCKETS;
       double rhoTimeOfDayFactor = params.rhoTimeOfDay[mTimeIdx];
-      double llTimeOfDayFactor = params.lambdaTimeOfDay[mTimeIdx];
+      double llTimeOfDayFactor = params.llTimeOfDay[mTimeIdx];
   
       double logLambda = llTimeOfDayFactor + llDayTypeFactor + llMonthFactor;
       double lambda = Math.exp(logLambda);
