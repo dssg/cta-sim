@@ -41,11 +41,10 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
    */
   @Override
   public int sample(String busStopId, DateMidnight day, int lastDepart, int thisDepart) {
-    // We don't have all stops trained yet just - just use an example stop
+    // We don't have all stops trained yet - use an example stop
     // ModelParams params = this.busStopToParams.get(busStopId);
     // TODO: fix parameter loading
     ModelParams params = this.busStopToParams.entrySet().iterator().next().getValue();
-    // TODO: allow sample across midnight
 
     int dayIdx = ModelConstants.DAYTYPE_WEEKDAY;
     int dayId = day.getDayOfWeek();
