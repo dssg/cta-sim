@@ -3,6 +3,7 @@ package dssg.client;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.extjs.gxt.ui.client.widget.Info;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -41,11 +42,11 @@ public class GetData {
 			Date date, Integer startT, Integer stopT) {
 	  String simId = route + date + startT + stopT;
 		simulationService.getResults(simId,
-				new AsyncCallback<List<Number>>() {
+				new AsyncCallback<Map<String, Integer[]>>() {
 					@Override
-					public void onSuccess(List<Number> output) {
-						Info.display("Sucess in getting data @DATA.", "Number of data points:" 
-    					+ Integer.toString(output.toArray().length));;
+					public void onSuccess(Map<String, Integer[]> output) {
+						Info.display("Sucess in getting data @DATA.", "Number of data points: " 
+    					+ Integer.toString(output.get("max_load_N").length) + " , " + Integer.toString(output.get("max_load_S").length));
 						gwtPortalContainer.updateCharts(output);
 					}
 

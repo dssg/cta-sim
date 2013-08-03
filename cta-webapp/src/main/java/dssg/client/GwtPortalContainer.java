@@ -7,6 +7,7 @@ package dssg.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.extjs.gxt.charts.client.Chart;
 import com.extjs.gxt.charts.client.event.ChartEvent;
@@ -74,6 +75,7 @@ import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.rpc.core.java.util.Arrays;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.Image;
@@ -94,25 +96,43 @@ public class GwtPortalContainer extends Viewport {
 	private Command updateSliderCmd;
 	private Command updateSlider2Cmd;
 	private Command createCenterPanelCmd;
-	private Integer time = 0;
-	private String route = null;
-	private Boolean bothDir = true;
-	private Boolean north = true;
-	private Integer startT = 0;
-	private Integer stopT = 23;
-	private Integer numStops = 80;
-	private Integer stop = 0;
-	private List<Number> loadData = new ArrayList<Number>();
+	private Integer time;
+	private String route;
+	private Boolean bothDir;
+	private Boolean north;
+	private Integer startT;
+	private Integer stopT;
+	private Integer numStops;
+	private Integer stop;
+	private Integer[][] simulation_data = new Integer[][] {};
 	private S3CommunicationServiceAsync s3ComunicationService;
 	private SimulationServiceAsync simulationService;
 	// Main portal container (main window) is a portal container which is
 	// divided into North, South, East and West regions.
 
+	// Constructor
 	public GwtPortalContainer(SimulationServiceAsync simulationService, S3CommunicationServiceAsync s3ComunicationService) {
 		this.s3ComunicationService = s3ComunicationService;
 		this.simulationService = simulationService;
+		time = 0;
+	    route = null;
+	    bothDir = true;
+	    north = true;
+	    startT = 0;
+	    stopT = 23;
+	    numStops = 80;
+	    stop = 0;
+//	    max_load_data = new Integer[48];
+//	    for(int i = 0; i<=47; i++) {
+//	      max_load_data[i]=0;
+//	    }
+	    simulation_data = new Integer[2][48];
+	    for(int i = 0; i<=1; i++) {
+	      for(int j = 0; j<=47; j++) {
+	        simulation_data[i][j]=0;
+	        }
+        }
 	}
-
 	// Elements to add upon rendering
 	@Override
 	protected void onRender(Element parent, int index) {
@@ -335,7 +355,6 @@ public class GwtPortalContainer extends Viewport {
 	private void createGenInfWest() {
 
 		// Local variables
-		final TextField<String> text;
 		RadioGroup rGroup = new RadioGroup();
 
 		// Initial form panel
@@ -731,9 +750,14 @@ public class GwtPortalContainer extends Viewport {
 
 	// -- CHARTS --
 	// Update all charts
-	public void updateCharts(List<Number> data){
-		Info.display("Sucess in getting data @PORTAL.", "Number of data points:"+Integer.toString(data.toArray().length));
-		loadData=data;
+	public void updateCharts(Map<String, Integer[]> data){
+	  Info.display("Sucess in getting data @DATA.", "Number of data points: " 
+          + Integer.toString(data.get("max_load_N").length) + " , " + Integer.toString(data.get("max_load_S").length));;
+		for(int i =startT; i<=stopT*2;i++) {
+		  simulation_data[0][i]=data.get("max_load_N")[i];
+		  simulation_data[1][i]=data.get("max_load_S")[i];
+		}
+		  
 		updateChart1Cmd.execute();
 		updateChart2Cmd.execute();
 		updateChart3Cmd.execute();
@@ -742,6 +766,7 @@ public class GwtPortalContainer extends Viewport {
 		createCenterPanelCmd.execute();
 		
 	}
+	
 	// Area chart for Load 24hrs
 	private ChartModel createLoadChart1() {
 		// Create a ChartModel with the Chart Title and some style attributes
@@ -768,7 +793,9 @@ public class GwtPortalContainer extends Viewport {
 		// Create the Y axis
 		YAxis ya = new YAxis();
 		// Add the labels to the Y axis
-		ya.setRange(0, getMax(loadData)*1.1, 10);
+		
+		//ya.setRange(0, Math.max(getMax(max_load_data[0]), getMax(max_load_data[1])),10);
+		ya.setRange(0,1.1*Math.max(getMax(simulation_data[0]), getMax(simulation_data[1])),10);
 		cm.setYAxis(ya);
 
 		// Create a Line Chart object NORTH
@@ -777,7 +804,9 @@ public class GwtPortalContainer extends Viewport {
 		lchart.setColour("#00aa00");
 		lchart.setTooltip("#val#");
 		lchart.setText("North");
-		lchart.addValues(loadData);
+		for(int i = startT; i<=stopT*2; i++) {
+		  lchart.addValues(simulation_data[0][i]);
+	    }
 		
 		if ((north == true || bothDir == true) && route != null) {
 			cm.addChartConfig(lchart);
@@ -789,11 +818,9 @@ public class GwtPortalContainer extends Viewport {
 		lchart.setColour("#ff0000");
 		lchart.setTooltip("#val#");
 		lchart.setText("South");
-		for (double n = startT; n <= stopT; n = n + .5) {
-			lchart.addValues(Math.floor(Math.abs(180
-					* Math.sin(n * Math.PI / 20 - Math.PI * 4 / 24)
-					+ Math.random() * 80)));
-		}
+		for(int i = startT; i<=stopT*2; i++) {
+          lchart.addValues(simulation_data[1][i]);
+        }
 		if ((north == false || bothDir == true) && route != null) {
 			cm.addChartConfig(lchart);
 		}
@@ -803,7 +830,7 @@ public class GwtPortalContainer extends Viewport {
 		lchart.setColour("#0099FF");
 		lchart.setText("Suggested Max Load");
 		for (double n = startT; n <= stopT; n = n + .5) {
-			lchart.addValues(220);
+			lchart.addValues(60);
 		}
 		cm.addChartConfig(lchart);
 
@@ -1068,11 +1095,11 @@ public class GwtPortalContainer extends Viewport {
 						}));
 	}
 
-	public int getMax(List<Number>list){
+	public int getMax(Integer[] list){
 	    int max = Integer.MIN_VALUE;
-	    for(int i=0; i<list.size(); i++){
-	        if(list.get(i).intValue() > max){
-	            max = list.get(i).intValue();
+	    for(int i=0; i<list.length; i++){
+	        if(list[i] > max){
+	            max = list[i];
 	        }
 	    }
 	    return max;
