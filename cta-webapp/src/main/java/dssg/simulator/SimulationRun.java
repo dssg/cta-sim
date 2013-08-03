@@ -125,6 +125,7 @@ public class SimulationRun implements Runnable {
     String tageoid = stop.getStopId();
     String busStopId = taroute + "," + tageoid;
 
+    int actualArrivalTime = bste.getStopTime().getArrivalTime(); // TODO: replace with service model
     int actualDepartureTime = bste.getStopTime().getDepartureTime(); // TODO: replace with service model
     Integer lastDepartureTime = stop.getTimeOfLastBus(taroute);
     // TODO: better way of handling first bus of day?
@@ -133,7 +134,7 @@ public class SimulationRun implements Runnable {
     }
     int arrivingLoad = bus.getLoad();
 
-    int alight = this.alightModel.sample(busStopId, arrivingLoad);
+    int alight = this.alightModel.sample(busStopId, this.day, actualArrivalTime, arrivingLoad);
     int prevLeftBehind = stop.getLeftBehind(routeId);
 
     int attemptBoard = this.boardModel.sample(busStopId, this.day, lastDepartureTime, actualDepartureTime) + prevLeftBehind;

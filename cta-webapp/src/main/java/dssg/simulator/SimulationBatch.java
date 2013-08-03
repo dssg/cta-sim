@@ -4,9 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +13,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import dssg.server.SimulationServiceImpl;
-import dssg.shared.S3Communication;
 
 /**
  * This class holds the state/results of a batch of simulations.
@@ -44,6 +41,7 @@ public class SimulationBatch {
   static private final String REL_PARAM_PATH = "src/main/resources/params/";
   static private final File PARAM_PATH = new File(System.getProperty("user.dir"),REL_PARAM_PATH);
   static private final String REL_BOARD_PARAM_PATH = "boardParams.json";
+  static private final String REL_ALIGHT_PARAM_PATH = "alightParams.json";
 
   private final ExecutorService executor = Executors
       .newFixedThreadPool(THREAD_COUNT);
@@ -66,8 +64,9 @@ public class SimulationBatch {
     this.batchId = batchId;
 
     BufferedReader boardParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_BOARD_PARAM_PATH)));
+    BufferedReader alightParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_ALIGHT_PARAM_PATH)));
     this.boardModel = new PassengerOnModelNegBinom(boardParamReader); 
-    this.alightModel = new PassengerOffModelBinom();
+    this.alightModel = new PassengerOffModelBinom(alightParamReader);
     
     // switch to Joda time internally
     DateTime jStartTime = new DateTime(startTime.getTime(),TIMEZONE);
