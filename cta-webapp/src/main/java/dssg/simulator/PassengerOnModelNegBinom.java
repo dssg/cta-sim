@@ -76,7 +76,7 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
       double mean = lambda * dispersion * bucketFraction;
   
       double n = dispersion;
-      double p = mean / (mean + dispersion);
+      double p = 1 - (mean / (mean + dispersion));
       double u = this.rand.nextDouble();
   
       sample += NegativeBinomialDist.inverseF(n,p,u);
