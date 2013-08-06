@@ -11,7 +11,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 public class webapp implements EntryPoint {
 
   /**
-   * Create a remote service proxy to talk to the server-side simulation
+   * Remote service proxy to talk to the server-side simulation
    * service.
    */
   private final SimulationServiceAsync simulationService = GWT

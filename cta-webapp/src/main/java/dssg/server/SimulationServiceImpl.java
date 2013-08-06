@@ -129,8 +129,14 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
         56, 54, 50, 48, 50, 48, 48, 38, 43, 42, 49, 40, 40, 49, 35, 41, 38, 36,
         37, 36, 44, 42, 33, 36, 41, 42, 48, 47, 26, 25, 24, 25, 10 };
 
+    Integer[] dummyData3 = { 5315, 17705, 5317, 5318, 5320, 1510, 1511, 1512,
+        1513, 1514, 1515, 1517, 1518, 1519, 1520, 1521, 1522, 1523, 1524, 5037,
+        7137, 5038, 5039, 5040, 14483, 4883, 4884, 14485, 76, 15241, 2188,
+        1119, 1120, 1121, 3953, 3954, 14222 };
+
     results.put("max_load_N", dummyData);
     results.put("max_load_S", dummyData2);
+    results.put("stops", dummyData3);
 
     return results;
   }
