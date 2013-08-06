@@ -1,41 +1,25 @@
 package dssg.simulator;
 
 import java.io.Reader;
-import java.util.Collections;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTimeConstants;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import umontreal.iro.lecuyer.probdist.NegativeBinomialDist;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
 public class PassengerOnModelNegBinom implements PassengerOnModel {
-  // number of seconds for bucket, in this case we bucket by half hour
-  private static final int BUCKET_SIZE = 60*30;
-  private static final int SECONDS_IN_DAY = 60*60*24;
-  private static final int NUM_BUCKETS = SECONDS_IN_DAY / BUCKET_SIZE;
-  static {
-    assert SECONDS_IN_DAY % BUCKET_SIZE == 0 : "Bucket size does not evenly divide day";
-  }
+  private static final int BUCKET_SIZE = ModelConstants.BUCKET_SIZE;
+  private static final int NUM_BUCKETS = ModelConstants.NUM_BUCKETS;
 
-  private static int WEEKDAY = 0;
-  private static int WEEKEND = 1;
   private transient final RandomStream rand;
   
   class ModelParams {
-    double[] lambdaTimeOfDay;
-    double[] lambdaDayType;
-    double[] lambdaMonth;
+    double[] llTimeOfDay;
+    double[] llDayType;
+    double[] llMonth;
     double[] rhoTimeOfDay;
   }
   Map<String, ModelParams> busStopToParams;
@@ -43,25 +27,8 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
 
   public PassengerOnModelNegBinom(Reader paramReader) {
     this.rand = new MRG32k3a();
-
-    Map<String, ModelParams> buildMap = new HashMap<String, ModelParams>();
-    Gson gson = new Gson();
-    JsonParser parser = new JsonParser();
-    JsonObject taroutes = parser.parse(paramReader).getAsJsonObject();
-    for(Entry<String,JsonElement> routeEntry : taroutes.entrySet()) {
-      String taroute = routeEntry.getKey();
-      JsonObject directions = routeEntry.getValue().getAsJsonObject();
-      for(Entry<String,JsonElement> directionEntry : directions.entrySet()) {
-        JsonObject tageoids = directionEntry.getValue().getAsJsonObject();
-        for(Entry<String,JsonElement> tageoidEntry : tageoids.entrySet()) {
-          String tageoid = tageoidEntry.getKey();
-          ModelParams params = gson.fromJson(tageoidEntry.getValue(),ModelParams.class);
-          String busStopId = taroute + "," + tageoid;
-          buildMap.put(busStopId, params);
-        }
-      }
-    }
-    this.busStopToParams = Collections.unmodifiableMap(buildMap);
+    ModelParamsReader<ModelParams> parser = new ModelParamsReader<ModelParams>(ModelParams.class);
+    this.busStopToParams = parser.loadParams(paramReader);
   }
 
   /**
@@ -74,32 +41,33 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
    */
   @Override
   public int sample(String busStopId, DateMidnight day, int lastDepart, int thisDepart) {
-    // We don't have all stops trained yet just - just use an example stop
+    // We don't have all stops trained yet - use an example stop
     // ModelParams params = this.busStopToParams.get(busStopId);
     // TODO: fix parameter loading
     ModelParams params = this.busStopToParams.entrySet().iterator().next().getValue();
-    // TODO: allow sample across midnight
 
-    int dayIdx = WEEKDAY;
+    int dayIdx = ModelConstants.DAYTYPE_WEEKDAY;
     int dayId = day.getDayOfWeek();
-    if (dayId == DateTimeConstants.SATURDAY || dayId == DateTimeConstants.SUNDAY) dayIdx = WEEKEND;
+    if (dayId == DateTimeConstants.SATURDAY || dayId == DateTimeConstants.SUNDAY)
+      dayIdx = ModelConstants.DAYTYPE_WEEKEND;
     int monthIdx = day.getMonthOfYear() - 1;
 
-    double llDayTypeFactor = params.lambdaDayType[dayIdx];
-    double llMonthFactor = params.lambdaMonth[monthIdx];
+    double llDayTypeFactor = params.llDayType[dayIdx];
+    double llMonthFactor = params.llMonth[monthIdx];
     
     int beginTimeIdx = lastDepart / BUCKET_SIZE;
     double beginBucketFraction = (BUCKET_SIZE - (lastDepart % BUCKET_SIZE)) / (double) BUCKET_SIZE;
     int endTimeIdx = thisDepart / BUCKET_SIZE;
-    double endBucketFraction = (thisDepart % BUCKET_SIZE) / (double) 1800;
+    double endBucketFraction = (thisDepart % BUCKET_SIZE) / (double) BUCKET_SIZE;
 
     int sample = 0;
     for(int timeIdx = beginTimeIdx; timeIdx <= endTimeIdx; timeIdx++) {
       double bucketFraction = 1;
       if(timeIdx == beginTimeIdx) bucketFraction = beginBucketFraction;
       if(timeIdx == endTimeIdx) bucketFraction = endBucketFraction;
-      double rhoTimeOfDayFactor = params.rhoTimeOfDay[timeIdx];
-      double llTimeOfDayFactor = params.lambdaTimeOfDay[timeIdx];
+      int mTimeIdx = timeIdx % NUM_BUCKETS;
+      double rhoTimeOfDayFactor = params.rhoTimeOfDay[mTimeIdx];
+      double llTimeOfDayFactor = params.llTimeOfDay[mTimeIdx];
   
       double logLambda = llTimeOfDayFactor + llDayTypeFactor + llMonthFactor;
       double lambda = Math.exp(logLambda);
@@ -107,7 +75,7 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
       double mean = lambda * dispersion * bucketFraction;
   
       double n = dispersion;
-      double p = mean / (mean + dispersion);
+      double p = 1 - (mean / (mean + dispersion));
       double u = this.rand.nextDouble();
   
       sample += NegativeBinomialDist.inverseF(n,p,u);
