@@ -35,6 +35,7 @@ public class SimulationRun implements Runnable {
   /*
    * Simulation static properties
    */
+  final private SimulationBatch batch;
   final private BlockIndexService bis;
   final private BlockLocationService bls;
   final private BlockCalendarService bcs;
@@ -42,21 +43,31 @@ public class SimulationRun implements Runnable {
   final private PassengerOnModel boardModel;
   final private PassengerOffModel alightModel;
 
-  final int runId;
-  final RouteEntry route;
-  final String routeId;
-  final DateTime startTime;
-  final DateTime endTime;
-  final DateMidnight day;
+  final private int runId;
+  final private RouteEntry route;
+  final private String routeId;
+  final private DateTime startTime;
+  final private DateTime endTime;
+  final private DateMidnight day;
 
-  final PriorityQueue<BlockStopTimeEntry> stopTimes;
-  final List<StopEvent> events;
-  final Map<String,BusState> buses; // Map GTFS block id to bus state object
-  final Map<String,StopState> stops; // Map GTFS stop id to stop state object
+  final private PriorityQueue<BlockStopTimeEntry> stopTimes;
+  final private List<StopEvent> events;
+  final private Map<String,BusState> buses; // Map GTFS block id to bus state object
+  final private Map<String,StopState> stops; // Map GTFS stop id to stop state object
   
+  final private boolean logEvents;
+  final private boolean keepEventObjs;
 
-  public SimulationRun(SimulationBatch simBatch, int runId,
-    String routeId, DateTime startTime, DateTime endTime) {
+
+  public SimulationRun(SimulationBatch simBatch, int runId, String routeId,
+      DateTime startTime, DateTime endTime) {
+    this(simBatch, runId, routeId, startTime, endTime, true, false);
+  }
+
+  public SimulationRun(SimulationBatch simBatch, int runId, String routeId,
+      DateTime startTime, DateTime endTime, boolean logEvents,
+      boolean keepEventObjs) {
+    this.batch = simBatch;
     this.bis = simBatch.simService.bis;
     this.bls = simBatch.simService.bls;
     this.bcs = simBatch.simService.bcs;
@@ -70,10 +81,16 @@ public class SimulationRun implements Runnable {
     this.endTime = endTime;
     this.day = startTime.toDateMidnight();
 
-    this.events = new ArrayList<StopEvent>();
+
     this.buses = new HashMap<String,BusState>();
     this.stops = new HashMap<String,StopState>();
     
+    this.logEvents = logEvents;
+
+    this.keepEventObjs = keepEventObjs;
+    if(keepEventObjs) this.events = new ArrayList<StopEvent>();
+    else this.events = null;
+
     AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + routeId);
     this.route = tgd.getRouteForId(routeAgencyAndId);
     List<BlockInstance> blocks = bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId, startTime.getMillis(), endTime.getMillis());
@@ -117,18 +134,20 @@ public class SimulationRun implements Runnable {
       stop = new StopState(stopEntry);
       this.stops.put(stopId, stop);
     }
-    StopEvent event = makeStopEvent(bste, bus, stop);
-    this.events.add(event);
+    makeStopEvent(bste, bus, stop);
     return true;
   }
   
-  public StopEvent makeStopEvent(BlockStopTimeEntry bste, BusState bus, StopState stop) {
+  public void makeStopEvent(BlockStopTimeEntry bste, BusState bus, StopState stop) {
     String taroute = bus.getCurrentRouteId();
     String tageoid = stop.getStopId();
     String busStopId = taroute + "," + tageoid;
 
-    int actualArrivalTime = bste.getStopTime().getArrivalTime(); // TODO: replace with service model
-    int actualDepartureTime = bste.getStopTime().getDepartureTime(); // TODO: replace with service model
+    int scheduledArrivalTime = bste.getStopTime().getArrivalTime();
+    int scheduledDepartureTime = bste.getStopTime().getDepartureTime();
+    // for CTA GTFS, the scheduled departure time is always equal to the scheduled arrival time
+    int actualArrivalTime = scheduledArrivalTime; // TODO: replace with service model
+    int actualDepartureTime = scheduledDepartureTime; // TODO: replace with service model
     Integer lastDepartureTime = stop.getTimeOfLastBus(taroute);
     // TODO: better way of handling first bus of day?
     if(lastDepartureTime == null) {
@@ -149,17 +168,39 @@ public class SimulationRun implements Runnable {
     if(nextStopTime != null)
       this.stopTimes.add(nextStopTime);
     
-    System.out.println(attemptBoard + " attempting to board at stop " + tageoid);
+    System.out.println(tageoid + "," + scheduledArrivalTime + "," + actualArrivalTime + "," + actualDepartureTime + "," + actualBoard + "," + alight + "," + departingLoad);
 
-    return new StopEvent(bste, alight, actualBoard, leftBehind, departingLoad);
+    if(this.logEvents) {
+      LogStopEvent eventLog = new LogStopEvent(this.runId,tageoid,
+          scheduledArrivalTime, actualArrivalTime,actualDepartureTime,
+          actualBoard,alight,departingLoad);
+      this.batch.logger.logEvent(eventLog);
+    }
+    if(this.keepEventObjs) {
+      // TODO: This is currently dead code - figure out if we would need to
+      // keep around StopEvent objects linked to their BlockStopTimeEntries.
+      // If not, the prune it.
+      StopEvent event = new StopEvent(bste, alight, actualBoard, leftBehind, departingLoad);
+      this.events.add(event);
+    }
+  }
+
+  public List<StopEvent> getStopEvents() {
+    return this.events;
   }
   
   @Override
   public void run() {
-    while (step()) {
-      /*
-       * TODO FIXME compute stats or put them in whatever format is needed.
-       */
+    try {
+      while (step()) {
+        /*
+         * TODO FIXME compute stats on the fly?
+         * Possibly use StatProbe objects from SSJ?
+         */
+      }
+    }
+    finally {
+      this.batch.runCallback(this);
     }
   }
 

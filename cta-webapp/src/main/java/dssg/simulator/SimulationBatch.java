@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
@@ -29,7 +30,7 @@ public class SimulationBatch {
   private static final String REL_BOARD_PARAM_PATH = "boardParams.json";
   private static final String REL_ALIGHT_PARAM_PATH = "alightParams.json";
 
-  static private final int THREAD_COUNT;
+  private static final int THREAD_COUNT;
   static {
     final int numProcessors =
         Runtime.getRuntime().availableProcessors();
@@ -41,14 +42,11 @@ public class SimulationBatch {
     }
   }
 
-  static private final String REL_PARAM_PATH = "src/main/resources/params/";
-  static private final File PARAM_PATH = new File(System.getProperty("user.dir"),REL_PARAM_PATH);
-  static private final String REL_BOARD_PARAM_PATH = "boardParams.json";
-  static private final String REL_ALIGHT_PARAM_PATH = "alightParams.json";
-
-  private final ExecutorService executor = Executors
-      .newFixedThreadPool(THREAD_COUNT);
   private final int NUM_RUNS = 1;
+
+  private final ExecutorService executor;
+  private final Semaphore runsFinished;
+  protected final LogBatch logger;
 
   protected final SimulationServiceImpl simService;
   protected final String batchId;
@@ -63,6 +61,10 @@ public class SimulationBatch {
   
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
       String routeId, Date startTime, Date endTime, File paramPath) throws FileNotFoundException {
+    this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
+    this.runsFinished = new Semaphore(0);
+    this.logger = new LogBatch(batchId);
+
     this.simService = simService;
     this.batchId = batchId;
 
@@ -78,6 +80,19 @@ public class SimulationBatch {
     for (int i = 0; i < NUM_RUNS; i++) {
       this.executor.execute(new SimulationRun(this, i, routeId, jStartTime, jEndTime));
     }
+    this.executor.execute(this.logger);
+
+    this.executor.execute(new Runnable() {
+      @Override public void run() {
+        try {
+          runsFinished.acquire(NUM_RUNS);
+          //Code to execute when all runs have completed
+          logger.finish();
+        } catch (InterruptedException e) {
+          logger.cancel();
+        }
+      }});
+
     this.executor.shutdown();
   }
   
@@ -85,8 +100,8 @@ public class SimulationBatch {
     return this.executor.awaitTermination(timeout, unit);
   }
 
-  public static int getThreadCount() {
-    return THREAD_COUNT;
+  public void runCallback(SimulationRun run) {
+    this.runsFinished.release();
   }
 
   public int getNumRuns() {
