@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.google.common.collect.Lists;
 
 import dssg.client.S3CommunicationService;
+import dssg.shared.ProjectConstants;
 import dssg.simulator.SimulationBatch;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -29,7 +30,7 @@ public class SimulationServiceImplTest {
   public void test() {
     SimulationServiceImpl simService = new SimulationServiceImpl();
 
-    Calendar testCal = GregorianCalendar.getInstance(TimeZone.getTimeZone(SimulationBatch.AGENCY_TIMEZONE));
+    Calendar testCal = GregorianCalendar.getInstance(TimeZone.getTimeZone(ProjectConstants.AGENCY_TIMEZONE));
     testCal.clear(Calendar.MILLISECOND);
     testCal.set(2013, Calendar.FEBRUARY,11,0,0,0);
     Date day = testCal.getTime();
