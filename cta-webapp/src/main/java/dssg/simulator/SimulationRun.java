@@ -22,10 +22,12 @@ import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TransitGraphDao;
 
+import dssg.shared.ProjectConstants;
+
 /**
  * This class holds the state/result of a single simulation.
  * 
- * @author bwillard
+ * @author jtbates
  * 
  */
 public class SimulationRun implements Runnable {
@@ -72,7 +74,7 @@ public class SimulationRun implements Runnable {
     this.buses = new HashMap<String,BusState>();
     this.stops = new HashMap<String,StopState>();
     
-    AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(SimulationBatch.AGENCY_NAME + "_" + routeId);
+    AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + routeId);
     this.route = tgd.getRouteForId(routeAgencyAndId);
     List<BlockInstance> blocks = bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId, startTime.getMillis(), endTime.getMillis());
 

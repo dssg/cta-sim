@@ -13,6 +13,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import dssg.server.SimulationServiceImpl;
+import dssg.shared.ProjectConstants;
 
 /**
  * This class holds the state/results of a batch of simulations.
@@ -22,9 +23,11 @@ import dssg.server.SimulationServiceImpl;
  */
 
 public class SimulationBatch {
-  static public final String AGENCY_TIMEZONE = "America/Chicago";
-  static public final String AGENCY_NAME = "Chicago Transit Authority";
-  static public final DateTimeZone TIMEZONE = DateTimeZone.forID(AGENCY_TIMEZONE);
+  private static final DateTimeZone TIMEZONE = DateTimeZone.forID(ProjectConstants.AGENCY_TIMEZONE);
+  private static final String REL_PARAM_PATH = "params";
+  private static final File PARAM_PATH = new File(ProjectConstants.RESOURCES_PATH,REL_PARAM_PATH);
+  private static final String REL_BOARD_PARAM_PATH = "boardParams.json";
+  private static final String REL_ALIGHT_PARAM_PATH = "alightParams.json";
 
   static private final int THREAD_COUNT;
   static {
