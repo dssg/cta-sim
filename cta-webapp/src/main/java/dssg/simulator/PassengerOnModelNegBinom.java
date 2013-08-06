@@ -6,13 +6,14 @@ import java.util.Map;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTimeConstants;
 
+import dssg.shared.ProjectConstants;
 import umontreal.iro.lecuyer.probdist.NegativeBinomialDist;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
 public class PassengerOnModelNegBinom implements PassengerOnModel {
-  private static final int BUCKET_SIZE = ModelConstants.BUCKET_SIZE;
-  private static final int NUM_BUCKETS = ModelConstants.NUM_BUCKETS;
+  private int BUCKET_SIZE = ProjectConstants.BUCKET_SIZE;
+  private int NUM_BUCKETS = ProjectConstants.NUM_BUCKETS;
 
   private transient final RandomStream rand;
   
@@ -46,10 +47,10 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
     // TODO: fix parameter loading
     ModelParams params = this.busStopToParams.entrySet().iterator().next().getValue();
 
-    int dayIdx = ModelConstants.DAYTYPE_WEEKDAY;
+    int dayIdx = ProjectConstants.DAYTYPE_WEEKDAY;
     int dayId = day.getDayOfWeek();
     if (dayId == DateTimeConstants.SATURDAY || dayId == DateTimeConstants.SUNDAY)
-      dayIdx = ModelConstants.DAYTYPE_WEEKEND;
+      dayIdx = ProjectConstants.DAYTYPE_WEEKEND;
     int monthIdx = day.getMonthOfYear() - 1;
 
     double llDayTypeFactor = params.llDayType[dayIdx];

@@ -6,14 +6,12 @@ import java.util.Map;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTimeConstants;
 
+import dssg.shared.ProjectConstants;
 import umontreal.iro.lecuyer.probdist.BinomialDist;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
 public class PassengerOffModelBinom implements PassengerOffModel {
-  private static final int BUCKET_SIZE = ModelConstants.BUCKET_SIZE;
-  private static final int NUM_BUCKETS = ModelConstants.NUM_BUCKETS;
-
   private transient final RandomStream rand;
 
   class ModelParams {
@@ -44,17 +42,16 @@ public class PassengerOffModelBinom implements PassengerOffModel {
     // TODO: fix parameter loading
     ModelParams params = this.busStopToParams.entrySet().iterator().next().getValue();
 
-    int dayIdx = ModelConstants.DAYTYPE_WEEKDAY;
+    int dayIdx = ProjectConstants.DAYTYPE_WEEKDAY;
     int dayId = day.getDayOfWeek();
     if (dayId == DateTimeConstants.SATURDAY || dayId == DateTimeConstants.SUNDAY) 
-      dayIdx = ModelConstants.DAYTYPE_WEEKEND;
+      dayIdx = ProjectConstants.DAYTYPE_WEEKEND;
     int monthIdx = day.getMonthOfYear() - 1;
 
     double lpDayTypeFactor = params.lpDayType[dayIdx];
     double lpMonthFactor = params.lpMonth[monthIdx];
     
-    int timeIdx = arrivalTime / BUCKET_SIZE;
-    int mTimeIdx = timeIdx % NUM_BUCKETS;
+    int mTimeIdx = ProjectConstants.getBucket(arrivalTime);
     double lpTimeOfDayFactor = params.lpTimeOfDay[mTimeIdx];
 
     double logP = lpTimeOfDayFactor + lpDayTypeFactor + lpMonthFactor;
