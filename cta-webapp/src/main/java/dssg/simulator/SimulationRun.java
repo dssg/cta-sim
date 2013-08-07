@@ -55,18 +55,15 @@ public class SimulationRun implements Runnable {
   final private Map<String,BusState> buses; // Map GTFS block id to bus state object
   final private Map<String,StopState> stops; // Map GTFS stop id to stop state object
   
-  final private boolean logEvents;
   final private boolean keepEventObjs;
-
 
   public SimulationRun(SimulationBatch simBatch, int runId, String routeId,
       DateTime startTime, DateTime endTime) {
-    this(simBatch, runId, routeId, startTime, endTime, true, false);
+    this(simBatch, runId, routeId, startTime, endTime, false);
   }
 
   public SimulationRun(SimulationBatch simBatch, int runId, String routeId,
-      DateTime startTime, DateTime endTime, boolean logEvents,
-      boolean keepEventObjs) {
+      DateTime startTime, DateTime endTime, boolean keepEventObjs) {
     this.batch = simBatch;
     this.bis = simBatch.simService.bis;
     this.bls = simBatch.simService.bls;
@@ -85,8 +82,6 @@ public class SimulationRun implements Runnable {
     this.buses = new HashMap<String,BusState>();
     this.stops = new HashMap<String,StopState>();
     
-    this.logEvents = logEvents;
-
     this.keepEventObjs = keepEventObjs;
     if(keepEventObjs) this.events = new ArrayList<StopEvent>();
     else this.events = null;
@@ -170,12 +165,10 @@ public class SimulationRun implements Runnable {
     
     System.out.println(tageoid + "," + scheduledArrivalTime + "," + actualArrivalTime + "," + actualDepartureTime + "," + actualBoard + "," + alight + "," + departingLoad);
 
-    if(this.logEvents) {
-      LogStopEvent eventLog = new LogStopEvent(this.runId,tageoid,
-          scheduledArrivalTime, actualArrivalTime,actualDepartureTime,
-          actualBoard,alight,departingLoad);
-      this.batch.logger.logEvent(eventLog);
-    }
+    LogStopEvent eventLog = new LogStopEvent(this.runId,tageoid,
+        scheduledArrivalTime, actualArrivalTime,actualDepartureTime,
+        actualBoard,alight,departingLoad);
+    this.batch.handleEvent(eventLog);
     if(this.keepEventObjs) {
       // TODO: This is currently dead code - figure out if we would need to
       // keep around StopEvent objects linked to their BlockStopTimeEntries.

@@ -24,7 +24,7 @@ public class LogBatch extends Thread {
     this.logName = logName;
   }
 
-  public void logEvent(LogStopEvent record) {
+  public void process(LogStopEvent record) {
     eventQueue.add(record);
   }
   
@@ -51,11 +51,10 @@ public class LogBatch extends Thread {
       // logging failed
       e.printStackTrace();
     }
-
   }
   
   public void finish() {
-    this.logEvent(this.POISON);
+    this.process(this.POISON);
   }
   
   public void cancel() {
