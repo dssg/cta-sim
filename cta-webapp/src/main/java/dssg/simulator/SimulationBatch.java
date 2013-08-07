@@ -46,7 +46,10 @@ public class SimulationBatch {
 
   private final ExecutorService executor;
   private final Semaphore runsFinished;
+  protected final StatProbesBatch probes;
+  protected final boolean computeStats;
   protected final LogBatch logger;
+  protected final boolean saveLogs;
 
   protected final SimulationServiceImpl simService;
   protected final String batchId;
@@ -56,14 +59,18 @@ public class SimulationBatch {
   
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
       String routeId, Date startTime, Date endTime) throws FileNotFoundException {
-    this(simService,batchId,routeId,startTime,endTime,PARAM_PATH);
+    this(simService,batchId,routeId,startTime,endTime,PARAM_PATH, true, false);
   }
   
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
-      String routeId, Date startTime, Date endTime, File paramPath) throws FileNotFoundException {
+      String routeId, Date startTime, Date endTime, File paramPath,
+      final boolean computeStats, final boolean saveLogs) throws FileNotFoundException {
     this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
     this.runsFinished = new Semaphore(0);
-    this.logger = new LogBatch(batchId);
+    this.computeStats = computeStats;
+    if(computeStats) this.probes = new StatProbesBatch(NUM_RUNS);
+    this.saveLogs = saveLogs;
+    if(saveLogs) this.logger = new LogBatch(batchId);
 
     this.simService = simService;
     this.batchId = batchId;
@@ -87,9 +94,11 @@ public class SimulationBatch {
         try {
           runsFinished.acquire(NUM_RUNS);
           //Code to execute when all runs have completed
-          logger.finish();
+          if(computeStats) probes.finish();
+          if(saveLogs) logger.finish();
         } catch (InterruptedException e) {
-          logger.cancel();
+          if(computeStats) probes.cancel();
+          if(saveLogs) logger.cancel();
         }
       }});
 
@@ -100,6 +109,10 @@ public class SimulationBatch {
     return this.executor.awaitTermination(timeout, unit);
   }
 
+  public void handleEvent(LogStopEvent event) {
+    if(this.saveLogs) this.logger.process(event);
+    if(this.computeStats) this.probes.queue(event);
+  }
   public void runCallback(SimulationRun run) {
     this.runsFinished.release();
   }
@@ -109,6 +122,6 @@ public class SimulationBatch {
   }
   
   public String getBatchId() {
-    return batchId;
+    return this.batchId;
   }
 }
