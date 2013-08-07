@@ -17,8 +17,8 @@ input_taroute <- toString(args[1])
 input_dir_group <- toString(args[2])
 input_tageoid <- toString(args[3])
 
-totaloutput <- toString(args[4])
-avgoutput <- toString(args[5])
+# totaloutput <- toString(args[4])
+# avgoutput <- toString(args[5])
 
 # input_months <- as.numeric(args[6])
 # input_weekend <- as.numeric(args[7])
@@ -41,6 +41,8 @@ print( paste("select * from rcp_join_dn1_train_apc where taroute='",input_tarout
 stop_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_train_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
 
 names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
+
+summary(stop_data)
 
 ### Cleaning ###
 
@@ -136,34 +138,34 @@ weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend I
 
 ### Calculate Distr for Input_month and Input_weekend ###
 
-print("About to Calc Distributions")
+# print("About to Calc Distributions")
 
-print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
+# print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
 
-for (i in 1:12) {
-for (j in 1:2) {
+#for (i in 1:12) {
+#for (j in 1:2) {
 
-distr_obs = which(actual_months == i-1 & weekend == j)
+# distr_obs = which(actual_months == i-1 & weekend == j)
 
-if (length(distr_obs) != 0 ){
+# if (length(distr_obs) != 0 ){
 
-distr_buckets = matrix(ncol = 3, nrow = num_buckets)
+# distr_buckets = matrix(ncol = 3, nrow = num_buckets)
 
-print(c(i,j))
+# print(c(i,j))
 
-for(k in 1:num_buckets) {
-    distr_buckets[k,2] <- mean(buckets[k,distr_obs])
-    distr_buckets[k,1] <- quantile(buckets[k,distr_obs],0.25)
-    distr_buckets[k,3] <- quantile(buckets[k,distr_obs],0.75)
-}
+# for(k in 1:num_buckets) {
+#    distr_buckets[k,2] <- mean(buckets[k,distr_obs])
+#    distr_buckets[k,1] <- quantile(buckets[k,distr_obs],0.25)
+#    distr_buckets[k,3] <- quantile(buckets[k,distr_obs],0.75)
+# }
 
-write.table(distr_buckets, paste("distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
+# write.table(distr_buckets, paste("distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
 
-}
-}
-}
+#}
+#}
+#}
 
-print("Finished Calcing Distributions")
+# print("Finished Calcing Distributions")
 
 ### BUGS CODE ###
 
@@ -283,8 +285,6 @@ print("About to run Rbugs")
 #                  bugsWorkingDir="/tmp", cleanBugsWorkingDir = T)
 
 
-print(paste("Number of observations is ", num_buckets*num_days))
-
 load.sim <- jags(data, inits, parameters, "model_negbinom.bug", n.chains=1, n.iter=6000, n.burnin=200, progress.bar="text")
 
 print(load.sim)
@@ -333,6 +333,8 @@ for (i in 1:dim(total_df)[2]) {
 }
 
 ### JSON OUTPUT ### 
+
+print("About to print JSON Output")
 
 if(length(unique(stop_data$taroute))==1){
   taroute=unique(stop_data$taroute)
@@ -383,11 +385,18 @@ names(aL)=c(Sys.Date())
 json = toJSON(aL)
 
 # setwd("cta-webapp/src/main/resources/")
-write(json, file="boardParams.json", append = TRUE)
+
+print("Made it to Creating the JSON File")
+
+print(paste("json_output/boardParams_",input_tageoid,".json",sep = ""))
+
+write(json, file=paste("json_output/boardParams_",input_tageoid,".json",sep = ""), append = TRUE)
+
+print("Created JSON File")
 
 # write to file
-write.table(total_df, totaloutput, sep=",", row.names = FALSE, col.names = TRUE)
-write.table(avg_values, avgoutput, sep=",", row.names = FALSE, col.names = TRUE)
+#write.table(total_df, totaloutput, sep=",", row.names = FALSE, col.names = TRUE)
+#write.table(avg_values, avgoutput, sep=",", row.names = FALSE, col.names = TRUE)
 
 # write.table(total_df, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/totalsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
 # write.table(avg_values, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
