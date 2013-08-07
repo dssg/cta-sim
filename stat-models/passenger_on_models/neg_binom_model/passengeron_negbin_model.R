@@ -356,13 +356,13 @@ if(length(unique(stop_data$tageoid))==1){
 values = as.vector(as.matrix(avg_values))
 
 nTimeOfDay=list(values[1:48])
-names(nTimeOfDay)=c("nTimeOfDay")
+names(nTimeOfDay)=c("llTimeOfDay")
 nDayType=list(values[49:50])
-names(nDayType)=c("nDayType")
+names(nDayType)=c("llDayType")
 rhoTimeOfDay=list(values[51:97])
 names(rhoTimeOfDay)=c("rhoTimeOfDay")
 nMonth=list(values[98:109])
-names(nMonth)= c("nMonth")
+names(nMonth)= c("llMonth")
 
 param_list = c(nTimeOfDay, nDayType, rhoTimeOfDay, nMonth)
 
