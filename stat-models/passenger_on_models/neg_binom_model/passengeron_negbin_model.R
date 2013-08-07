@@ -380,9 +380,9 @@ names(aL)=c(taroute)
 
 #FIT DATE
 final=list(aL)
-names(aL)=c(Sys.Date())
+names(final)=c(Sys.Date())
 
-json = toJSON(aL)
+json = toJSON(final)
 
 # setwd("cta-webapp/src/main/resources/")
 
