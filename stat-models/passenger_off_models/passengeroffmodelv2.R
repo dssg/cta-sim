@@ -349,6 +349,65 @@ for (i in 1:dim(total_df)[2]) {
 write.table(total_df, "mcmc_output/totalsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
 write.table(avg_values, "mcmc_output/avgsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
 
+### JSON OUTPUT ### 
+
+print("About to print JSON Output")
+
+if(length(unique(stop_data$taroute))==1){
+  taroute=unique(stop_data$taroute)
+}else{
+  print("ERROR: route not unique")
+}
+if(length(unique(stop_data$dir_group))==1){
+  dir_group=unique(stop_data$dir_group)
+}else{
+  print("ERROR: dir_group not unique")
+}
+if(length(unique(stop_data$tageoid))==1){
+  tageoid=unique(stop_data$tageoid)
+}else{
+  print("ERROR: tageoid not unique")
+}
+
+#PARAMETERS
+values = as.vector(as.matrix(avg_values))
+
+nTimeOfDay=list(values[1:48])
+names(nTimeOfDay)=c("llTimeOfDay")
+nDayType=list(values[49:50])
+names(nDayType)=c("llDayType")
+nMonth=list(values[51:62])
+names(nMonth)= c("llMonth")
+
+param_list = c(nTimeOfDay, nDayType, nMonth)
+
+#TAGEOID
+cL=list(param_list)
+names(cL)=c(tageoid)
+
+#DIR_GROUP
+bL=list(cL)
+names(bL)=c(dir_group)
+
+#TAROUTE
+aL=list(bL)
+names(aL)=c(taroute)
+
+#FIT DATE
+final=list(aL)
+names(final)=c(Sys.Date())
+
+json = toJSON(final)
+
+# setwd("cta-webapp/src/main/resources/")
+
+print("Made it to Creating the JSON File")
+
+print(paste("json_output/boardParams_",input_tageoid,".json",sep = ""))
+
+write(json, file=paste("json_output/boardParams_",input_tageoid,".json",sep = ""), append = TRUE)
+
+print("Created JSON File")
 
 
 
