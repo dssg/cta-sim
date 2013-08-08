@@ -32,6 +32,7 @@ public class StatProbesBatch extends Thread {
   private boolean finalized;
 
   public StatProbesBatch(int numRuns, List<String> stops) {
+    // TODO: Handle different patterns correctly
     this.numRuns = numRuns;
     this.numStops = stops.size();
     this.stops = stops;

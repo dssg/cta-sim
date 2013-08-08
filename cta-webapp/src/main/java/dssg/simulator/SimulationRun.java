@@ -8,21 +8,12 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 import org.joda.time.DateMidnight;
-import org.joda.time.DateTime;
 
-import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.transit_data_federation.services.blocks.BlockCalendarService;
-import org.onebusaway.transit_data_federation.services.blocks.BlockIndexService;
 import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
-import org.onebusaway.transit_data_federation.services.realtime.BlockLocationService;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockConfigurationEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
-import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
-import org.onebusaway.transit_data_federation.services.transit_graph.TransitGraphDao;
-
-import dssg.shared.ProjectConstants;
 
 /**
  * This class holds the state/result of a single simulation.
@@ -36,18 +27,11 @@ public class SimulationRun implements Runnable {
    * Simulation static properties
    */
   final private SimulationBatch batch;
-  final private BlockIndexService bis;
-  final private BlockLocationService bls;
-  final private BlockCalendarService bcs;
-  final private TransitGraphDao tgd;
   final private PassengerOnModel boardModel;
   final private PassengerOffModel alightModel;
 
   final private int runId;
-  final private RouteEntry route;
-  final private String routeId;
-  final private DateTime startTime;
-  final private DateTime endTime;
+  final private List<BlockInstance> blocks;
   final private DateMidnight day;
 
   final private PriorityQueue<BlockStopTimeEntry> stopTimes;
@@ -57,27 +41,20 @@ public class SimulationRun implements Runnable {
   
   final private boolean keepEventObjs;
 
-  public SimulationRun(SimulationBatch simBatch, int runId, String routeId,
-      DateTime startTime, DateTime endTime) {
-    this(simBatch, runId, routeId, startTime, endTime, false);
+  public SimulationRun(SimulationBatch simBatch, int runId,
+      List<BlockInstance> blocks, DateMidnight day) {
+    this(simBatch, runId, blocks, day, false);
   }
 
-  public SimulationRun(SimulationBatch simBatch, int runId, String routeId,
-      DateTime startTime, DateTime endTime, boolean keepEventObjs) {
+  public SimulationRun(SimulationBatch simBatch, int runId,
+      List<BlockInstance> blocks, DateMidnight day, boolean keepEventObjs) {
     this.batch = simBatch;
-    this.bis = simBatch.simService.bis;
-    this.bls = simBatch.simService.bls;
-    this.bcs = simBatch.simService.bcs;
-    this.tgd = simBatch.simService.tgd;
+    this.runId = runId;
+    this.blocks = blocks;
+    this.day = day;
+
     this.boardModel = simBatch.boardModel;
     this.alightModel = simBatch.alightModel;
-
-    this.runId = runId;
-    this.routeId = routeId;
-    this.startTime = startTime;
-    this.endTime = endTime;
-    this.day = startTime.toDateMidnight();
-
 
     this.buses = new HashMap<String,BusState>();
     this.stops = new HashMap<String,StopState>();
@@ -86,9 +63,6 @@ public class SimulationRun implements Runnable {
     if(keepEventObjs) this.events = new ArrayList<StopEvent>();
     else this.events = null;
 
-    AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + routeId);
-    this.route = tgd.getRouteForId(routeAgencyAndId);
-    List<BlockInstance> blocks = bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId, startTime.getMillis(), endTime.getMillis());
 
     stopTimes = new PriorityQueue<BlockStopTimeEntry>(1000,
 	    new Comparator<BlockStopTimeEntry>() {
@@ -100,7 +74,6 @@ public class SimulationRun implements Runnable {
 
     for(BlockInstance blockInst : blocks)
         stopTimes.add(blockInst.getBlock().getStopTimes().get(0));
-    
   }
 
   /**
@@ -151,12 +124,12 @@ public class SimulationRun implements Runnable {
     int arrivingLoad = bus.getLoad();
 
     int alight = this.alightModel.sample(busStopId, this.day, actualArrivalTime, arrivingLoad);
-    int prevLeftBehind = stop.getLeftBehind(routeId);
+    int prevLeftBehind = stop.getLeftBehind(taroute);
 
     int attemptBoard = this.boardModel.sample(busStopId, this.day, lastDepartureTime, actualDepartureTime) + prevLeftBehind;
     int actualBoard = bus.update(alight, attemptBoard);
     int leftBehind = attemptBoard - actualBoard;
-    stop.update(routeId, actualDepartureTime, leftBehind);
+    stop.update(taroute, actualDepartureTime, leftBehind);
     int departingLoad = bus.getLoad();
     
     BlockStopTimeEntry nextStopTime = bus.depart();

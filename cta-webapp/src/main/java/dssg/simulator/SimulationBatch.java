@@ -4,14 +4,20 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.joda.time.DateMidnight;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
+import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
 
 import dssg.server.SimulationServiceImpl;
 import dssg.shared.ProjectConstants;
@@ -67,10 +73,15 @@ public class SimulationBatch {
       final boolean computeStats, final boolean saveLogs) throws FileNotFoundException {
     this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
     this.runsFinished = new Semaphore(0);
+
     this.computeStats = computeStats;
-    if(computeStats) this.probes = new StatProbesBatch(NUM_RUNS);
+    // FIXME: This will fail - replaces with list of all stops for route
+    if(computeStats) this.probes = new StatProbesBatch(NUM_RUNS, new ArrayList<String>());
+    else this.probes = null;
+
     this.saveLogs = saveLogs;
     if(saveLogs) this.logger = new LogBatch(batchId);
+    else this.logger = null;
 
     this.simService = simService;
     this.batchId = batchId;
@@ -83,9 +94,15 @@ public class SimulationBatch {
     // switch to Joda time internally
     DateTime jStartTime = new DateTime(startTime.getTime(),TIMEZONE);
     DateTime jEndTime = new DateTime(endTime.getTime(),TIMEZONE);
+    DateMidnight day = jStartTime.toDateMidnight();
+
+    AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + routeId);
+    RouteEntry route = simService.tgd.getRouteForId(routeAgencyAndId);
+    List<BlockInstance> blocks = simService.bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId,
+            jStartTime.getMillis(), jEndTime.getMillis());
     
     for (int i = 0; i < NUM_RUNS; i++) {
-      this.executor.execute(new SimulationRun(this, i, routeId, jStartTime, jEndTime));
+      this.executor.execute(new SimulationRun(this, i, blocks, day));
     }
     this.executor.execute(this.logger);
 
