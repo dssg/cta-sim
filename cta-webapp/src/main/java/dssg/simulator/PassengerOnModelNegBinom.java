@@ -45,7 +45,7 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
     // We don't have all stops trained yet - use an example stop
     // ModelParams params = this.busStopToParams.get(busStopId);
     // TODO: fix parameter loading
-    ModelParams params = this.busStopToParams.entrySet().iterator().next().getValue();
+    ModelParams params = this.busStopToParams.get(busStopId);
 
     int dayIdx = ProjectConstants.DAYTYPE_WEEKDAY;
     int dayId = day.getDayOfWeek();

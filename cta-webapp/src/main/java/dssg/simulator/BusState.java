@@ -47,6 +47,10 @@ public class BusState {
   public String getCurrentDirectionId() {
     return this.currentDirectionId;
   }
+  
+  public BlockStopTimeEntry getNextStop() {
+    return this.nextStop;
+  }
 
   /**
    * Updates the bus state after making a stop.

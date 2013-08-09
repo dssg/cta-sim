@@ -2,6 +2,7 @@ package dssg.client;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -11,7 +12,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("simulate")
 public interface SimulationService extends RemoteService {
-  String submitSimulation(String route, Date startTime,
+  String submitSimulation(Set<String> routeAndDirs, Date startTime,
     Date endTime) throws IllegalArgumentException;
   
   public Map<String, Integer[]> getResults(String simId); 

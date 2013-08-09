@@ -2,11 +2,12 @@ package dssg.simulator;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class StatProbesBatch extends Thread {
   public final LogStopEvent POISON = new LogStopEvent();
-  private BlockingQueue<LogStopEvent> eventQueue;
+  private final BlockingQueue<LogStopEvent> eventQueue;
 
   private final int numRuns;
   private final HashMap<String,LinkedHashMap<String,Integer>> routeAndDirToStopIdToNum;
@@ -15,14 +16,15 @@ public class StatProbesBatch extends Thread {
   private boolean finalized;
 
   public StatProbesBatch(int numRuns, HashMap<String,LinkedHashMap<String,Integer>> routeAndDirToStopIdToNum) {
-    // TODO: Handle different patterns correctly
+    this.eventQueue = new LinkedBlockingQueue<LogStopEvent>();
+
     this.numRuns = numRuns;
     this.routeAndDirToStopIdToNum = routeAndDirToStopIdToNum;
     this.routeAndDirToProbes = new HashMap<String,StatProbesRouteDir>();
 
     for(String routeAndDir : routeAndDirToStopIdToNum.keySet()) {
-      StatProbesRouteDir stopIdToNum = new StatProbesRouteDir(numRuns, routeAndDirToStopIdToNum.get(routeAndDir));
-      this.routeAndDirToProbes.put(routeAndDir, stopIdToNum);
+      StatProbesRouteDir probes = new StatProbesRouteDir(numRuns, routeAndDirToStopIdToNum.get(routeAndDir));
+      this.routeAndDirToProbes.put(routeAndDir, probes);
     }
   }
   

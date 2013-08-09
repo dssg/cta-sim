@@ -1,10 +1,6 @@
 package dssg.simulator;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
@@ -44,20 +40,41 @@ public class StatProbesRouteDir {
     
     this.q3LoadByTimeByStop = new double[NUM_BUCKETS][numStops];
     this.maxLoadByTime = new double[NUM_BUCKETS];
+    this.q3FlowByTimeByStop = new double[NUM_BUCKETS][numStops];
+    this.maxFlowByTime = new double[NUM_BUCKETS];
   }
   
   public void add(LogStopEvent event) {
     this.finalized = false;
+    String tageoid = event.getTageoid();
+    Integer currentStop = this.tageoidToStopNum.get(tageoid);
+    // ignore if stop not in canonical pattern
+    if(currentStop == null) return;
+
     int runId = event.getRunId();
     int departTime = event.getTime_actual_depart();
-    int stopNum = this.tageoidToStopNum.get(event.getTageoid());
     int load = event.getPassengers_in();
-
     int timeBucket = ProjectConstants.getBucket(departTime);
 
-    DoubleArrayList flows = this.flowByTimeByStop[timeBucket][stopNum];
-    flows.set(runId, flows.get(runId) + load);
-    this.loadByTimeByStop[timeBucket][stopNum].add(load);
+    // Count the number of stops back in the canonical pattern back until
+    // the last one that was stopped at by this trip
+    // This allows flow from express routes to be accounted for over the 
+    // intermediate stops
+    LogStopEvent pEvent = event;
+    Integer lastCanonStop =  null;
+    while(true) {
+      pEvent = pEvent.getLastEvent();
+      if(pEvent == null) break;
+      lastCanonStop = this.tageoidToStopNum.get(pEvent.getTageoid());
+      if(lastCanonStop != null) break;
+    }
+    if(lastCanonStop == null) lastCanonStop = currentStop - 1;
+    
+    for(int stopNum = lastCanonStop + 1; stopNum <= currentStop; stopNum++) {
+      DoubleArrayList flows = this.flowByTimeByStop[timeBucket][stopNum];
+      flows.set(runId, flows.get(runId) + load);
+      this.loadByTimeByStop[timeBucket][stopNum].add(load);
+    }
   }
 
   public void postCompute() {

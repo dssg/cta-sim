@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -53,7 +54,7 @@ public class SimulationBatch {
     }
   }
 
-  private final int NUM_RUNS = 1;
+  private final int NUM_RUNS = 30;
 
   private final ExecutorService executor;
   private final Semaphore runsFinished;
@@ -69,12 +70,12 @@ public class SimulationBatch {
   protected final PassengerOffModel alightModel;
   
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
-      String routeId, Date startTime, Date endTime) throws FileNotFoundException {
-    this(simService,batchId,routeId,startTime,endTime,PARAM_PATH, true, false);
+      Set<String> routeAndDirs, Date startTime, Date endTime) throws FileNotFoundException {
+    this(simService,batchId,routeAndDirs,startTime,endTime,PARAM_PATH, true, false);
   }
   
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
-      String routeId, Date startTime, Date endTime, File paramPath,
+      Set<String> routeAndDirs, Date startTime, Date endTime, File paramPath,
       final boolean computeStats, final boolean saveLogs) throws FileNotFoundException {
     this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
     this.runsFinished = new Semaphore(0);
@@ -96,10 +97,17 @@ public class SimulationBatch {
     DateTime jEndTime = new DateTime(endTime.getTime(),TIMEZONE);
     DateMidnight day = jStartTime.toDateMidnight();
 
-    AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + routeId);
-    RouteEntry route = simService.tgd.getRouteForId(routeAgencyAndId);
-    List<BlockInstance> blocks = simService.bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId,
-            jStartTime.getMillis(), jEndTime.getMillis());
+    Map<String,List<String>> routeToDirs = new HashMap<String,List<String>>();
+    List<BlockInstance> blocks = new ArrayList<BlockInstance>();
+    for(String routeAndDir : routeAndDirs) {
+      String[] split = routeAndDir.split(",",2);
+      String taroute = split[0];
+      String dir_group = split[1];
+      AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + taroute);
+      List<BlockInstance> routeBlocks = simService.bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId,
+              jStartTime.getMillis(), jEndTime.getMillis());
+      blocks.addAll(routeBlocks);
+    }
     
     // pattern is encoded with bt_ver + patternid in the shapeId
     // FIXME: Why can't I use the interfaces in these declarations?
@@ -113,7 +121,8 @@ public class SimulationBatch {
         String taroute = bte.getTrip().getRoute().getId().getId();
         String direction = bte.getTrip().getDirectionId();
         String routeAndDir = taroute + "," + direction;
-        if(!routeAndDirToPatterns.containsKey(taroute)) {
+        if(!routeAndDirs.contains(routeAndDir)) continue;
+        if(!routeAndDirToPatterns.containsKey(routeAndDir)) {
           routeAndDirToPatterns.put(routeAndDir, new ArrayList<String>());
           routeAndDirToStops.put(routeAndDir, new ArrayList<String>());
         }
@@ -139,22 +148,26 @@ public class SimulationBatch {
       }
     }
 
+    // build tageoid -> canonical pattern stop number for each route and direction
     HashMap<String,LinkedHashMap<String,Integer>> routeAndDirToStopIdToNum;
     routeAndDirToStopIdToNum = new HashMap<String,LinkedHashMap<String,Integer>>();
-    for(String routeAndDir : routeAndDirToStopIdToNum.keySet()) {
+    for(String routeAndDir : routeAndDirToStops.keySet()) {
       LinkedHashMap<String,Integer> stopIdToNum = new LinkedHashMap<String,Integer>();
       ArrayList<String> stopList = routeAndDirToStops.get(routeAndDir);
       for(int i = 0; i < stopList.size(); i++) {
         stopIdToNum.put(stopList.get(i), i);
       }
+      routeAndDirToStopIdToNum.put(routeAndDir, stopIdToNum);
     }
+
+    // Create list of statistical probes
     this.computeStats = computeStats;
     // FIXME: This will fail - replaces with list of all stops for route
     if(computeStats) this.probes = new StatProbesBatch(NUM_RUNS, routeAndDirToStopIdToNum);
     else this.probes = null;
 
     for (int i = 0; i < NUM_RUNS; i++) {
-      this.executor.execute(new SimulationRun(this, i, blocks, day));
+      this.executor.execute(new SimulationRun(this, i, routeAndDirs, blocks, day));
     }
     if(saveLogs)
       this.executor.execute(this.logger);

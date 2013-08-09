@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -91,15 +92,18 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
     return simulations.get(batchId);
   }
 
-  public String submitSimulation(String route, Date startTime, Date endTime)
+  public String submitSimulation(Set<String> routeAndDirs, Date startTime, Date endTime)
       throws IllegalArgumentException {
 
-    String batchId = route + startTime + endTime;
+    String batchId = "";
+    for(String routeAndDir : routeAndDirs)
+      batchId += routeAndDir + "_";
+    batchId += "From_" + startTime + "_To_" + endTime;
 
     SimulationBatch simBatch = simulations.get(batchId);
     if (simBatch == null) {
       try {
-        simBatch = new SimulationBatch(this, batchId, route, startTime, endTime);
+        simBatch = new SimulationBatch(this, batchId, routeAndDirs, startTime, endTime);
         simulations.put(batchId, simBatch);
       } catch (FileNotFoundException e) {
         e.printStackTrace();

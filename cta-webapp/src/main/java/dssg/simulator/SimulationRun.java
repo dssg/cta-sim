@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import org.joda.time.DateMidnight;
 import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
@@ -14,6 +15,7 @@ import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTi
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
+import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
 
 /**
  * This class holds the state/result of a single simulation.
@@ -32,9 +34,10 @@ public class SimulationRun implements Runnable {
 
   final private int runId;
   final private List<BlockInstance> blocks;
+  final private Set<String> routeAndIds;
   final private DateMidnight day;
 
-  final private PriorityQueue<BlockStopTimeEntry> stopTimes;
+  final private PriorityQueue<BusState> stopTimes;
   final private List<StopEvent> events;
   final private Map<String,BusState> buses; // Map GTFS block id to bus state object
   final private Map<String,StopState> stops; // Map GTFS stop id to stop state object
@@ -44,14 +47,16 @@ public class SimulationRun implements Runnable {
   final private Map<BlockTripEntry,LogStopEvent> tripToLastEvent;
 
   public SimulationRun(SimulationBatch simBatch, int runId,
-      List<BlockInstance> blocks, DateMidnight day) {
-    this(simBatch, runId, blocks, day, false);
+      Set<String> routeAndDirs, List<BlockInstance> blocks, DateMidnight day) {
+    this(simBatch, runId, routeAndDirs, blocks, day, false);
   }
 
   public SimulationRun(SimulationBatch simBatch, int runId,
-      List<BlockInstance> blocks, DateMidnight day, boolean keepEventObjs) {
+      Set<String> routeAndIds, List<BlockInstance> blocks, DateMidnight day,
+      boolean keepEventObjs) {
     this.batch = simBatch;
     this.runId = runId;
+    this.routeAndIds = routeAndIds;
     this.blocks = blocks;
     this.day = day;
 
@@ -67,16 +72,16 @@ public class SimulationRun implements Runnable {
 
     this.tripToLastEvent = new HashMap<BlockTripEntry,LogStopEvent>();
 
-    stopTimes = new PriorityQueue<BlockStopTimeEntry>(1000,
-	    new Comparator<BlockStopTimeEntry>() {
+    this.stopTimes = new PriorityQueue<BusState>(1000,
+	    new Comparator<BusState>() {
 	      @Override
-	      public int compare(BlockStopTimeEntry st1, BlockStopTimeEntry st2) {
-	        return st1.getStopTime().getDepartureTime() - st2.getStopTime().getDepartureTime();
+	      public int compare(BusState b1, BusState b2) {
+	        return b1.getNextStop().getStopTime().getDepartureTime() - b2.getNextStop().getStopTime().getDepartureTime();
 	      }
 	    });
 
     for(BlockInstance blockInst : blocks)
-        stopTimes.add(blockInst.getBlock().getStopTimes().get(0));
+        stopTimes.add(new BusState(blockInst.getBlock().getStopTimes().get(0)));
   }
 
   /**
@@ -87,15 +92,21 @@ public class SimulationRun implements Runnable {
     if(this.stopTimes.isEmpty()) {
       return false;
     }
-    BlockStopTimeEntry bste = this.stopTimes.remove();
+    BusState bus = this.stopTimes.remove();
+    BlockStopTimeEntry bste = bus.getNextStop();
+    TripEntry trip = bste.getTrip().getTrip();
+    String taroute = trip.getRoute().getId().getId();
+    String direction = trip.getDirectionId();
+    String routeAndDir = taroute + "," + direction;
 
     BlockConfigurationEntry bce = bste.getTrip().getBlockConfiguration();
     String blockId = bce.getBlock().getId().getId();
     StopTimeEntry stopTimeEntry = bste.getStopTime();
-    BusState bus = this.buses.get(blockId);
-    if(bus == null) {
-      bus = new BusState(bste);
-      this.buses.put(blockId, bus);
+
+    if(!this.routeAndIds.contains(routeAndDir)) {
+      BlockStopTimeEntry nextStop = bus.depart();
+      if(nextStop != null) this.stopTimes.add(bus);
+      return true;
     }
 
     StopEntry stopEntry = stopTimeEntry.getStop();
@@ -140,15 +151,13 @@ public class SimulationRun implements Runnable {
     LogStopEvent lastEvent = this.tripToLastEvent.get(trip);
     BlockStopTimeEntry nextStopTime = bus.depart();
 
-    System.out.println(tageoid + "," + scheduledArrivalTime + "," + actualArrivalTime + "," + actualDepartureTime + "," + actualBoard + "," + alight + "," + departingLoad);
-
     LogStopEvent eventLog = new LogStopEvent(this.runId,taroute,dir_group,tageoid,
         scheduledArrivalTime, actualArrivalTime,actualDepartureTime,
         actualBoard,alight,departingLoad,lastEvent);
     this.batch.handleEvent(eventLog);
 
     if(nextStopTime != null) {
-      this.stopTimes.add(nextStopTime);
+      this.stopTimes.add(bus);
       this.tripToLastEvent.put(trip,eventLog);
     }
     else {
