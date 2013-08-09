@@ -2,17 +2,11 @@ package dssg.simulator;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 import dssg.shared.ProjectConstants;
 
 public class StatProbesBatch extends Thread {
-  private final int NUM_BUCKETS = ProjectConstants.NUM_BUCKETS;
-
   public final LogStopEvent POISON = new LogStopEvent();
   private BlockingQueue<LogStopEvent> eventQueue;
 
