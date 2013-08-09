@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.BlockingQueue;
 
-import dssg.shared.ProjectConstants;
-
 public class StatProbesBatch extends Thread {
   public final LogStopEvent POISON = new LogStopEvent();
   private BlockingQueue<LogStopEvent> eventQueue;
