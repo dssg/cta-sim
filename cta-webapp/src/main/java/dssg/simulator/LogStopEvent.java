@@ -5,6 +5,8 @@ import org.supercsv.cellprocessor.ift.CellProcessor;
 
 public class LogStopEvent {
   private int runId;
+  private String taroute;
+  private String dir_group;
   private String tageoid;
   private int time_scheduled;
   private int time_actual_arrive;
@@ -12,10 +14,13 @@ public class LogStopEvent {
   private int passengers_on;
   private int passengers_off;
   private int passengers_in;
+  private LogStopEvent lastEvent;
 
   public static CellProcessor[] getReadProcessors() {
     final CellProcessor[] processors = new CellProcessor[] {
         new ParseInt(), // runId
+        null, // taroute
+        null, // dir_group
         null, // tageoid
         new ParseInt(), // time_scheduled
         new ParseInt(), // time_actual_arrive
@@ -27,8 +32,8 @@ public class LogStopEvent {
     return processors;
   }
   public static String[] getHeader() {
-    final String[] header = new String[] { "runId", "tageoid",
-      "time_scheduled", "time_actual_arrive", "time_actual_depart", 
+    final String[] header = new String[] { "runId", "taroute", "dir_group",
+      "tageoid", "time_scheduled", "time_actual_arrive", "time_actual_depart",
       "passengers_on", "passengers_off", "passengers_in" };
     return header;
   }
@@ -37,10 +42,13 @@ public class LogStopEvent {
     // nullary constructor
   }
 
-  public LogStopEvent(int runId, String tageoid, int time_scheduled, 
-      int time_actual_arrive, int time_actual_depart, int passengers_on,
-      int passengers_off, int passengers_in) {
+  public LogStopEvent(int runId, String taroute, String dir_group,
+      String tageoid, int time_scheduled, int time_actual_arrive,
+      int time_actual_depart, int passengers_on, int passengers_off,
+      int passengers_in, LogStopEvent lastEvent) {
     this.setRunId(runId);
+    this.setTaroute(taroute);
+    this.setDir_group(dir_group);
     this.setTageoid(tageoid);
     this.setTime_scheduled(time_scheduled);
     this.setTime_actual_arrive(time_actual_arrive);
@@ -48,6 +56,7 @@ public class LogStopEvent {
     this.setPassengers_in(passengers_in);
     this.setPassengers_off(passengers_off);
     this.setPassengers_on(passengers_on);
+    this.setLastEvent(lastEvent);
   }
 
   public int getRunId() {
@@ -55,6 +64,18 @@ public class LogStopEvent {
   }
   public void setRunId(int runId) {
     this.runId = runId;
+  }
+  public String getTaroute() {
+    return taroute;
+  }
+  public void setTaroute(String taroute) {
+    this.taroute = taroute;
+  }
+  public String getDir_group() {
+    return dir_group;
+  }
+  public void setDir_group(String dir_group) {
+    this.dir_group = dir_group;
   }
   public String getTageoid() {
     return tageoid;
@@ -97,5 +118,11 @@ public class LogStopEvent {
   }
   public void setPassengers_in(int passengers_in) {
     this.passengers_in = passengers_in;
+  }
+  public LogStopEvent getLastEvent() {
+    return lastEvent;
+  }
+  public void setLastEvent(LogStopEvent lastEvent) {
+    this.lastEvent = lastEvent;
   }
 }

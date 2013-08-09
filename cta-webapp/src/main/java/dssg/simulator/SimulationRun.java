@@ -138,9 +138,9 @@ public class SimulationRun implements Runnable {
     
     System.out.println(tageoid + "," + scheduledArrivalTime + "," + actualArrivalTime + "," + actualDepartureTime + "," + actualBoard + "," + alight + "," + departingLoad);
 
-    LogStopEvent eventLog = new LogStopEvent(this.runId,tageoid,
+    LogStopEvent eventLog = new LogStopEvent(this.runId,taroute,dir_group,tageoid,
         scheduledArrivalTime, actualArrivalTime,actualDepartureTime,
-        actualBoard,alight,departingLoad);
+        actualBoard,alight,departingLoad,lastEvent);
     this.batch.handleEvent(eventLog);
     if(this.keepEventObjs) {
       // TODO: This is currently dead code - figure out if we would need to
