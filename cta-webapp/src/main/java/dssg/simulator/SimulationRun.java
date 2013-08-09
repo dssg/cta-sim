@@ -8,10 +8,10 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 import org.joda.time.DateMidnight;
-
 import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockConfigurationEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
+import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
 
@@ -41,6 +41,8 @@ public class SimulationRun implements Runnable {
   
   final private boolean keepEventObjs;
 
+  final private Map<BlockTripEntry,LogStopEvent> tripToLastEvent;
+
   public SimulationRun(SimulationBatch simBatch, int runId,
       List<BlockInstance> blocks, DateMidnight day) {
     this(simBatch, runId, blocks, day, false);
@@ -58,11 +60,12 @@ public class SimulationRun implements Runnable {
 
     this.buses = new HashMap<String,BusState>();
     this.stops = new HashMap<String,StopState>();
-    
+
     this.keepEventObjs = keepEventObjs;
     if(keepEventObjs) this.events = new ArrayList<StopEvent>();
     else this.events = null;
 
+    this.tripToLastEvent = new HashMap<BlockTripEntry,LogStopEvent>();
 
     stopTimes = new PriorityQueue<BlockStopTimeEntry>(1000,
 	    new Comparator<BlockStopTimeEntry>() {
@@ -108,6 +111,7 @@ public class SimulationRun implements Runnable {
   
   public void makeStopEvent(BlockStopTimeEntry bste, BusState bus, StopState stop) {
     String taroute = bus.getCurrentRouteId();
+    String dir_group = bus.getCurrentDirectionId();
     String tageoid = stop.getStopId();
     String busStopId = taroute + "," + tageoid;
 
@@ -132,16 +136,25 @@ public class SimulationRun implements Runnable {
     stop.update(taroute, actualDepartureTime, leftBehind);
     int departingLoad = bus.getLoad();
     
+    BlockTripEntry trip = bste.getTrip();
+    LogStopEvent lastEvent = this.tripToLastEvent.get(trip);
     BlockStopTimeEntry nextStopTime = bus.depart();
-    if(nextStopTime != null)
-      this.stopTimes.add(nextStopTime);
-    
+
     System.out.println(tageoid + "," + scheduledArrivalTime + "," + actualArrivalTime + "," + actualDepartureTime + "," + actualBoard + "," + alight + "," + departingLoad);
 
     LogStopEvent eventLog = new LogStopEvent(this.runId,taroute,dir_group,tageoid,
         scheduledArrivalTime, actualArrivalTime,actualDepartureTime,
         actualBoard,alight,departingLoad,lastEvent);
     this.batch.handleEvent(eventLog);
+
+    if(nextStopTime != null) {
+      this.stopTimes.add(nextStopTime);
+      this.tripToLastEvent.put(trip,eventLog);
+    }
+    else {
+      this.tripToLastEvent.remove(trip);
+    }
+
     if(this.keepEventObjs) {
       // TODO: This is currently dead code - figure out if we would need to
       // keep around StopEvent objects linked to their BlockStopTimeEntries.
