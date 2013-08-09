@@ -1,6 +1,7 @@
 package dssg.simulator;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -16,93 +17,60 @@ public class StatProbesBatch extends Thread {
   private BlockingQueue<LogStopEvent> eventQueue;
 
   private final int numRuns;
-  private final int numStops;
-  private final List<String> stops;
-  private final Map<String,Integer> tageoidToStopNum;
-
-  private DoubleArrayList loadByTimeByStop[][];
-  private DoubleArrayList flowByTimeByStop[][];
-  
-  // 75th percentiles and their max over stops
-  private double q3LoadByTimeByStop[][];
-  private double maxLoadByTime[];
-  private double q3FlowByTimeByStop[][];
-  private double maxFlowByTime[];
+  private final HashMap<String,LinkedHashMap<String,Integer>> routeAndDirToStopIdToNum;
+  private final HashMap<String,StatProbesRouteDir> routeAndDirToProbes;
   
   private boolean finalized;
 
-  public StatProbesBatch(int numRuns, List<String> stops) {
+  public StatProbesBatch(int numRuns, HashMap<String,LinkedHashMap<String,Integer>> routeAndDirToStopIdToNum) {
     // TODO: Handle different patterns correctly
     this.numRuns = numRuns;
-    this.numStops = stops.size();
-    this.stops = stops;
-    this.tageoidToStopNum = new HashMap<String,Integer>();
-    for(int i = 0; i < this.numStops; i++)
-      this.tageoidToStopNum.put(stops.get(i), i);
-      
-    this.loadByTimeByStop = new DoubleArrayList[NUM_BUCKETS][numStops];
-    this.flowByTimeByStop= new DoubleArrayList[NUM_BUCKETS][numStops];
-    for(int i=0; i < NUM_BUCKETS; i++)
-      for(int j=0; j < this.numStops; j++) {
-        this.loadByTimeByStop[i][j] = new DoubleArrayList();
-        this.flowByTimeByStop[i][j] = new DoubleArrayList(new double[numRuns]);
-      }
-    
-    this.q3LoadByTimeByStop = new double[NUM_BUCKETS][numStops];
-    this.maxLoadByTime = new double[NUM_BUCKETS];
+    this.routeAndDirToStopIdToNum = routeAndDirToStopIdToNum;
+    this.routeAndDirToProbes = new HashMap<String,StatProbesRouteDir>();
+
+    for(String routeAndDir : routeAndDirToStopIdToNum.keySet()) {
+      StatProbesRouteDir stopIdToNum = new StatProbesRouteDir(numRuns, routeAndDirToStopIdToNum.get(routeAndDir));
+      this.routeAndDirToProbes.put(routeAndDir, stopIdToNum);
+    }
   }
   
   public void add(LogStopEvent event) {
+    String routeAndDir = event.getTaroute() + "," + event.getDir_group();
     this.finalized = false;
-    int runId = event.getRunId();
-    int departTime = event.getTime_actual_depart();
-    int stopNum = this.tageoidToStopNum.get(event.getTageoid());
-    int load = event.getPassengers_in();
-
-    int timeBucket = ProjectConstants.getBucket(departTime);
-
-    DoubleArrayList flows = this.flowByTimeByStop[timeBucket][stopNum];
-    flows.set(runId, flows.get(runId) + load);
-    this.loadByTimeByStop[timeBucket][stopNum].add(load);
+    StatProbesRouteDir probes = this.routeAndDirToProbes.get(routeAndDir);
+    probes.add(event);
   }
 
   public void postCompute() {
-    for(int i=0; i < NUM_BUCKETS; i++)
-      for(int j=0; j < this.numStops; j++) {
-        DoubleArrayList loads = this.loadByTimeByStop[i][j];
-        loads.sort();
-        double q3Load = Descriptive.quantile(loads, 0.75);
-        this.q3LoadByTimeByStop[i][j] = q3Load;
-        if(q3Load > maxLoadByTime[i])
-          maxLoadByTime[i] = q3Load;
-        DoubleArrayList flows = this.flowByTimeByStop[i][j];
-        flows.sort();
-        double q3Flow = Descriptive.quantile(flows, 0.75);
-        this.q3FlowByTimeByStop[i][j] = q3Flow;
-        if(q3Flow > maxFlowByTime[i])
-          maxFlowByTime[i] = q3Flow;
-      }
+    for(String routeAndDir : this.routeAndDirToProbes.keySet()) {
+      StatProbesRouteDir probes = this.routeAndDirToProbes.get(routeAndDir);
+      probes.postCompute();
+    }
     this.finalized = true;
   }
 
-  public double[][] getQ3LoadByTimeByStop() {
+  public double[][] getQ3LoadByTimeByStop(String routeAndDir) {
     if(!this.finalized) return null;
-    return this.q3FlowByTimeByStop;
+    StatProbesRouteDir probes = this.routeAndDirToProbes.get(routeAndDir);
+    return probes.getQ3LoadByTimeByStop();
   }
 
-  public double[][] getQ3FlowByTimeByStop() {
+  public double[][] getQ3FlowByTimeByStop(String routeAndDir) {
     if(!this.finalized) return null;
-    return this.q3FlowByTimeByStop;
+    StatProbesRouteDir probes = this.routeAndDirToProbes.get(routeAndDir);
+    return probes.getQ3FlowByTimeByStop();
   }
 
-  public double[] getMaxLoadByTime() {
+  public double[] getMaxLoadByTime(String routeAndDir) {
     if(!this.finalized) return null;
-    return this.maxLoadByTime;
+    StatProbesRouteDir probes = this.routeAndDirToProbes.get(routeAndDir);
+    return probes.getMaxLoadByTime();
   }
 
-  public double[] getMaxFlowByTime() {
+  public double[] getMaxFlowByTime(String routeAndDir) {
     if(!this.finalized) return null;
-    return this.maxFlowByTime;
+    StatProbesRouteDir probes = this.routeAndDirToProbes.get(routeAndDir);
+    return probes.getMaxFlowByTime();
   }
 
   public void run() {
