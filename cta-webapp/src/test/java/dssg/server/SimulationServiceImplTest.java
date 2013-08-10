@@ -4,10 +4,13 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -36,11 +39,14 @@ public class SimulationServiceImplTest {
     Date day = testCal.getTime();
 
     Date startTime = new Date(day.getTime() + 3*60*60*1000);
-    Date endTime = new Date(day.getTime() + 27*60*60*1000);
-    
+    Date endTime = new Date(startTime.getTime() + 24*60*60*1000);
+    //Date endTime = new Date(startTime.getTime() + 7*24*60*60*1000);
+
     String batchId;
     try {
-      batchId = simService.submitSimulation("6", startTime, endTime);
+      Set<String> routeAndDirs = new HashSet<String>();
+      routeAndDirs.add("6,1");
+      batchId = simService.submitSimulation(routeAndDirs, startTime, endTime);
       SimulationBatch simBatch = simService.getSimulation(batchId);
       try {
         while(!simBatch.awaitTermination(1, TimeUnit.SECONDS)) {
