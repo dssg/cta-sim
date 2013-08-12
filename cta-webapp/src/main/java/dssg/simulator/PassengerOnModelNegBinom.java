@@ -8,15 +8,12 @@ import org.joda.time.DateTimeConstants;
 
 import dssg.shared.ProjectConstants;
 import umontreal.iro.lecuyer.probdist.NegativeBinomialDist;
-import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
 public class PassengerOnModelNegBinom implements PassengerOnModel {
   private int BUCKET_SIZE = ProjectConstants.BUCKET_SIZE;
   private int NUM_BUCKETS = ProjectConstants.NUM_BUCKETS;
 
-  private transient final RandomStream rand;
-  
   class ModelParams {
     double[] llTimeOfDay;
     double[] llDayType;
@@ -24,10 +21,8 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
     double[] rhoTimeOfDay;
   }
   Map<String, ModelParams> busStopToParams;
-  
 
   public PassengerOnModelNegBinom(Reader paramReader) {
-    this.rand = new MRG32k3a();
     ModelParamsReader<ModelParams> parser = new ModelParamsReader<ModelParams>(ModelParams.class);
     this.busStopToParams = parser.loadParams(paramReader);
   }
@@ -41,10 +36,7 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
    * @return the number of passengers who want to board the bus
    */
   @Override
-  public int sample(String busStopId, DateMidnight day, int lastDepart, int thisDepart) {
-    // We don't have all stops trained yet - use an example stop
-    // ModelParams params = this.busStopToParams.get(busStopId);
-    // TODO: fix parameter loading
+  public int sample(String busStopId, DateMidnight day, int lastDepart, int thisDepart, RandomStream rng) {
     ModelParams params = this.busStopToParams.get(busStopId);
 
     int dayIdx = ProjectConstants.DAYTYPE_WEEKDAY;
@@ -77,7 +69,7 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
   
       double n = dispersion;
       double p = 1 - (mean / (mean + dispersion));
-      double u = this.rand.nextDouble();
+      double u = rng.nextDouble();
   
       sample += NegativeBinomialDist.inverseF(n,p,u);
     }
