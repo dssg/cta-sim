@@ -309,7 +309,7 @@ months= matrix(nrow = dim(months.mcmc)[1], ncol = 12)
 
 for (i in 1:12) {
     if (length(which(obs_month == i)) == 0) {
-       months[,i] = NaN
+       months[,i] = NA
     }
     if (length(which(obs_month == i)) != 0) {
        months[,i] = months.mcmc[,which(obs_month == i)]
@@ -354,6 +354,8 @@ if(length(unique(stop_data$tageoid))==1){
 
 #PARAMETERS
 values = as.vector(as.matrix(avg_values))
+
+print(paste("Length of avg_values",length(avg_values))
 
 nTimeOfDay=list(values[1:48])
 names(nTimeOfDay)=c("llTimeOfDay")
