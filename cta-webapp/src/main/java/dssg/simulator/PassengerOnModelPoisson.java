@@ -3,7 +3,6 @@ package dssg.simulator;
 import org.joda.time.DateMidnight;
 
 import umontreal.iro.lecuyer.probdist.PoissonDist;
-import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
 public class PassengerOnModelPoisson implements PassengerOnModel {

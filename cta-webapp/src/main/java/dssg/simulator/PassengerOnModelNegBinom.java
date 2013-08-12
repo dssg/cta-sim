@@ -8,7 +8,6 @@ import org.joda.time.DateTimeConstants;
 
 import dssg.shared.ProjectConstants;
 import umontreal.iro.lecuyer.probdist.NegativeBinomialDist;
-import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
 public class PassengerOnModelNegBinom implements PassengerOnModel {
