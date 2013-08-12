@@ -23,7 +23,6 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEntry;
-import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
 
 import dssg.server.SimulationServiceImpl;
 import dssg.shared.ProjectConstants;
@@ -66,6 +65,7 @@ public class SimulationBatch {
   protected final SimulationServiceImpl simService;
   protected final String batchId;
   
+  protected final BusServiceModel serviceModel;
   protected final PassengerOnModel boardModel;
   protected final PassengerOffModel alightModel;
   
@@ -89,6 +89,7 @@ public class SimulationBatch {
 
     BufferedReader boardParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_BOARD_PARAM_PATH)));
     BufferedReader alightParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_ALIGHT_PARAM_PATH)));
+    this.serviceModel = new BusServiceModelNormal();
     this.boardModel = new PassengerOnModelNegBinom(boardParamReader); 
     this.alightModel = new PassengerOffModelBinom(alightParamReader);
     
