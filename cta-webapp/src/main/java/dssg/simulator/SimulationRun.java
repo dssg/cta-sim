@@ -17,6 +17,9 @@ import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
 
+import umontreal.iro.lecuyer.rng.MRG32k3a;
+import umontreal.iro.lecuyer.rng.RandomStream;
+
 /**
  * This class holds the state/result of a single simulation.
  * 
@@ -29,6 +32,7 @@ public class SimulationRun implements Runnable {
    * Simulation static properties
    */
   final private SimulationBatch batch;
+  final private RandomStream rng;
   final private PassengerOnModel boardModel;
   final private PassengerOffModel alightModel;
 
@@ -60,6 +64,7 @@ public class SimulationRun implements Runnable {
     this.blocks = blocks;
     this.day = day;
 
+    this.rng = new MRG32k3a();
     this.boardModel = simBatch.boardModel;
     this.alightModel = simBatch.alightModel;
 
@@ -138,10 +143,10 @@ public class SimulationRun implements Runnable {
     }
     int arrivingLoad = bus.getLoad();
 
-    int alight = this.alightModel.sample(busStopId, this.day, actualArrivalTime, arrivingLoad);
+    int alight = this.alightModel.sample(busStopId, this.day, actualArrivalTime, arrivingLoad, this.rng);
     int prevLeftBehind = stop.getLeftBehind(taroute);
 
-    int attemptBoard = this.boardModel.sample(busStopId, this.day, lastDepartureTime, actualDepartureTime) + prevLeftBehind;
+    int attemptBoard = this.boardModel.sample(busStopId, this.day, lastDepartureTime, actualDepartureTime, this.rng) + prevLeftBehind;
     int actualBoard = bus.update(alight, attemptBoard);
     int leftBehind = attemptBoard - actualBoard;
     stop.update(taroute, actualDepartureTime, leftBehind);

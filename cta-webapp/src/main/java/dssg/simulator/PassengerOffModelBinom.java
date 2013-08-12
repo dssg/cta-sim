@@ -12,8 +12,6 @@ import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
 public class PassengerOffModelBinom implements PassengerOffModel {
-  private transient final RandomStream rand;
-
   class ModelParams {
     double[] lpTimeOfDay;
     double[] lpDayType;
@@ -22,7 +20,6 @@ public class PassengerOffModelBinom implements PassengerOffModel {
   Map<String, ModelParams> busStopToParams;
 
   public PassengerOffModelBinom(Reader paramReader) {
-    this.rand = new MRG32k3a();
     ModelParamsReader<ModelParams> parser = new ModelParamsReader<ModelParams>(ModelParams.class);
     this.busStopToParams = parser.loadParams(paramReader);
   }
@@ -36,7 +33,7 @@ public class PassengerOffModelBinom implements PassengerOffModel {
    * @return the number of passengers who get off the bus
    */
   @Override
-  public int sample(String busStopId, DateMidnight day, int arrivalTime, int arrivingLoad) {
+  public int sample(String busStopId, DateMidnight day, int arrivalTime, int arrivingLoad, RandomStream rng) {
     // We don't have all stops trained yet - use an example stop
     // ModelParams params = this.busStopToParams.get(busStopId);
     // TODO: fix parameter loading
@@ -58,7 +55,7 @@ public class PassengerOffModelBinom implements PassengerOffModel {
 
     int n = arrivingLoad;
     double p = Math.exp(logP);
-    double u = this.rand.nextDouble();
+    double u = rng.nextDouble();
 
     return BinomialDist.inverseF(n, p, u); 
   }
