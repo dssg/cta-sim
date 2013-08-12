@@ -189,7 +189,7 @@ public class SimulationRun implements Runnable {
     if(this.keepEventObjs) {
       // TODO: This is currently dead code - figure out if we would need to
       // keep around StopEvent objects linked to their BlockStopTimeEntries.
-      // If not, the prune it.
+      // If not, the prune it. If we do need it, merge with LogStopEvent?
       StopEvent event = new StopEvent(bste, alight, actualBoard, leftBehind, departingLoad);
       this.events.add(event);
     }
