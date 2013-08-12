@@ -13,6 +13,7 @@ public class BusState {
 	final private int maxCapacity;
 
 	private int passengersIn;
+	private LogStopEvent prevStopEvent;
   private BlockStopTimeEntry nextStop;
   private String currentRouteId;
   private String currentDirectionId;
@@ -30,6 +31,7 @@ public class BusState {
 
 		this.maxCapacity = 80;
 		this.passengersIn = 0;
+		this.prevStopEvent = null;
 	}
 
   public int getLoad() {
@@ -79,7 +81,8 @@ public class BusState {
     return actual_board;
   }
 
-  public BlockStopTimeEntry depart() {
+  public BlockStopTimeEntry depart(LogStopEvent prevStopEvent) {
+    this.prevStopEvent = prevStopEvent;
     if(this.nextStop.hasNextStop()) {
       BlockStopTimeEntry prevStop = this.nextStop;
       BlockStopTimeEntry stop = prevStop.getNextStop();
@@ -92,5 +95,9 @@ public class BusState {
       return stop;
     }
     else return null;
+  }
+
+  public LogStopEvent getPrevStopEvent() {
+    return this.prevStopEvent;
   }
 }

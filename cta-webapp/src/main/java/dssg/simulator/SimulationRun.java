@@ -33,6 +33,7 @@ public class SimulationRun implements Runnable {
    */
   final private SimulationBatch batch;
   final private RandomStream rng;
+  final private BusServiceModel serviceModel;
   final private PassengerOnModel boardModel;
   final private PassengerOffModel alightModel;
 
@@ -65,6 +66,7 @@ public class SimulationRun implements Runnable {
     this.day = day;
 
     this.rng = new MRG32k3a();
+    this.serviceModel = simBatch.serviceModel;
     this.boardModel = simBatch.boardModel;
     this.alightModel = simBatch.alightModel;
 
@@ -109,7 +111,7 @@ public class SimulationRun implements Runnable {
     StopTimeEntry stopTimeEntry = bste.getStopTime();
 
     if(!this.routeAndIds.contains(routeAndDir)) {
-      BlockStopTimeEntry nextStop = bus.depart();
+      BlockStopTimeEntry nextStop = bus.depart(null);
       if(nextStop != null) this.stopTimes.add(bus);
       return true;
     }
@@ -130,12 +132,27 @@ public class SimulationRun implements Runnable {
     String dir_group = bus.getCurrentDirectionId();
     String tageoid = stop.getStopId();
     String busStopId = taroute + "," + tageoid;
+    String routeAndDir= taroute + "," + dir_group;
 
+    // for CTA GTFS, the scheduled departure time is always equal to the
+    // scheduled arrival time, but this may change in the future
     int scheduledArrivalTime = bste.getStopTime().getArrivalTime();
     int scheduledDepartureTime = bste.getStopTime().getDepartureTime();
-    // for CTA GTFS, the scheduled departure time is always equal to the scheduled arrival time
-    int actualArrivalTime = scheduledArrivalTime; // TODO: replace with service model
-    int actualDepartureTime = scheduledDepartureTime; // TODO: replace with service model
+
+    LogStopEvent prevStopEvent = bus.getPrevStopEvent();
+    // TODO: better way to handle first stop in trip?
+    int prevDelta = 0;
+    int schedInterval = 10*60;
+    if(prevStopEvent != null) {
+      int prevDepartureTime = prevStopEvent.getTime_actual_depart();
+      int prevScheduledTime = prevStopEvent.getTime_scheduled();
+      prevDelta = prevDepartureTime - prevScheduledTime;
+      schedInterval = scheduledDepartureTime - prevScheduledTime;
+    }
+    int delta = this.serviceModel.sample(routeAndDir,prevDelta,schedInterval,this.rng);
+    int actualArrivalTime = scheduledDepartureTime + delta;
+    int actualDepartureTime = actualArrivalTime; // TODO: model dwell time?
+
     Integer lastDepartureTime = stop.getTimeOfLastBus(taroute);
     // TODO: better way of handling first bus of day?
     if(lastDepartureTime == null) {
@@ -154,7 +171,7 @@ public class SimulationRun implements Runnable {
     
     BlockTripEntry trip = bste.getTrip();
     LogStopEvent lastEvent = this.tripToLastEvent.get(trip);
-    BlockStopTimeEntry nextStopTime = bus.depart();
+    BlockStopTimeEntry nextStopTime = bus.depart(lastEvent);
 
     LogStopEvent eventLog = new LogStopEvent(this.runId,taroute,dir_group,tageoid,
         scheduledArrivalTime, actualArrivalTime,actualDepartureTime,
