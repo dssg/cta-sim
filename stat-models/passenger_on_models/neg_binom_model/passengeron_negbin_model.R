@@ -138,34 +138,34 @@ weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend I
 
 ### Calculate Distr for Input_month and Input_weekend ###
 
-# print("About to Calc Distributions")
+print("About to Calc Distributions")
 
-# print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
+print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
 
-#for (i in 1:12) {
-#for (j in 1:2) {
+for (i in 1:12) {
+for (j in 1:2) {
 
-# distr_obs = which(actual_months == i-1 & weekend == j)
+distr_obs = which(actual_months == i-1 & weekend == j)
 
-# if (length(distr_obs) != 0 ){
+if (length(distr_obs) != 0 ){
 
-# distr_buckets = matrix(ncol = 3, nrow = num_buckets)
+distr_buckets = matrix(ncol = 3, nrow = num_buckets)
 
-# print(c(i,j))
+print(c(i,j))
 
-# for(k in 1:num_buckets) {
-#    distr_buckets[k,2] <- mean(buckets[k,distr_obs])
-#    distr_buckets[k,1] <- quantile(buckets[k,distr_obs],0.25)
-#    distr_buckets[k,3] <- quantile(buckets[k,distr_obs],0.75)
-# }
+for(k in 1:num_buckets) {
+    distr_buckets[k,2] <- mean(buckets[k,distr_obs])
+    distr_buckets[k,1] <- quantile(buckets[k,distr_obs],0.25)
+    distr_buckets[k,3] <- quantile(buckets[k,distr_obs],0.75)
+}
 
-# write.table(distr_buckets, paste("distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
+write.table(distr_buckets, paste("distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
 
-#}
-#}
-#}
+}
+}
+}
 
-# print("Finished Calcing Distributions")
+print("Finished Calcing Distributions")
 
 ### BUGS CODE ###
 
@@ -309,7 +309,7 @@ months= matrix(nrow = dim(months.mcmc)[1], ncol = 12)
 
 for (i in 1:12) {
     if (length(which(obs_month == i)) == 0) {
-       months[,i] = NA
+       months[,i] = NaN
     }
     if (length(which(obs_month == i)) != 0) {
        months[,i] = months.mcmc[,which(obs_month == i)]
@@ -359,9 +359,9 @@ nTimeOfDay=list(values[1:48])
 names(nTimeOfDay)=c("llTimeOfDay")
 nDayType=list(values[49:50])
 names(nDayType)=c("llDayType")
-rhoTimeOfDay=list(values[51:97])
+rhoTimeOfDay=list(values[51:98])
 names(rhoTimeOfDay)=c("rhoTimeOfDay")
-nMonth=list(values[98:109])
+nMonth=list(values[99:110])
 names(nMonth)= c("llMonth")
 
 param_list = c(nTimeOfDay, nDayType, rhoTimeOfDay, nMonth)
@@ -398,8 +398,14 @@ print("Created JSON File")
 #write.table(total_df, totaloutput, sep=",", row.names = FALSE, col.names = TRUE)
 #write.table(avg_values, avgoutput, sep=",", row.names = FALSE, col.names = TRUE)
 
-# write.table(total_df, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/totalsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
-# write.table(avg_values, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
+#print("Writing to Table")
+
+#print(avg_values)
+
+#write.table(total_df, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/totalsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
+#write.table(avg_values, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
+
+#print("Created csvs!")
 
 # }
 
