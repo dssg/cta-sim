@@ -69,8 +69,8 @@ public class GraphPortlets extends Portlet {
     stopTageoid = 0;
     this.dataType = dataType;
     this.route = route;
-    if (direction == "")
-      Info.display("Error with directio", "");
+    if (direction.equals(""))
+      Info.display("Error with direction", "");
     else
       this.direction = direction;
 
@@ -85,7 +85,7 @@ public class GraphPortlets extends Portlet {
     portletLayout.setVBoxLayoutAlign(VBoxLayoutAlign.STRETCH);
 
     // Layout preferences
-    this.setHeadingHtml("Route: " + route + "\t" + dataType);
+    this.setHeadingHtml("Route: " + route + " "+ direction+" :" + dataType);
     configPanel(this);
     this.setHeight(750);
     this.setLayout(portletLayout);
@@ -134,9 +134,9 @@ public class GraphPortlets extends Portlet {
   // Line chart Time Window
   private ChartModel createChartTimeWindow() {
     // Choose title
-    if (dataType == "Load")
+    if (dataType.equals("Load"))
       title = "   Max Load by half hour, all stops.";
-    if (dataType == "Flow")
+    if (dataType.equals("Flow"))
       title = "   Max Flow by half hour, all stops.";
 
     // Create a ChartModel with the Chart Title and some style attributes
@@ -179,7 +179,7 @@ public class GraphPortlets extends Portlet {
       i++;
     }
 
-    if ((direction == "N" || direction == "B") && route != null) {
+    if ((direction.equals("N") || direction.equals("B")) && route != null) {
       cm.addChartConfig(lchart);
     }
 
@@ -194,7 +194,7 @@ public class GraphPortlets extends Portlet {
       lchart.addValues(simulation_data[1][i]);
       i++;
     }
-    if ((direction == "S" || direction == "B") && route != null) {
+    if ((direction.equals("S") || direction.equals("B")) && route != null) {
       cm.addChartConfig(lchart);
     }
 
@@ -272,9 +272,9 @@ public class GraphPortlets extends Portlet {
   // Line chart for All Stops chart
   private ChartModel createChartAllStops() {
     // Choose title
-    if (dataType == "Load")
+    if (dataType.equals("Load"))
       title = " hrs.   Load by stop.";
-    if (dataType == "Flow")
+    if (dataType.equals("Flow"))
       title = " hrs.   Flow by stop.";
 
     // Create a ChartModel with the Chart Title and some style attributes
@@ -316,7 +316,7 @@ public class GraphPortlets extends Portlet {
           * Math.abs(Math.cos(Random.nextDouble()) * 220
               * Math.sin(n * Math.PI / 70)) + 20));
     }
-    if ((direction == "N" || direction == "B") && route != null) {
+    if ((direction.equals("N") || direction.equals("B")) && route != null) {
       cm.addChartConfig(lchart);
     }
 
@@ -332,7 +332,7 @@ public class GraphPortlets extends Portlet {
           * Math.abs(Math.floor(Math.cos(Random.nextDouble()) * 220
               * Math.sin(n * Math.PI / 70)) + 20));
     }
-    if ((direction == "S" || direction == "B") && route != null) {
+    if ((direction.equals("S")|| direction.equals("B")) && route != null) {
       cm.addChartConfig(lchart);
     }
 
@@ -491,7 +491,7 @@ public class GraphPortlets extends Portlet {
     lchartN.setAnimateOnShow(true);
     lchartN.addValues(dataNM);
 
-    if ((direction == "N" || direction == "B") && route != null) {
+    if ((direction.equals("N") || direction.equals("B")) && route != null) {
       cm.addChartConfig(bchartN);
       cm.addChartConfig(lchartN);
     }
@@ -513,7 +513,7 @@ public class GraphPortlets extends Portlet {
     lchartS.setAnimateOnShow(true);
     lchartS.addValues(dataSM);
 
-    if ((direction == "S" || direction == "B") && route != null) {
+    if ((direction.equals("S") || direction.equals("B")) && route != null) {
       cm.addChartConfig(bchartS);
       cm.addChartConfig(lchartS);
     }

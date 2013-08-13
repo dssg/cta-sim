@@ -38,20 +38,18 @@ public class GetData {
    * for the LOAD at a given time window
    */
   public static void getData(SimulationServiceAsync simulationService,
-      final GwtPortalContainer gwtPortalContainer, String route, Date date,
+      final GwtPortalContainer gwtPortalContainer, String route, String direction, Date date,
       Integer startT, Integer stopT) {
-    String simId = route + date + startT + stopT;
-    simulationService.getResults(simId,
+    simulationService.getResults(route, direction, date, startT, stopT,
         new AsyncCallback<Map<String, Integer[]>>() {
           @Override
           public void onSuccess(Map<String, Integer[]> output) {
+            
             Info.display(
                 "Sucess in getting data @DATA.",
                 "Number of data points: "
-                    + Integer.toString(output.get("max_load_N").length) + " , "
-                    + Integer.toString(output.get("max_load_S").length));
+                    + Integer.toString(output.get("max_load_N").length));
             gwtPortalContainer.updateCharts(output);
-
           }
 
           @Override
@@ -59,6 +57,7 @@ public class GetData {
             Info.display("Failure in getting data", "");
           }
         });
+ 
   }
 
   public static void testS3(S3CommunicationServiceAsync s3ComunicationService) {

@@ -24,6 +24,8 @@ import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEntry;
 
+import com.google.common.base.Preconditions;
+
 import dssg.server.SimulationServiceImpl;
 import dssg.shared.ProjectConstants;
 
@@ -71,7 +73,7 @@ public class SimulationBatch {
   
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
       Set<String> routeAndDirs, Date startTime, Date endTime) throws FileNotFoundException {
-    this(simService,batchId,routeAndDirs,startTime,endTime,PARAM_PATH, true, false);
+    this(simService,batchId,routeAndDirs,startTime,endTime, PARAM_PATH, true, false);
   }
   
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
@@ -107,6 +109,7 @@ public class SimulationBatch {
       AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + taroute);
       List<BlockInstance> routeBlocks = simService.bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId,
               jStartTime.getMillis(), jEndTime.getMillis());
+      Preconditions.checkState(!routeBlocks.isEmpty());
       blocks.addAll(routeBlocks);
     }
     
@@ -210,4 +213,9 @@ public class SimulationBatch {
   public String getBatchId() {
     return this.batchId;
   }
+
+  public StatProbesBatch getProbes() {
+    return probes;
+  }
+  
 }

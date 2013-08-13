@@ -86,9 +86,9 @@ public class GwtPortalContainer extends Viewport {
     startT = 0;
     stopT = 23;
     numStops = 80;
-    simulation_data = new Integer[2][48];
-    for (int i = 0; i <= 1; i++) {
-      for (int j = 0; j <= 47; j++) {
+    simulation_data = new Integer[4][48];
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 48; j++) {
         simulation_data[i][j] = 0;
       }
     }
@@ -258,7 +258,7 @@ public class GwtPortalContainer extends Viewport {
     portal.setColumnWidth(1, .45);
     portal.setScrollMode(Scroll.AUTOY);
 
-    // Portlet for Charts
+    // Portlet for Charts executed when updating charts.
     createCenterPanelCmd = new Command() {
       @Override
       public void execute() {
@@ -368,7 +368,7 @@ public class GwtPortalContainer extends Viewport {
           startT = timeS.getDateValue().getHours();
           stopT = timeF.getDateValue().getHours();
           // Call to SIMULATION
-          GetData.getData(simulationService, portalContainer, route, date
+          GetData.getData(simulationService, portalContainer, route, direction, date
               .getDatePicker().getValue(), startT, stopT);
         }
       }
@@ -433,7 +433,7 @@ public class GwtPortalContainer extends Viewport {
     submitBtn.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
-        callS3Upload(gtsfFile.getRawValue());
+//        callS3Upload(gtsfFile.getRawValue());
       }
     });
     simple.add(submitBtn);
@@ -458,7 +458,7 @@ public class GwtPortalContainer extends Viewport {
   // Update all charts
   public void updateCharts(Map<String, Integer[]> data) {
     Info.display(
-        "Sucess in getting data @DATA.",
+        "Sucess in getting data @PORTAL.",
         "Number of data points: "
             + Integer.toString(data.get("max_load_N").length) + " , "
             + Integer.toString(data.get("max_load_S").length));
@@ -466,6 +466,9 @@ public class GwtPortalContainer extends Viewport {
     for (double i = startT; i <= stopT; i = i + .5) {
       simulation_data[0][j] = data.get("max_load_N")[j];
       simulation_data[1][j] = data.get("max_load_S")[j];
+      simulation_data[0][j] = data.get("max_flow_N")[j];
+      simulation_data[1][j] = data.get("max_flow_S")[j];
+
       j++;
     }
 
@@ -500,21 +503,21 @@ public class GwtPortalContainer extends Viewport {
 
   // -- AWS S3 File Upload--
   // FIXME get this method to work
-  private void callS3Upload(final String file) {
-    System.out.println("File path: " + file);
-
-    this.s3ComunicationService.uploadFile(file,
-        new AsyncCallback<List<DataStats>>() {
-          @Override
-          public void onSuccess(List<DataStats> output) {
-            Info.display("Sucess", "");
-          }
-
-          @Override
-          public void onFailure(Throwable e) {
-            Info.display("Failure", "");
-
-          }
-        });
-  }
+//  private void callS3Upload(final String file) {
+//    System.out.println("File path: " + file);
+//
+//    this.s3ComunicationService.uploadFile(file,
+//        new AsyncCallback<List<DataStats>>() {
+//          @Override
+//          public void onSuccess(List<DataStats> output) {
+//            Info.display("Sucess", "");
+//          }
+//
+//          @Override
+//          public void onFailure(Throwable e) {
+//            Info.display("Failure", "");
+//
+//          }
+//        });
+//  }
 }
