@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,10 +39,6 @@ import dssg.shared.ProjectConstants;
 
 public class SimulationBatch {
   private static final DateTimeZone TIMEZONE = DateTimeZone.forID(ProjectConstants.AGENCY_TIMEZONE);
-  private static final String REL_PARAM_PATH = "params";
-  private static final File PARAM_PATH = new File(ProjectConstants.RESOURCES_PATH,REL_PARAM_PATH);
-  private static final String REL_BOARD_PARAM_PATH = "boardParams.json";
-  private static final String REL_ALIGHT_PARAM_PATH = "alightParams.json";
 
   private static final int THREAD_COUNT;
   static {
@@ -70,15 +67,19 @@ public class SimulationBatch {
   protected final BusServiceModel serviceModel;
   protected final PassengerOnModel boardModel;
   protected final PassengerOffModel alightModel;
-  
+
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
       Set<String> routeAndDirs, Date startTime, Date endTime) throws FileNotFoundException {
-    this(simService,batchId,routeAndDirs,startTime,endTime, PARAM_PATH, true, false);
+    this(simService,batchId,routeAndDirs,startTime,endTime,true,false,
+         new BufferedReader(new FileReader(ProjectConstants.MODEL_FIT_BOARD)),
+         new BufferedReader(new FileReader(ProjectConstants.MODEL_FIT_ALIGHT)),
+         null);
   }
-  
+
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
-      Set<String> routeAndDirs, Date startTime, Date endTime, File paramPath,
-      final boolean computeStats, final boolean saveLogs) throws FileNotFoundException {
+      Set<String> routeAndDirs, Date startTime, Date endTime,
+      final boolean computeStats, final boolean saveLogs, Reader boardParamReader,
+      Reader alightParamReader, Reader serviceParamReader) throws FileNotFoundException {
     this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
     this.runsFinished = new Semaphore(0);
 
@@ -89,11 +90,9 @@ public class SimulationBatch {
     this.simService = simService;
     this.batchId = batchId;
 
-    BufferedReader boardParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_BOARD_PARAM_PATH)));
-    BufferedReader alightParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_ALIGHT_PARAM_PATH)));
-    this.serviceModel = new BusServiceModelNormal();
     this.boardModel = new PassengerOnModelNegBinom(boardParamReader); 
     this.alightModel = new PassengerOffModelBinom(alightParamReader);
+    this.serviceModel = new BusServiceModelNormal(serviceParamReader);
     
     // switch to Joda time internally
     DateTime jStartTime = new DateTime(startTime.getTime(),TIMEZONE);
@@ -113,6 +112,7 @@ public class SimulationBatch {
       blocks.addAll(routeBlocks);
     }
     
+    // final canonical pattern (longest) for each routeAndDir
     // pattern is encoded with bt_ver + patternid in the shapeId
     // FIXME: Why can't I use the interfaces in these declarations?
     HashMap<String,ArrayList<String>> routeAndDirToPatterns;

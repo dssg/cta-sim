@@ -16,17 +16,6 @@ public class S3CommunicationServiceImpl extends RemoteServiceServlet implements
 
   S3CommunicationServiceImpl() {
     this.s3c = new S3Communication();
-    File configPath;
-    try {
-      configPath = new File(this.getServletContext().getRealPath(
-          "/WEB-INF/classes/configFile.yaml"));
-    }
-    catch (NullPointerException e) {
-      String webappPath = System.getProperty("user.dir");
-      String relConfigPath = "src/main/resources/configFile.yaml";
-      configPath = new File(webappPath,relConfigPath);
-    }
-    s3c.setConfigPath(configPath);
   }
 
 	/*
