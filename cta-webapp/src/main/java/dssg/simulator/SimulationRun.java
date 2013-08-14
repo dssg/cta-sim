@@ -1,5 +1,10 @@
 package dssg.simulator;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -17,6 +22,7 @@ import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
 
+import dssg.shared.ProjectConstants;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
@@ -87,8 +93,38 @@ public class SimulationRun implements Runnable {
 	      }
 	    });
 
-    for(BlockInstance blockInst : blocks)
-        stopTimes.add(new BusState(blockInst.getBlock().getStopTimes().get(0)));
+    Connection db = null;
+    try {
+      db = ProjectConstants.getDatabaseConnection();
+      PreparedStatement vehTypeStmt = db.prepareStatement("SELECT veh_type FROM dn_bt_veh_type WHERE bt_ver=? AND blockno=?");
+      for(BlockInstance blockInst : blocks) {
+        BlockConfigurationEntry bce = blockInst.getBlock();
+        BlockStopTimeEntry bste = bce.getStopTimes().get(0);
+        String btVerAndPatternId = bste.getTrip().getTrip().getShapeId().getId();
+        String btVer = btVerAndPatternId.substring(0,3);
+        String blockno = bce.getBlock().getId().getId();
+        vehTypeStmt.setString(1, btVer);
+        vehTypeStmt.setString(2, blockno);
+        ResultSet rs = vehTypeStmt.executeQuery();
+        rs.next();
+        String vehType = rs.getString(1);
+        BusState bus = new BusState(bste,vehType);
+        stopTimes.add(bus);
+      }
+    }
+    catch(SQLException e) {
+      // FIXME handle this exception properly
+      e.printStackTrace();
+    }
+    finally {
+      if(db != null)
+        try {
+          db.close();
+        } catch (SQLException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+    }
   }
 
   /**
