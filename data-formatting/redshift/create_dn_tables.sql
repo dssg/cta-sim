@@ -33,8 +33,8 @@ btt.bt_ver, btt.timepointid, btt.description, btt.latitude, btt.longitude
 FROM lu_ctrl_pt lcp, bt_timepoint btt, lu_direction ld
 WHERE btt.bt_ver=402 AND lcp.placeid=btt.placeid AND lcp.direction_id=ld.direction_id;
 
-CREATE TABLE dn_bt_veh_max_capacity SORTKEY(bt_ver,blockno) AS
+CREATE TABLE dn_bt_veh_max_capacity DISTKEY(bt_ver) SORTKEY(bt_ver,blockno) AS
 SELECT ver.bt_ver, vt.blockno, CASE vt.veh_type WHEN '30ft' THEN 40
-WHEN '40ft' THEN 70 WHEN '60ft' THEN 95 ELSE NULL END AS max_capacity
+WHEN '40ft' THEN 70 WHEN '60ft' THEN 95 ELSE NULL END AS veh_max_capacity
 FROM bt_version ver, bt_veh_type vt WHERE ver.s_ver = vt.s_ver;
 
