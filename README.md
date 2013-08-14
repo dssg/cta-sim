@@ -29,7 +29,7 @@ Most of the information regarding the project idea can be found in the wiki sect
 <h1> The DSSG Team </h1>
 Andres Akle Carranza - Webapp design/coding, Modeling
 
-Jordan Bates - Data Management/Formatting
+Jordan Bates - Discrete event simulation, big data
 
 Walter Dempsey - Statistics/Modeling
 
