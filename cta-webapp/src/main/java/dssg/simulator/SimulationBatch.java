@@ -1,13 +1,17 @@
 package dssg.simulator;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +26,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
+import org.onebusaway.transit_data_federation.services.transit_graph.BlockConfigurationEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEntry;
 
@@ -164,6 +169,57 @@ public class SimulationBatch {
       routeAndDirToStopIdToNum.put(routeAndDir, stopIdToNum);
     }
 
+    // find the vehicle type for all blocks
+    Set<String> btVers = new HashSet<String>();
+    Set<String> blocknos = new HashSet<String>();
+    Connection db = null;
+    for(BlockInstance blockInst : blocks) {
+      BlockConfigurationEntry bce = blockInst.getBlock();
+      BlockStopTimeEntry bste = bce.getStopTimes().get(0);
+      String btVerAndPatternId = bste.getTrip().getTrip().getShapeId().getId();
+      String btVer = btVerAndPatternId.substring(0,3);
+      String blockno = bce.getBlock().getId().getId();
+      btVers.add(btVer);
+      blocknos.add(blockno);
+    }
+    Map<String,String> btVerAndBlocknoToVehType = new HashMap<String,String>();
+    try {
+      db = Config.getDatabaseConnection();
+      String stmt = "SELECT bt_ver,blockno,veh_type FROM dn_bt_veh_type WHERE bt_ver IN (";
+      for(String btVer : btVers) {
+        stmt += btVer + ",";
+      }
+      stmt = stmt.substring(0,stmt.length() - 1);
+      stmt += ") AND blockno IN (";
+      for(String blockno : blocknos) {
+        stmt += blockno + ",";
+      }
+      stmt = stmt.substring(0,stmt.length() - 1);
+      stmt += ");";
+      PreparedStatement vehTypesStmt = db.prepareStatement(stmt);
+      ResultSet rs = vehTypesStmt.executeQuery();
+      while(rs.next()) {
+        String btVer = rs.getString(1);
+        String blockno = rs.getString(2);
+        String vehType = rs.getString(3);
+        String btVerAndBlockno = btVer + "," + blockno;
+        btVerAndBlocknoToVehType.put(btVerAndBlockno, vehType);
+      }
+    }
+    catch(SQLException e) {
+      // FIXME handle this exception properly
+      e.printStackTrace();
+    }
+    finally {
+      if(db != null)
+        try {
+          db.close();
+        } catch (SQLException e) {
+          // FIXME handle this exception properly
+          e.printStackTrace();
+        }
+    }
+
     // Create list of statistical probes
     this.computeStats = computeStats;
     // FIXME: This will fail - replaces with list of all stops for route
@@ -171,7 +227,7 @@ public class SimulationBatch {
     else this.probes = null;
 
     for (int i = 0; i < NUM_RUNS; i++) {
-      this.executor.execute(new SimulationRun(this, i, routeAndDirs, blocks, day));
+      this.executor.execute(new SimulationRun(this, i, routeAndDirs, blocks, btVerAndBlocknoToVehType, day));
     }
     if(saveLogs)
       this.executor.execute(this.logger);
