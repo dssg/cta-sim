@@ -6,5 +6,5 @@ for file in "$2"/*.csv
 do
 filename=$(basename "$file")
 echo "$filename"
-"$1" < "$file" > "$3/$filename"
+eval "$1" < "$file" > "$3/$filename"
 done

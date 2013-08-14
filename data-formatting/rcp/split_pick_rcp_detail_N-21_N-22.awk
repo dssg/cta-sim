@@ -1,6 +1,6 @@
-#Usage: awk -f split_pick_rcp_detail_N-21_N-22.awk <.csv in>
+#Usage: awk -v outputdir=path/to/outputdir -f split_pick_rcp_detail_N-21_N-22.awk path/to/rcp_detail_N-21_N-22.csv
 # We received one detail file for both picks N-21 and N-22. This script
-# splits it into two.
+# splits it into two. 
 
 BEGIN {
     FS = ","   # input field seperator
@@ -12,8 +12,8 @@ BEGIN {
 }
 
 NR == 1 {
-    print > N21File
-    print > N22File
+    print > outputdir"/"N21File
+    print > outputdir"/"N22File
     for(i=1;i<=NF;i++) { 
         if($i ~ "SIGNUP_NAME") {
             colnum=i;
@@ -24,8 +24,8 @@ NR == 1 {
 
 NR > 1 {
     if($colnum == "\"N-21\"")
-        print > N21File;
+        print > outputdir"/"N21File;
     else if($colnum == "\"N-22\"")
-        print > N22File;
+        print > outputdir"/"N22File;
     else print "ERROR: Unexpected signup_name";
 }
