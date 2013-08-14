@@ -37,27 +37,32 @@ public class GetData {
    * Get the data from simulation services containing the time and the values
    * for the LOAD at a given time window
    */
-  public static void getData(SimulationServiceAsync simulationService,
-      final GwtPortalContainer gwtPortalContainer, String route, String direction, Date date,
-      Integer startT, Integer stopT) {
-    simulationService.getResults(route, direction, date, startT, stopT,
+  public static void runSim(SimulationServiceAsync simulationService,
+      final GwtPortalContainer gwtPortalContainer, String route,
+      String direction, Date date, Integer startT, Integer stopT) {
+    simulationService.runSimulation(route, direction, date, startT, stopT,
         new AsyncCallback<Map<String, Integer[]>>() {
           @Override
           public void onSuccess(Map<String, Integer[]> output) {
-            
-            Info.display(
-                "Sucess in getting data @DATA.",
-                "Number of data points: "
-                    + Integer.toString(output.get("max_load_N").length));
+
+            Info.display("Simulation Complete", "Sending data to Portal.");
+
+            /*
+             * If ouy need to look at what data points you are getting from the
+             * server use: output.get("max_load_N").length));
+             */
+
+            // Update charts in Portal container
             gwtPortalContainer.updateCharts(output);
           }
 
           @Override
           public void onFailure(Throwable e) {
-            Info.display("Failure in getting data", "");
+            Info.display("Failure in getting data",
+                "There is a problem with the server or the connection.");
           }
         });
- 
+
   }
 
   public static void testS3(S3CommunicationServiceAsync s3ComunicationService) {
