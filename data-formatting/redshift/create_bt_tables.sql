@@ -217,3 +217,19 @@ DELIMITER AS ','
 EMPTYASNULL
 DATEFORMAT AS 'DD-MON-YY';
 -- END BT_Tables from BSHT DVD5
+
+-- We received the following tables via email in Excel files
+-- BEGIN BT_Tables from email communications
+CREATE TABLE BT_VEH_TYPE
+(
+  S_VER    NUMERIC(2) NOT NULL,
+  BLOCKNO  NUMERIC(7),
+  VEH_TYPE VARCHAR(6)
+)
+SORTKEY(S_VER,BLOCKNO);
+
+COPY BT_VEH_TYPE FROM 's3://cta-data/ex_tables/BT_VEH_TYPE.csv'
+CREDENTIALS 'aws_access_key_id=$[AWS_ACCESS_KEY_ID];aws_secret_access_key=$[AWS_SECRET_ACCESS_KEY]'
+DELIMITER AS ','
+EMPTYASNULL;
+-- END BT_Tables from email communications
