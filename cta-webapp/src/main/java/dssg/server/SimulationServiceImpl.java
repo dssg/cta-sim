@@ -150,8 +150,8 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 
     String batchId;
     try {
-      batchId = simService.submitSimulation(routeAndDirs, startTimeH, endTimeH);
       System.out.println("[WA INFO] Starting Simulation.");
+      batchId = simService.submitSimulation(routeAndDirs, startTimeH, endTimeH);
       SimulationBatch simBatch = simService.getSimulation(batchId);
       StatProbesBatch statProbe = simBatch.getProbes();
       try {
@@ -195,7 +195,7 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
               dataLoadByTimeStopN[i][j] = (int) statProbe
                   .getQ3LoadByTimeByStop(route + ",1")[i][j];
             }
-            results.put("load_timestop_N_stop" + i, dataLoadByTimeStopN[i]);
+            results.put("load_timestop_N_hour" + i, dataLoadByTimeStopN[i]);
           }
 
           // FLOW results
@@ -219,7 +219,7 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
               dataFlowByTimeStopN[i][j] = (int) statProbe
                   .getQ3FlowByTimeByStop(route + ",1")[i][j];
             }
-            results.put("flow_timestop_N_stop" + i, dataFlowByTimeStopN[i]);
+            results.put("flow_timestop_N_hour" + i, dataFlowByTimeStopN[i]);
           }
         }
 
@@ -255,7 +255,7 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
               dataLoadByTimeStopS[i][j] = (int) statProbe
                   .getQ3LoadByTimeByStop(route + ",0")[i][j];
             }
-            results.put("load_timestop_S_stop" + i, dataLoadByTimeStopS[i]);
+            results.put("load_timestop_S_hour" + i, dataLoadByTimeStopS[i]);
           }
 
           // FLOW results
@@ -278,7 +278,7 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
               dataFlowByTimeStopS[i][j] = (int) statProbe
                   .getQ3FlowByTimeByStop(route + ",0")[i][j];
             }
-            results.put("flow_timestop_S_stop" + i, dataFlowByTimeStopS[i]);
+            results.put("flow_timestop_S_hour" + i, dataFlowByTimeStopS[i]);
           }
         }
 

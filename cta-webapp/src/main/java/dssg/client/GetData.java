@@ -10,25 +10,67 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class GetData {
 
-  // TEMP
-  public static List<DataStats> getStats() {
+  public List<DataStats> stats = new ArrayList<DataStats>();
+
+  /**
+   * Statistics to populate the Summary Grid
+   * @param dataType
+   * @param sim_data
+   * @param direction
+   * @return
+   */
+  public static List<DataStats> getStats(String dataType,
+      Map<String, Integer[]> sim_data, String direction) {
     List<DataStats> stats = new ArrayList<DataStats>();
-    for (int i = 0; i <= 80; i++)
-      stats.add(new DataStats(Integer.toString(i), Math.random() * 200, Math
-          .random() * 5, Math.random() * 3, Math.random() * 4 + 20));
+    if (dataType.equals("Load")) {
+      for (int i = 0; i < 48; i++) {
+        if (direction.equals("N") || direction.equals("B"))
+          stats.add(new DataStats((double) i / 2, sim_data
+              .get("load_timestop_N_hour" + i)[1], sim_data
+              .get("load_timestop_N_hour" + i)[20], sim_data
+              .get("load_timestop_N_hour" + i)[40], sim_data
+              .get("load_timestop_N_hour" + i)[59]));
+        if (direction.equals("S") || direction.equals("B"))
+          stats.add(new DataStats((double) i / 2, sim_data
+              .get("load_timestop_S_hour" + i)[1], sim_data
+              .get("load_timestop_S_hour" + i)[20], sim_data
+              .get("load_timestop_N_hour" + i)[40], sim_data
+              .get("load_timestop_S_hour" + i)[59]));
+      }
+    }
+
+    if (dataType.equals("Flow")) {
+      for (int i = 0; i < 48; i++) {
+        if (direction.equals("N") || direction.equals("B"))
+              stats.add(new DataStats((double) i / 2, sim_data
+                  .get("flow_timestop_N_hour" + i)[1], sim_data
+                  .get("flow_timestop_N_hour" + i)[20], sim_data
+                  .get("load_timestop_N_hour" + i)[40], sim_data
+                  .get("flow_timestop_N_hour" + i)[59]));
+        if (direction.equals("S") || direction.equals("B"))
+          stats.add(new DataStats((double) i / 2, sim_data
+              .get("flow_timestop_S_hour" + i)[1], sim_data
+              .get("flow_timestop_S_hour" + i)[20], sim_data
+              .get("load_timestop_N_hour" + i)[40], sim_data
+              .get("flow_timestop_S_hour" + i)[59]));
+      }
+    }
 
     return stats;
-
   }
-
+  
+  /**
+   * List of all Routes to populate combo box and be able to simulate
+   * @return
+   */
   public static List<DataRoutes> getRoutes() {
     List<DataRoutes> routes = new ArrayList<DataRoutes>();
-    routes.add(new DataRoutes(2, "2.Hyde-Park-Exp"));
-    routes.add(new DataRoutes(3, "3.King Drive"));
+    // routes.add(new DataRoutes(2, "2.Hyde-Park-Exp"));
+    // routes.add(new DataRoutes(3, "3.King Drive"));
     routes.add(new DataRoutes(6, "6.Jack-Park-Exp"));
     routes.add(new DataRoutes(7, "7.Harrison"));
     routes.add(new DataRoutes(9, "9.Ashland"));
-
+    // Add more routes here
     return routes;
 
   }

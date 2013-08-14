@@ -9,59 +9,35 @@ public class DataStats extends BaseModel {
 	}
 	
 	// Temporary usage for stats grid in GwtPortalContainer
-	public DataStats(String stop, Double min, Double mean, Double th, Double max) {
-		set("stop",stop);
-		set("min",min);
-		set("mean",mean);
-		set("th",th);
-		set("max",max);
-	}
-	
-	public String getName() {
-	    return (String) get("stop");
-	}
-	
-	public double getMin() {
-	    Double open = (Double) get("min");
-	    return open.doubleValue();
-	}
-	
-	public double getMean() {
-	    Double open = (Double) get("mean");
-	    return open.doubleValue();
-	}
-	
-	public double getTh() {
-	    Double open = (Double) get("th");
-	    return open.doubleValue();
-	}
-	
-	public double getMax() {
-	    Double open = (Double) get("max");
-	    return open.doubleValue();
-	}
-	
-	//
-	
-	// Usage for hour values for charts
-	public DataStats(Integer route, Double hour, Double value) {
-		set("route", route);
+	public DataStats(double hour, Integer load_at_beg, Integer load_at_mid, Integer load_at_mid2, Integer load_at_fin) {
 		set("hour",hour);
-		set("value",value);
+		set("load_at_beg",load_at_beg);
+		set("load_at_mid",load_at_mid);
+		set("load_at_mid2",load_at_mid2);
+		set("load_at_fin",load_at_fin);
 	}
-	
-	public int getRoute() {
-		Integer open = (Integer) get("route");
-		return open.intValue();
-	}
-	
+	 
 	public double getHour() {
-		Double open = (Double) get("hour");
-		return open.doubleValue();
+	  Double open = (Double) get("hour");
+      return open.doubleValue();
 	}
 	
-	public double getValue() {
-		Double open = (Double) get("value");
-		return open.doubleValue();
+	public Integer getLoadAtBeg() {
+	  Integer open = (Integer) get("load_at_beg");
+	    return open.intValue();
 	}
+	public Integer getLoadAtMid() {
+      Integer open = (Integer) get("load_at_mid");
+        return open.intValue();
+    }
+	public Integer getLoadAtMid2() {
+      Integer open = (Integer) get("load_at_mid2");
+        return open.intValue();
+    }
+	public Integer getLoadAtFin() {
+      Integer open = (Integer) get("load_at_fin");
+        return open.intValue();
+ 
+	}
+	
 }
