@@ -6,7 +6,7 @@ import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEn
 import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
 
-import dssg.shared.ProjectConstants;
+import dssg.shared.Config;
 
 public class BusState {
   final private String blockId;
@@ -29,7 +29,7 @@ public class BusState {
     this.currentDirectionId = tripEntry.getDirectionId();
 	  this.nextStop = bste;
 
-		this.maxCapacity = ProjectConstants.BUS_PRACTICAL_MAX_CAPACITY.get(vehicleType);
+		this.maxCapacity = Config.BUS_PRACTICAL_MAX_CAPACITY.get(vehicleType);
 		this.passengersIn = 0;
 		this.prevStopEvent = null;
 	}

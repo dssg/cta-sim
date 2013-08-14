@@ -19,7 +19,7 @@ import org.yaml.snakeyaml.Yaml;
  * @author jtbates
  *
  */
-public class ProjectConstants {
+public class Config {
   public static final String AGENCY_TIMEZONE = "America/Chicago";
   public static final String AGENCY_NAME = "Chicago Transit Authority";
 

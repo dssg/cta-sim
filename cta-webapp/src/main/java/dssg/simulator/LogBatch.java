@@ -9,12 +9,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import dssg.shared.ProjectConstants;
+import dssg.shared.Config;
 
 public class LogBatch extends Thread {
   public final LogStopEvent POISON = new LogStopEvent();
 
-  private static final File LOG_PATH = new File(ProjectConstants.RESOURCES_PATH,"logs");
+  private static final File LOG_PATH = new File(Config.RESOURCES_PATH,"logs");
   private BlockingQueue<LogStopEvent> eventQueue;
   private final String logName;
 

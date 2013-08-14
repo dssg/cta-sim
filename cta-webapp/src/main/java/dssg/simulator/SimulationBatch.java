@@ -28,7 +28,7 @@ import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEn
 import com.google.common.base.Preconditions;
 
 import dssg.server.SimulationServiceImpl;
-import dssg.shared.ProjectConstants;
+import dssg.shared.Config;
 
 /**
  * This class holds the state/results of a batch of simulations.
@@ -38,7 +38,7 @@ import dssg.shared.ProjectConstants;
  */
 
 public class SimulationBatch {
-  private static final DateTimeZone TIMEZONE = DateTimeZone.forID(ProjectConstants.AGENCY_TIMEZONE);
+  private static final DateTimeZone TIMEZONE = DateTimeZone.forID(Config.AGENCY_TIMEZONE);
 
   private static final int THREAD_COUNT;
   static {
@@ -71,8 +71,8 @@ public class SimulationBatch {
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
       Set<String> routeAndDirs, Date startTime, Date endTime) throws FileNotFoundException {
     this(simService,batchId,routeAndDirs,startTime,endTime,true,false,
-         new BufferedReader(new FileReader(ProjectConstants.MODEL_FIT_BOARD)),
-         new BufferedReader(new FileReader(ProjectConstants.MODEL_FIT_ALIGHT)),
+         new BufferedReader(new FileReader(Config.MODEL_FIT_BOARD)),
+         new BufferedReader(new FileReader(Config.MODEL_FIT_ALIGHT)),
          null);
   }
 
@@ -105,7 +105,7 @@ public class SimulationBatch {
       String[] split = routeAndDir.split(",",2);
       String taroute = split[0];
       String dir_group = split[1];
-      AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + taroute);
+      AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(Config.AGENCY_NAME + "_" + taroute);
       List<BlockInstance> routeBlocks = simService.bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId,
               jStartTime.getMillis(), jEndTime.getMillis());
       Preconditions.checkState(!routeBlocks.isEmpty());

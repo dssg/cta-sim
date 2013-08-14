@@ -30,10 +30,10 @@ public class S3Communication implements S3CommunicationService {
 	@Override
 	public List<DataStats> uploadFile(String filename) {
 		// AWS Credential information
-		AWSCredentials awsCredentials = ProjectConstants.AWS_CREDENTIALS;
+		AWSCredentials awsCredentials = Config.AWS_CREDENTIALS;
 
 		// S3 bucket information
-		String s3Bucket = ProjectConstants.S3_BUCKET;
+		String s3Bucket = Config.S3_BUCKET;
 
 		// Data type
 		List<DataStats> stats = new ArrayList<DataStats>();
@@ -68,10 +68,10 @@ public class S3Communication implements S3CommunicationService {
 	@Override
 	public List<String> downloadParameters() {
 		// AWS Credential information
-		AWSCredentials awsCredentials = ProjectConstants.AWS_CREDENTIALS;
+		AWSCredentials awsCredentials = Config.AWS_CREDENTIALS;
 
 		// S3 bucket information
-		String s3Bucket = ProjectConstants.S3_BUCKET;
+		String s3Bucket = Config.S3_BUCKET;
 
 		// Name of the file with the parameters
 		String file = "params.json";

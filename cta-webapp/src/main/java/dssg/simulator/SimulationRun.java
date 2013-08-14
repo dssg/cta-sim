@@ -22,7 +22,7 @@ import org.onebusaway.transit_data_federation.services.transit_graph.StopEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
 
-import dssg.shared.ProjectConstants;
+import dssg.shared.Config;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
@@ -95,7 +95,7 @@ public class SimulationRun implements Runnable {
 
     Connection db = null;
     try {
-      db = ProjectConstants.getDatabaseConnection();
+      db = Config.getDatabaseConnection();
       PreparedStatement vehTypeStmt = db.prepareStatement("SELECT veh_type FROM dn_bt_veh_type WHERE bt_ver=? AND blockno=?");
       for(BlockInstance blockInst : blocks) {
         BlockConfigurationEntry bce = blockInst.getBlock();

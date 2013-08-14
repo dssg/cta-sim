@@ -4,10 +4,10 @@ import java.util.LinkedHashMap;
 
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
-import dssg.shared.ProjectConstants;
+import dssg.shared.Config;
 
 public class StatProbesRouteDir {
-  private final int NUM_BUCKETS = ProjectConstants.NUM_BUCKETS;
+  private final int NUM_BUCKETS = Config.NUM_BUCKETS;
 
   private final int numRuns;
   private final int numStops;
@@ -54,7 +54,7 @@ public class StatProbesRouteDir {
     int runId = event.getRunId();
     int departTime = event.getTime_actual_depart();
     int load = event.getPassengers_in();
-    int timeBucket = ProjectConstants.getBucket(departTime);
+    int timeBucket = Config.getBucket(departTime);
 
     // Count the number of stops back in the canonical pattern back until
     // the last one that was stopped at by this trip
