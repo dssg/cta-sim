@@ -1,5 +1,5 @@
-#Usage: awk -v outdir=path -f unquote.awk input.csv
-# undo the quoting of fields and convert from Windows to Unix line endings
+# remove quotes from csv and drops header line
+#Usage: awk -v outputdir=path/to/outputdir -f unquote.awk path/to/file.csv
 
 BEGIN {
     FS = ","   # input field seperator
@@ -25,8 +25,5 @@ BEGIN {
     gsub(/"/,"")
     if(NR > 1) {
         print
-    }
-    else {
-        print > "$outdir/header_" FILENAME
     }
 }

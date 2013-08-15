@@ -1,12 +1,17 @@
 package dssg.simulator;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.Reader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,11 +26,14 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
+import org.onebusaway.transit_data_federation.services.transit_graph.BlockConfigurationEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEntry;
 
+import com.google.common.base.Preconditions;
+
 import dssg.server.SimulationServiceImpl;
-import dssg.shared.ProjectConstants;
+import dssg.shared.Config;
 
 /**
  * This class holds the state/results of a batch of simulations.
@@ -35,11 +43,7 @@ import dssg.shared.ProjectConstants;
  */
 
 public class SimulationBatch {
-  private static final DateTimeZone TIMEZONE = DateTimeZone.forID(ProjectConstants.AGENCY_TIMEZONE);
-  private static final String REL_PARAM_PATH = "params";
-  private static final File PARAM_PATH = new File(ProjectConstants.RESOURCES_PATH,REL_PARAM_PATH);
-  private static final String REL_BOARD_PARAM_PATH = "boardParams.json";
-  private static final String REL_ALIGHT_PARAM_PATH = "alightParams.json";
+  private static final DateTimeZone TIMEZONE = DateTimeZone.forID(Config.AGENCY_TIMEZONE);
 
   private static final int THREAD_COUNT;
   static {
@@ -68,15 +72,19 @@ public class SimulationBatch {
   protected final BusServiceModel serviceModel;
   protected final PassengerOnModel boardModel;
   protected final PassengerOffModel alightModel;
-  
+
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
       Set<String> routeAndDirs, Date startTime, Date endTime) throws FileNotFoundException {
-    this(simService,batchId,routeAndDirs,startTime,endTime,PARAM_PATH, true, false);
+    this(simService,batchId,routeAndDirs,startTime,endTime,true,false,
+         new BufferedReader(new FileReader(Config.MODEL_FIT_BOARD)),
+         new BufferedReader(new FileReader(Config.MODEL_FIT_ALIGHT)),
+         null);
   }
-  
+
   public SimulationBatch(SimulationServiceImpl simService, String batchId,
-      Set<String> routeAndDirs, Date startTime, Date endTime, File paramPath,
-      final boolean computeStats, final boolean saveLogs) throws FileNotFoundException {
+      Set<String> routeAndDirs, Date startTime, Date endTime,
+      final boolean computeStats, final boolean saveLogs, Reader boardParamReader,
+      Reader alightParamReader, Reader serviceParamReader) throws FileNotFoundException {
     this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
     this.runsFinished = new Semaphore(0);
 
@@ -87,11 +95,9 @@ public class SimulationBatch {
     this.simService = simService;
     this.batchId = batchId;
 
-    BufferedReader boardParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_BOARD_PARAM_PATH)));
-    BufferedReader alightParamReader = new BufferedReader(new FileReader(new File(paramPath,REL_ALIGHT_PARAM_PATH)));
-    this.serviceModel = new BusServiceModelNormal();
     this.boardModel = new PassengerOnModelNegBinom(boardParamReader); 
     this.alightModel = new PassengerOffModelBinom(alightParamReader);
+    this.serviceModel = new BusServiceModelNormal(serviceParamReader);
     
     // switch to Joda time internally
     DateTime jStartTime = new DateTime(startTime.getTime(),TIMEZONE);
@@ -104,12 +110,14 @@ public class SimulationBatch {
       String[] split = routeAndDir.split(",",2);
       String taroute = split[0];
       String dir_group = split[1];
-      AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(ProjectConstants.AGENCY_NAME + "_" + taroute);
+      AgencyAndId routeAgencyAndId = AgencyAndId.convertFromString(Config.AGENCY_NAME + "_" + taroute);
       List<BlockInstance> routeBlocks = simService.bcs.getActiveBlocksForRouteInTimeRange(routeAgencyAndId,
               jStartTime.getMillis(), jEndTime.getMillis());
+      Preconditions.checkState(!routeBlocks.isEmpty());
       blocks.addAll(routeBlocks);
     }
     
+    // final canonical pattern (longest) for each routeAndDir
     // pattern is encoded with bt_ver + patternid in the shapeId
     // FIXME: Why can't I use the interfaces in these declarations?
     HashMap<String,ArrayList<String>> routeAndDirToPatterns;
@@ -161,6 +169,57 @@ public class SimulationBatch {
       routeAndDirToStopIdToNum.put(routeAndDir, stopIdToNum);
     }
 
+    // find the vehicle type for all blocks
+    Set<String> btVers = new HashSet<String>();
+    Set<String> blocknos = new HashSet<String>();
+    Connection db = null;
+    for(BlockInstance blockInst : blocks) {
+      BlockConfigurationEntry bce = blockInst.getBlock();
+      BlockStopTimeEntry bste = bce.getStopTimes().get(0);
+      String btVerAndPatternId = bste.getTrip().getTrip().getShapeId().getId();
+      String btVer = btVerAndPatternId.substring(0,3);
+      String blockno = bce.getBlock().getId().getId();
+      btVers.add(btVer);
+      blocknos.add(blockno);
+    }
+    Map<String,String> btVerAndBlocknoToVehType = new HashMap<String,String>();
+    try {
+      db = Config.getDatabaseConnection();
+      String stmt = "SELECT bt_ver,blockno,veh_type FROM dn_bt_veh_type WHERE bt_ver IN (";
+      for(String btVer : btVers) {
+        stmt += btVer + ",";
+      }
+      stmt = stmt.substring(0,stmt.length() - 1);
+      stmt += ") AND blockno IN (";
+      for(String blockno : blocknos) {
+        stmt += blockno + ",";
+      }
+      stmt = stmt.substring(0,stmt.length() - 1);
+      stmt += ");";
+      PreparedStatement vehTypesStmt = db.prepareStatement(stmt);
+      ResultSet rs = vehTypesStmt.executeQuery();
+      while(rs.next()) {
+        String btVer = rs.getString(1);
+        String blockno = rs.getString(2);
+        String vehType = rs.getString(3);
+        String btVerAndBlockno = btVer + "," + blockno;
+        btVerAndBlocknoToVehType.put(btVerAndBlockno, vehType);
+      }
+    }
+    catch(SQLException e) {
+      // FIXME handle this exception properly
+      e.printStackTrace();
+    }
+    finally {
+      if(db != null)
+        try {
+          db.close();
+        } catch (SQLException e) {
+          // FIXME handle this exception properly
+          e.printStackTrace();
+        }
+    }
+
     // Create list of statistical probes
     this.computeStats = computeStats;
     // FIXME: This will fail - replaces with list of all stops for route
@@ -168,7 +227,7 @@ public class SimulationBatch {
     else this.probes = null;
 
     for (int i = 0; i < NUM_RUNS; i++) {
-      this.executor.execute(new SimulationRun(this, i, routeAndDirs, blocks, day));
+      this.executor.execute(new SimulationRun(this, i, routeAndDirs, blocks, btVerAndBlocknoToVehType, day));
     }
     if(saveLogs)
       this.executor.execute(this.logger);
@@ -210,4 +269,9 @@ public class SimulationBatch {
   public String getBatchId() {
     return this.batchId;
   }
+
+  public StatProbesBatch getProbes() {
+    return probes;
+  }
+  
 }

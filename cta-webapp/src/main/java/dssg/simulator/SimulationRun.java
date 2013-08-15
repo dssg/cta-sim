@@ -52,12 +52,12 @@ public class SimulationRun implements Runnable {
   final private Map<BlockTripEntry,LogStopEvent> tripToLastEvent;
 
   public SimulationRun(SimulationBatch simBatch, int runId,
-      Set<String> routeAndDirs, List<BlockInstance> blocks, DateMidnight day) {
-    this(simBatch, runId, routeAndDirs, blocks, day, false);
+      Set<String> routeAndDirs, List<BlockInstance> blocks, Map<String,String> btVerAndBlocknoToVehType, DateMidnight day) {
+    this(simBatch, runId, routeAndDirs, blocks, btVerAndBlocknoToVehType, day, false);
   }
 
   public SimulationRun(SimulationBatch simBatch, int runId,
-      Set<String> routeAndIds, List<BlockInstance> blocks, DateMidnight day,
+      Set<String> routeAndIds, List<BlockInstance> blocks, Map<String,String> btVerAndBlocknoToVehType, DateMidnight day,
       boolean keepEventObjs) {
     this.batch = simBatch;
     this.runId = runId;
@@ -87,8 +87,17 @@ public class SimulationRun implements Runnable {
 	      }
 	    });
 
-    for(BlockInstance blockInst : blocks)
-        stopTimes.add(new BusState(blockInst.getBlock().getStopTimes().get(0)));
+    for(BlockInstance blockInst : blocks) {
+      BlockConfigurationEntry bce = blockInst.getBlock();
+      BlockStopTimeEntry bste = bce.getStopTimes().get(0);
+      String btVerAndPatternId = bste.getTrip().getTrip().getShapeId().getId();
+      String btVer = btVerAndPatternId.substring(0,3);
+      String blockno = bce.getBlock().getId().getId();
+      String btVerAndBlockno = btVer + "," + blockno;
+      String vehType = btVerAndBlocknoToVehType.get(btVerAndBlockno);
+      BusState bus = new BusState(bste,vehType);
+      stopTimes.add(bus);
+    }
   }
 
   /**

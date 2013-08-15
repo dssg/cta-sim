@@ -1,48 +1,23 @@
 package dssg.server;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.Channels;
-import java.net.URL;
-import java.util.ArrayList;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-import org.onebusaway.gtfs.impl.GtfsDaoImpl;
-import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
-import org.onebusaway.gtfs.model.AgencyAndId;
-import org.onebusaway.gtfs.model.Route;
-import org.onebusaway.gtfs.serialization.GtfsReader;
 import org.onebusaway.transit_data_federation.services.blocks.BlockCalendarService;
 import org.onebusaway.transit_data_federation.services.blocks.BlockIndexService;
-import org.onebusaway.transit_data_federation.services.blocks.BlockInstance;
 import org.onebusaway.transit_data_federation.services.realtime.BlockLocationService;
-import org.onebusaway.transit_data_federation.services.transit_graph.AgencyEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TransitGraphDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-
-import dssg.client.S3CommunicationService;
 import dssg.client.SimulationService;
-import dssg.shared.FieldVerifier;
 import dssg.simulator.SimulationBatch;
-import dssg.simulator.SimulationBatch;
+import dssg.simulator.StatProbesBatch;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -53,6 +28,10 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 @SuppressWarnings("serial")
 public class SimulationServiceImpl extends RemoteServiceServlet implements
     SimulationService {
+
+  public SimulationServiceImpl() {
+    super();
+  }
 
   @Autowired
   public BlockIndexService bis;
@@ -92,56 +71,238 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
     return simulations.get(batchId);
   }
 
-  public String submitSimulation(Set<String> routeAndDirs, Date startTime, Date endTime)
-      throws IllegalArgumentException {
+  @Override
+  public String submitSimulation(Set<String> routeAndDirs, Date startTime,
+      Date endTime) throws IllegalArgumentException {
 
     String batchId = "";
-    for(String routeAndDir : routeAndDirs)
+    for (String routeAndDir : routeAndDirs)
       batchId += routeAndDir + "_";
     batchId += "From_" + startTime + "_To_" + endTime;
 
     SimulationBatch simBatch = simulations.get(batchId);
     if (simBatch == null) {
       try {
-        simBatch = new SimulationBatch(this, batchId, routeAndDirs, startTime, endTime);
+        simBatch = new SimulationBatch(this, batchId, routeAndDirs, startTime,
+            endTime);
         simulations.put(batchId, simBatch);
       } catch (FileNotFoundException e) {
         e.printStackTrace();
         return null;
       }
     }
-
     return simBatch.getBatchId();
   }
 
   /**
    * Return simulation results to client side for display.
    */
-  public Map<String, Integer[]> getResults(String batchId) {
+  @Override
+  public Map<String, Integer[]> runSimulation(String route, String direction,
+      Date date, Integer startT, Integer endT) {
 
-    SimulationBatch simulation = simulations.get(batchId);
+    System.out
+        .println("\n[WA INFO] SimulationsServiceImpl.getResults() accessed with parameters: Route "
+            + route
+            + ", Direction "
+            + direction
+            + ", Date "
+            + date
+            + ", Start Time " + startT + ", End Time " + endT);
 
-    if (simulation != null) {
-      // TODO implement!
+    Integer[] dataMaxLoadN = new Integer[48];
+    Integer[] dataMaxFlowN = new Integer[48];
+    Integer[] dataMaxLoadS = new Integer[48];
+    Integer[] dataMaxFlowS = new Integer[48];
+
+    Integer[][] dataLoadByTimeStopN;
+    Integer[][] dataFlowByTimeStopN;
+    Integer[][] dataLoadByTimeStopS;
+    Integer[][] dataFlowByTimeStopS;
+
+    for (int i = 0; i < 48; i++) {
+      dataMaxLoadN[i] = 0;
+      dataMaxFlowN[i] = 0;
+      dataMaxLoadS[i] = 0;
+      dataMaxFlowS[i] = 0;
     }
+
+    // Simulation Service Object
+    SimulationServiceImpl simService = new SimulationServiceImpl();
+    // Substract 12 hourse from the date
+    Date day = new Date(date.getTime() - 12 * 60 * 60 * 1000);
+    Date startTimeH = new Date(day.getTime() + startT * 60 * 60 * 1000);
+    Date endTimeH = new Date(startTimeH.getTime() + (endT - startT) * 60 * 60
+        * 1000);
+    // Return variable
     Map<String, Integer[]> results = new HashMap<String, Integer[]>();
-    Integer[] dummyData = { 30, 9, 10, 12, 10, 10, 11, 3, 8, 11, 16, 25, 29,
-        35, 55, 54, 48, 49, 48, 36, 33, 41, 43, 42, 49, 44, 49, 50, 51, 52, 53,
-        50, 51, 52, 50, 55, 53, 50, 48, 52, 48, 46, 44, 43, 35, 33, 31 };
 
-    Integer[] dummyData2 = { 15, 9, 11, 10, 8, 6, 3, 8, 12, 17, 27, 30, 36, 59,
-        56, 54, 50, 48, 50, 48, 48, 38, 43, 42, 49, 40, 40, 49, 35, 41, 38, 36,
-        37, 36, 44, 42, 33, 36, 41, 42, 48, 47, 26, 25, 24, 25, 10 };
+    // Adding routes and directions for the simmulation.
+    Set<String> routeAndDirs = new HashSet<String>();
+    if (direction.equals("N"))
+      routeAndDirs.add(route + ",1");
+    if (direction.equals("S"))
+      routeAndDirs.add(route + ",0");
+    if (direction.equals("B")) {
+      routeAndDirs.add(route + ",1");
+      routeAndDirs.add(route + ",0");
+    }
 
-    Integer[] dummyData3 = { 5315, 17705, 5317, 5318, 5320, 1510, 1511, 1512,
-        1513, 1514, 1515, 1517, 1518, 1519, 1520, 1521, 1522, 1523, 1524, 5037,
-        7137, 5038, 5039, 5040, 14483, 4883, 4884, 14485, 76, 15241, 2188,
-        1119, 1120, 1121, 3953, 3954, 14222 };
+    String batchId;
+    try {
+      System.out.println("[WA INFO] Starting Simulation.");
+      batchId = simService.submitSimulation(routeAndDirs, startTimeH, endTimeH);
+      SimulationBatch simBatch = simService.getSimulation(batchId);
+      StatProbesBatch statProbe = simBatch.getProbes();
+      try {
+        while (!simBatch.awaitTermination(1, TimeUnit.SECONDS)) {
+          // check again
+        }
+        ;
 
-    results.put("max_load_N", dummyData);
-    results.put("max_load_S", dummyData2);
-    results.put("stops", dummyData3);
+        System.out.println("[WA INFO] Simulation Finished.");
 
+        // North direction results
+        if (direction.equals("N") || direction.equals("B")) {
+          int stops;
+          System.out.println("[WA INFO] North results.");
+
+          // Check if the length of the result is correct
+          if (statProbe.getMaxLoadByTime(route + ",1").length != 48
+              || statProbe.getMaxFlowByTime(route + ",1").length != 48
+              || statProbe.getQ3LoadByTimeByStop(route + ",1").length != 48)
+            System.out
+                .println("[WA FAIL] Problem with the length of the output:");
+
+          // LOAD results
+
+          // Max Load
+          System.out
+              .println("[WA INFO] Max Load, length of simulation result: "
+                  + statProbe.getMaxLoadByTime(route + ",1").length);
+          for (int i = 0; i < 48; i++)
+            dataMaxLoadN[i] = (int) statProbe.getMaxLoadByTime(route + ",1")[i];
+
+          // Load by time and stop
+          System.out
+              .println("[WA INFO] Load by Time Stop, length of simulation result: "
+                  + statProbe.getQ3LoadByTimeByStop(route + ",1").length+ " x "
+                      + statProbe.getQ3LoadByTimeByStop(route + ",1")[0].length);
+          stops = statProbe.getQ3LoadByTimeByStop(route + ",1")[0].length;
+          dataLoadByTimeStopN = new Integer[48][stops];
+          for (int i = 0; i < 48; i++) {
+            for (int j = 0; j < stops; j++) {
+              dataLoadByTimeStopN[i][j] = (int) statProbe
+                  .getQ3LoadByTimeByStop(route + ",1")[i][j];
+            }
+            results.put("load_timestop_N_hour" + i, dataLoadByTimeStopN[i]);
+          }
+
+          // FLOW results
+
+          // Max Flow results
+          System.out
+              .println("[WA INFO] Max Flow, length of simulation result: "
+                  + statProbe.getMaxFlowByTime(route + ",1").length);
+          for (int i = 0; i < 48; i++)
+            dataMaxFlowN[i] = (int) statProbe.getMaxFlowByTime(route + ",1")[i];
+
+          // Flow by time and stop
+          System.out
+              .println("[WA INFO] Flow by Time Stop, length of simulation result: "
+                  + statProbe.getQ3FlowByTimeByStop(route + ",1").length+ " x "
+                      + statProbe.getQ3FlowByTimeByStop(route + ",1")[0].length);
+          stops = statProbe.getQ3FlowByTimeByStop(route + ",1")[0].length;
+          dataFlowByTimeStopN = new Integer[48][stops];
+          for (int i = 0; i < 48; i++) {
+            for (int j = 0; j < stops; j++) {
+              dataFlowByTimeStopN[i][j] = (int) statProbe
+                  .getQ3FlowByTimeByStop(route + ",1")[i][j];
+            }
+            results.put("flow_timestop_N_hour" + i, dataFlowByTimeStopN[i]);
+          }
+        }
+
+        // South direction results
+        if (direction.equals("S") || direction.equals("B")) {
+          int stops;
+          System.out.println("[WA INFO] South results.");
+
+          // Check if the length of the result is correct
+          if (statProbe.getMaxLoadByTime(route + ",0").length != 48
+              || statProbe.getMaxFlowByTime(route + ",0").length != 48
+              || statProbe.getQ3LoadByTimeByStop(route + ",0").length != 48)
+            System.out.println("[FAIL] Problem with the length of the output:");
+
+          // LOAD results
+          
+          // Max Load
+          System.out
+              .println("[WA INFO] Max Load, length of simulation result: "
+                  + statProbe.getMaxLoadByTime(route + ",0").length);
+          for (int i = 0; i < 48; i++)
+            dataMaxLoadS[i] = (int) statProbe.getMaxLoadByTime(route + ",0")[i];
+          
+          // Load by time and stop
+          System.out
+              .println("[WA INFO] Load by Time Stop, length of simulation result: "
+                  + statProbe.getQ3LoadByTimeByStop(route + ",0").length+ " x "
+                      + statProbe.getQ3LoadByTimeByStop(route + ",0")[0].length);
+          stops = statProbe.getQ3LoadByTimeByStop(route + ",0")[0].length;
+          dataLoadByTimeStopS = new Integer[48][stops];
+          for (int i = 0; i < 48; i++) {
+            for (int j = 0; j < stops; j++) {
+              dataLoadByTimeStopS[i][j] = (int) statProbe
+                  .getQ3LoadByTimeByStop(route + ",0")[i][j];
+            }
+            results.put("load_timestop_S_hour" + i, dataLoadByTimeStopS[i]);
+          }
+
+          // FLOW results
+          // Max Flow
+          System.out
+              .println("[WA INFO] Max Flow, length of simulation result: "
+                  + statProbe.getMaxFlowByTime(route + ",0").length);
+          for (int i = 0; i < 48; i++)
+            dataMaxFlowS[i] = (int) statProbe.getMaxFlowByTime(route + ",0")[i];
+          
+          // Flow by time and stop
+          System.out
+              .println("[WA INFO] Flow by Time Stop, length of simulation result: "
+                  + statProbe.getQ3FlowByTimeByStop(route + ",0").length + " x "
+                  + statProbe.getQ3FlowByTimeByStop(route + ",0")[0].length);
+          stops = statProbe.getQ3FlowByTimeByStop(route + ",0")[0].length;
+          dataFlowByTimeStopS = new Integer[48][stops];
+          for (int i = 0; i < 48; i++) {
+            for (int j = 0; j < stops; j++) {
+              dataFlowByTimeStopS[i][j] = (int) statProbe
+                  .getQ3FlowByTimeByStop(route + ",0")[i][j];
+            }
+            results.put("flow_timestop_S_hour" + i, dataFlowByTimeStopS[i]);
+          }
+        }
+
+      } catch (InterruptedException e) {
+        System.err.println("[WA FAIL] Simulation batch interrupted:");
+        e.printStackTrace();
+      }
+    } catch (IllegalArgumentException e1) {
+      e1.printStackTrace();
+      System.err
+          .println("[WA FAIL] Illegal argument exception on submitting simulation");
+    }
+
+    // Simulation results added to return variable (Map)
+
+    System.out.println("[WA INFO] Putting data into results to return.");
+    results.put("max_load_N", dataMaxLoadN);
+    results.put("max_flow_N", dataMaxFlowN);
+    results.put("max_load_S", dataMaxLoadS);
+    results.put("max_flow_S", dataMaxFlowS);
+
+    // Return results to client side
+    System.out.println("[WA INFO] Returning results to client side.");
     return results;
   }
+
 }

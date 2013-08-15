@@ -1,12 +1,12 @@
 package dssg.simulator;
 
-import org.onebusaway.transit_data_federation.services.transit_graph.BlockConfigurationEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockStopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.BlockTripEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.RouteEntry;
-import org.onebusaway.transit_data_federation.services.transit_graph.StopTimeEntry;
 import org.onebusaway.transit_data_federation.services.transit_graph.TripEntry;
+
+import dssg.shared.Config;
 
 public class BusState {
   final private String blockId;
@@ -18,7 +18,7 @@ public class BusState {
   private String currentRouteId;
   private String currentDirectionId;
 	
-	public BusState(BlockStopTimeEntry bste) {
+	public BusState(BlockStopTimeEntry bste, String vehicleType) {
 	  BlockTripEntry bte = bste.getTrip();
     TripEntry tripEntry = bte.getTrip();
     RouteEntry routeEntry = tripEntry.getRoute();
@@ -29,7 +29,7 @@ public class BusState {
     this.currentDirectionId = tripEntry.getDirectionId();
 	  this.nextStop = bste;
 
-		this.maxCapacity = 80;
+		this.maxCapacity = Config.BUS_PRACTICAL_MAX_CAPACITY.get(vehicleType);
 		this.passengersIn = 0;
 		this.prevStopEvent = null;
 	}

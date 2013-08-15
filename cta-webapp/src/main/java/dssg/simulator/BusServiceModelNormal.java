@@ -14,13 +14,11 @@ public class BusServiceModelNormal implements BusServiceModel {
   Map<String, ModelParams> routeAndDirToParams;
 
   public BusServiceModelNormal(Reader paramReader) {
-    ModelParamsReader<ModelParams> parser = new ModelParamsReader<ModelParams>(ModelParams.class);
-    this.routeAndDirToParams = parser.loadParams(paramReader);
+    // TODO: uncomment when we have the service model params
+    //ModelParamsReader<ModelParams> parser = new ModelParamsReader<ModelParams>(ModelParams.class);
+    //this.routeAndDirToParams = parser.loadParams(paramReader);
   }
 
-  // TODO: remove this constructor once we have parametrs to load
-  public BusServiceModelNormal() {
-  }
 
   // TODO: determine if we need separate models for dwell time and for time
   //   between departing one stop and arriving at the next

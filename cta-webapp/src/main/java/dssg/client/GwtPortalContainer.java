@@ -5,7 +5,6 @@
 
 package dssg.client;
 
-import java.util.List;
 import java.util.Map;
 
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
@@ -43,7 +42,6 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Image;
 
@@ -64,13 +62,13 @@ public class GwtPortalContainer extends Viewport {
   private String route;
   private Integer startT;
   private Integer stopT;
-  private Integer numStops;
-  private Integer[][] simulation_data;
   private S3CommunicationServiceAsync s3ComunicationService;
   private SimulationServiceAsync simulationService;
   private String direction;
-  CheckBox checkLoad;
-  CheckBox checkFlow;
+  private CheckBox checkLoad;
+  private CheckBox checkFlow;
+  private Map<String, Integer[]> simulation_data;
+  private DateField date;
 
   /*
    * Constructor
@@ -85,13 +83,6 @@ public class GwtPortalContainer extends Viewport {
     route = null;
     startT = 0;
     stopT = 23;
-    numStops = 80;
-    simulation_data = new Integer[2][48];
-    for (int i = 0; i <= 1; i++) {
-      for (int j = 0; j <= 47; j++) {
-        simulation_data[i][j] = 0;
-      }
-    }
     checkLoad = new CheckBox();
     checkFlow = new CheckBox();
   }
@@ -258,20 +249,21 @@ public class GwtPortalContainer extends Viewport {
     portal.setColumnWidth(1, .45);
     portal.setScrollMode(Scroll.AUTOY);
 
-    // Portlet for Charts
+    // EXECUTED AFTER SIMULATION FINISHES
+    // Portlet for Charts executed when updating charts.
     createCenterPanelCmd = new Command() {
       @Override
       public void execute() {
         if (checkLoad.getValue()) {
           GraphPortlets graphPortlets = new GraphPortlets("Load", route,
-              direction, startT, stopT, numStops, simulation_data);
+              direction, startT, stopT,date.getDatePicker().getValue(), simulation_data);
           portal.add(graphPortlets, 0);
           portal.add(graphPortlets.getPortletOneStop(), 1);
           portal.add(graphPortlets.getGrid(), 1);
         }
         if (checkFlow.getValue()) {
           GraphPortlets graphPortlets = new GraphPortlets("Flow", route,
-              direction, startT, stopT, numStops, simulation_data);
+              direction, startT, stopT, date.getDatePicker().getValue(), simulation_data);
           portal.add(graphPortlets, 0);
           portal.add(graphPortlets.getPortletOneStop(), 1);
           portal.add(graphPortlets.getGrid(), 1);
@@ -327,7 +319,7 @@ public class GwtPortalContainer extends Viewport {
     simple.add(routeCmb, formData);
 
     // Date field
-    final DateField date = new DateField();
+    date = new DateField();
     date.setFieldLabel("Date");
     simple.add(date, formData);
     // Time field
@@ -367,9 +359,10 @@ public class GwtPortalContainer extends Viewport {
           // callLoading();
           startT = timeS.getDateValue().getHours();
           stopT = timeF.getDateValue().getHours();
-          // Call to SIMULATION
-          GetData.getData(simulationService, portalContainer, route, date
-              .getDatePicker().getValue(), startT, stopT);
+          // RUN SIMULATION
+          GetData.runSim(simulationService, portalContainer, route, direction,
+              date.getDatePicker().getValue(), startT, stopT);
+          Info.display("Starting Simulation.","The results will be displayed at the bottom of the page.");
         }
       }
     });
@@ -433,7 +426,7 @@ public class GwtPortalContainer extends Viewport {
     submitBtn.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
-        callS3Upload(gtsfFile.getRawValue());
+        // callS3Upload(gtsfFile.getRawValue());
       }
     });
     simple.add(submitBtn);
@@ -453,22 +446,14 @@ public class GwtPortalContainer extends Viewport {
   }
 
   /*
-   * -- Charts --
+   * -- Charts -- EXECUTED AFTER SIMULATION FINISHES Create new charts for the
+   * ouput of the simulation.
    */
   // Update all charts
   public void updateCharts(Map<String, Integer[]> data) {
-    Info.display(
-        "Sucess in getting data @DATA.",
-        "Number of data points: "
-            + Integer.toString(data.get("max_load_N").length) + " , "
-            + Integer.toString(data.get("max_load_S").length));
-    int j = 0;
-    for (double i = startT; i <= stopT; i = i + .5) {
-      simulation_data[0][j] = data.get("max_load_N")[j];
-      simulation_data[1][j] = data.get("max_load_S")[j];
-      j++;
-    }
-
+    // Info.display("Sucess in getting data @portal.",
+    // "The results are shown in a new pannel at the bottom of your screen.");
+    simulation_data = data;
     createCenterPanelCmd.execute();
 
   }
@@ -500,21 +485,21 @@ public class GwtPortalContainer extends Viewport {
 
   // -- AWS S3 File Upload--
   // FIXME get this method to work
-  private void callS3Upload(final String file) {
-    System.out.println("File path: " + file);
-
-    this.s3ComunicationService.uploadFile(file,
-        new AsyncCallback<List<DataStats>>() {
-          @Override
-          public void onSuccess(List<DataStats> output) {
-            Info.display("Sucess", "");
-          }
-
-          @Override
-          public void onFailure(Throwable e) {
-            Info.display("Failure", "");
-
-          }
-        });
-  }
+  // private void callS3Upload(final String file) {
+  // System.out.println("File path: " + file);
+  //
+  // this.s3ComunicationService.uploadFile(file,
+  // new AsyncCallback<List<DataStats>>() {
+  // @Override
+  // public void onSuccess(List<DataStats> output) {
+  // Info.display("Sucess", "");
+  // }
+  //
+  // @Override
+  // public void onFailure(Throwable e) {
+  // Info.display("Failure", "");
+  //
+  // }
+  // });
+  // }
 }

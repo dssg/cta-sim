@@ -24,40 +24,16 @@ import dssg.client.DataStats;
 import dssg.client.S3CommunicationService;
 
 public class S3Communication implements S3CommunicationService {
-  protected File configPath;
-  
-  public S3Communication() {
-    String webappPath = System.getProperty("user.dir");
-    String relConfigPath = "src/main/resources/configFile.yaml";
-    this.setConfigPath(new File(webappPath,relConfigPath));
-  }
-
 	/*
 	 * --- UPLOAD File to S3 Bucket ---
 	 */
 	@Override
 	public List<DataStats> uploadFile(String filename) {
-		// Read Yaml file with information for S3
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(new FileReader(this.getConfigPath()));
-			
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-			System.err.println("Cannot find YAML file." + e1);
-		}
-		// Create YAML object
-		final Yaml yaml = new Yaml();
-		Map<String, Object> map = (Map<String, Object>) yaml.load(reader);
-
 		// AWS Credential information
-		String awsAccessKey = (String) map.get("aws_access_key");
-		String awsSecretKey = (String) map.get("aws_secret_access_key");
-		AWSCredentials awsCredentials = new AWSCredentials(awsAccessKey,
-				awsSecretKey);
+		AWSCredentials awsCredentials = Config.AWS_CREDENTIALS;
 
 		// S3 bucket information
-		String s3Bucket = (String) map.get("aws_s3bucket_name");
+		String s3Bucket = Config.S3_BUCKET;
 
 		// Data type
 		List<DataStats> stats = new ArrayList<DataStats>();
@@ -83,7 +59,6 @@ public class S3Communication implements S3CommunicationService {
 		}
 
 		return stats;
-
 	}
 
 	/*
@@ -92,33 +67,14 @@ public class S3Communication implements S3CommunicationService {
 	 */
 	@Override
 	public List<String> downloadParameters() {
-		
-		// Read Yaml file with information for S3
-		System.out.println("Reading yamil configuration file.");
-		BufferedReader reader2 = null;
-		try {
-			reader2 = new BufferedReader(new FileReader(this.getConfigPath()));
-			System.out.println("Yaml file found");
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-			System.err.println("/nCannot find yaml file. " + e1);
-		}
-		// Create YAML object
-		final Yaml yaml = new Yaml();
-		Map<String, Object> map = (Map<String, Object>) yaml.load(reader2);
-
 		// AWS Credential information
-		System.out.println("Getting AWS credentials.");
-		String awsAccessKey = (String) map.get("aws_access_key");
-		String awsSecretKey = (String) map.get("aws_secret_access_key");
-		AWSCredentials awsCredentials = new AWSCredentials(awsAccessKey,
-				awsSecretKey);
+		AWSCredentials awsCredentials = Config.AWS_CREDENTIALS;
 
 		// S3 bucket information
-		String s3Bucket = (String) map.get("aws_s3bucket_name");
+		String s3Bucket = Config.S3_BUCKET;
 
 		// Name of the file with the parameters
-		String file = (String) map.get("parameterFile");
+		String file = "params.json";
 
 		// Data type
 		List<String> parameters = new ArrayList<String>();
@@ -160,13 +116,4 @@ public class S3Communication implements S3CommunicationService {
 		return parameters;
 
 	}
-
-  public File getConfigPath() {
-    return configPath;
-  }
-
-  public void setConfigPath(File configPath) {
-    this.configPath = configPath;
-  }
-
 }
