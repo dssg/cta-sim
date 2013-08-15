@@ -321,6 +321,7 @@ public class GwtPortalContainer extends Viewport {
     // Date field
     date = new DateField();
     date.setFieldLabel("Date");
+    date.setAllowBlank(false);
     simple.add(date, formData);
     // Time field
     final TimeField timeS = new TimeField();

@@ -62,6 +62,7 @@ public class GraphPortlets extends Portlet {
   private Integer[][] sim_dataTimeStopS;
   private Resizable r;
   private String title;
+  private Date date;
 
   /*
    * Constructor for LOAD and FLOW
@@ -83,6 +84,7 @@ public class GraphPortlets extends Portlet {
 
     this.startT = startT;
     this.stopT = stopT;
+    this.date = date;
     
     // Create the simulated data arrays
     sim_dataTimeWindow = new Integer[2][48];
@@ -472,7 +474,7 @@ public class GraphPortlets extends Portlet {
     final Portlet stopPortlet = new Portlet();
     // Layout preferences
     stopPortlet.setHeadingHtml("Route: " + route + "\t" + dataType
-        + " by half hour for one stop.");
+        + " by half hour for one stop. (" +date+")" );
     configPanel(stopPortlet);
     stopPortlet.setHeight(370);
     r = new Resizable(stopPortlet);
@@ -630,7 +632,7 @@ public class GraphPortlets extends Portlet {
   public Portlet getGrid() {
     // Portlet for the Information Grid
     final Portlet gridPortlet = new Portlet();
-    gridPortlet.setHeadingHtml("Route: " + route + "\tSummary");
+    gridPortlet.setHeadingHtml("Route: " + route + " "+dataType+" Summary ("+date+")");
 
     configPanel(gridPortlet);
     gridPortlet.setHeight(370);
@@ -664,7 +666,7 @@ public class GraphPortlets extends Portlet {
 
     ColumnConfig loadBeg = new ColumnConfig();
     loadBeg.setId("load_at_beg");
-    loadBeg.setHeaderHtml("Load at stop 1");
+    loadBeg.setHeaderHtml(dataType+" at stop 1");
     loadBeg.setWidth(90);
     text = new TextField<String>();
     text.setAllowBlank(false);
@@ -673,7 +675,7 @@ public class GraphPortlets extends Portlet {
     
     ColumnConfig loadMid = new ColumnConfig();
     loadMid.setId("load_at_mid");
-    loadMid.setHeaderHtml("Load at stop 20");
+    loadMid.setHeaderHtml(dataType+" at stop 20");
     loadMid.setWidth(90);
     text = new TextField<String>();
     text.setAllowBlank(false);
@@ -682,7 +684,7 @@ public class GraphPortlets extends Portlet {
     
     ColumnConfig loadMid2 = new ColumnConfig();
     loadMid2.setId("load_at_mid2");
-    loadMid2.setHeaderHtml("Load at stop 40");
+    loadMid2.setHeaderHtml(dataType+" at stop 40");
     loadMid2.setWidth(90);
     text = new TextField<String>();
     text.setAllowBlank(false);
@@ -691,7 +693,7 @@ public class GraphPortlets extends Portlet {
     
     ColumnConfig loadFin = new ColumnConfig();
     loadFin.setId("load_at_fin");
-    loadFin.setHeaderHtml("Load at stop 59");
+    loadFin.setHeaderHtml(dataType+" at stop 59");
     loadFin.setWidth(90);
     text = new TextField<String>();
     text.setAllowBlank(false);
