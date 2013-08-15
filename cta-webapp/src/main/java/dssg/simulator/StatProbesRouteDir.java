@@ -98,7 +98,7 @@ public class StatProbesRouteDir {
 
   public double[][] getQ3LoadByTimeByStop() {
     if(!this.finalized) return null;
-    return this.q3FlowByTimeByStop;
+    return this.q3LoadByTimeByStop;
   }
 
   public double[][] getQ3FlowByTimeByStop() {
