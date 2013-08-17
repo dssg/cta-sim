@@ -1,6 +1,7 @@
 package dssg.server;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,6 +70,17 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 
   public SimulationBatch getSimulation(String batchId) {
     return simulations.get(batchId);
+  }
+  
+  @Override
+  public String estimateParameters(String route) {
+    System.out.println("\n[WA INFO] Beginning estimation process for parameters on route: "+ route);
+    try {
+      Runtime.getRuntime().exec("host -t a ");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return "Done";
   }
 
   @Override
