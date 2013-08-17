@@ -7,6 +7,7 @@ import org.joda.time.DateMidnight;
 import org.joda.time.DateTimeConstants;
 
 import dssg.shared.Config;
+import dssg.shared.LogMath;
 import umontreal.iro.lecuyer.probdist.NegativeBinomialDist;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
@@ -38,7 +39,7 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
   @Override
   public int sample(String busStopId, DateMidnight day, int lastDepart, int thisDepart, RandomStream rng) {
     ModelParams params = this.busStopToParams.get(busStopId);
-
+    
     int dayIdx = Config.DAYTYPE_WEEKDAY;
     int dayId = day.getDayOfWeek();
     if (dayId == DateTimeConstants.SATURDAY || dayId == DateTimeConstants.SUNDAY)
@@ -63,15 +64,15 @@ public class PassengerOnModelNegBinom implements PassengerOnModel {
       double llTimeOfDayFactor = params.llTimeOfDay[mTimeIdx];
   
       double logLambda = llTimeOfDayFactor + llDayTypeFactor + llMonthFactor;
-      double lambda = Math.exp(logLambda);
-      double dispersion = rhoTimeOfDayFactor;
-      double mean = lambda * dispersion * bucketFraction;
+      
+      double logDispersion = Math.log(rhoTimeOfDayFactor);
+      double logMean = logLambda + logDispersion + Math.log(bucketFraction);
   
-      double n = dispersion;
-      double p = 1 - (mean / (mean + dispersion));
+      double n = rhoTimeOfDayFactor;
+      double p = LogMath.subtract(0d, logMean - LogMath.add(logMean, logDispersion)); 
       double u = rng.nextDouble();
   
-      sample += NegativeBinomialDist.inverseF(n,p,u);
+      sample += NegativeBinomialDist.inverseF(n,Math.exp(p),u);
     }
     return sample; 
   }
