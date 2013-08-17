@@ -1,7 +1,9 @@
 package dssg.server;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,12 +76,28 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
   
   @Override
   public String estimateParameters(String route) {
-    System.out.println("\n[WA INFO] Beginning estimation process for parameters on route: "+ route);
+    System.out.println("\n[WA INFO] Attempt to run script for estimation process for parameters on route: "+ route);
+    String cmd = "/Users/Andres/Desktop/testScript.sh";
+    // TODO correct path to R script
+
+    ProcessBuilder pb = new ProcessBuilder("/bin/sh", cmd, route);
     try {
-      Runtime.getRuntime().exec("host -t a ");
+      Process p = pb.start();
+      p.waitFor();
+      BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+      String line = reader.readLine();        
+      while (line != null) {
+        System.out.println("[WA SCRIPT INFO] "+line);
+        line = reader.readLine();
+      }
     } catch (IOException e) {
+      System.out.println("[WA FAIL] Problem with the execution of the script.");
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      System.out.println("[WA FAIL] Problem with the execution of the script.");
       e.printStackTrace();
     }
+    
     return "Done";
   }
 

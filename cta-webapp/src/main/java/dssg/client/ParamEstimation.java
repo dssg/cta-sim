@@ -1,8 +1,5 @@
 package dssg.client;
 
-import java.util.Date;
-import java.util.Map;
-
 import com.extjs.gxt.ui.client.widget.Info;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 

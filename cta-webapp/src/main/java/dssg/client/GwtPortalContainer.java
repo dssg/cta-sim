@@ -439,7 +439,7 @@ public class GwtPortalContainer extends Viewport {
     };  
 
     // Submit Button
-    Button submitBtn = new Button("Create new parameters");
+    Button submitBtn = new Button("Calculate new parameters");
     submitBtn.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
