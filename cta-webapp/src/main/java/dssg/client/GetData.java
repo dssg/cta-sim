@@ -68,8 +68,8 @@ public class GetData {
     // routes.add(new DataRoutes(2, "2.Hyde-Park-Exp"));
     // routes.add(new DataRoutes(3, "3.King Drive"));
     routes.add(new DataRoutes(6, "6.Jack-Park-Exp"));
-    routes.add(new DataRoutes(7, "7.Harrison"));
-    routes.add(new DataRoutes(9, "9.Ashland"));
+    //routes.add(new DataRoutes(7, "7.Harrison"));
+    //routes.add(new DataRoutes(9, "9.Ashland"));
     // Add more routes here
     return routes;
 
