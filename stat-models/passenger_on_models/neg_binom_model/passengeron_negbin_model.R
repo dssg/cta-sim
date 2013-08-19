@@ -38,11 +38,16 @@ library(RODBC)
 conn <- odbcConnect("dssg_cta_redshift")
 
 print( paste("select * from rcp_join_dn1_train_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
+
 stop_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_train_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
+
+odbcClose(conn)
 
 names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
 
 summary(stop_data)
+
+dim(stop_data)
 
 ### Cleaning ###
 
@@ -138,34 +143,34 @@ weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend I
 
 ### Calculate Distr for Input_month and Input_weekend ###
 
-print("About to Calc Distributions")
+#print("About to Calc Distributions")
 
-print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
+#print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
 
-for (i in 1:12) {
-for (j in 1:2) {
+#for (i in 1:12) {
+#for (j in 1:2) {
 
-distr_obs = which(actual_months == i-1 & weekend == j)
+#distr_obs = which(actual_months == i-1 & weekend == j)
 
-if (length(distr_obs) != 0 ){
+#if (length(distr_obs) != 0 ){
 
-distr_buckets = matrix(ncol = 3, nrow = num_buckets)
+#distr_buckets = matrix(ncol = 3, nrow = num_buckets)
 
-print(c(i,j))
+#print(c(i,j))
 
-for(k in 1:num_buckets) {
-    distr_buckets[k,2] <- mean(buckets[k,distr_obs])
-    distr_buckets[k,1] <- quantile(buckets[k,distr_obs],0.25)
-    distr_buckets[k,3] <- quantile(buckets[k,distr_obs],0.75)
-}
+#for(k in 1:num_buckets) {
+#    distr_buckets[k,2] <- mean(buckets[k,distr_obs])
+#    distr_buckets[k,1] <- quantile(buckets[k,distr_obs],0.25)
+#    distr_buckets[k,3] <- quantile(buckets[k,distr_obs],0.75)
+#}
 
-write.table(distr_buckets, paste("distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
+#write.table(distr_buckets, paste("distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
 
-}
-}
-}
+#}
+#}
+#}
 
-print("Finished Calcing Distributions")
+#print("Finished Calcing Distributions")
 
 ### BUGS CODE ###
 
@@ -355,8 +360,6 @@ if(length(unique(stop_data$tageoid))==1){
 #PARAMETERS
 values = as.vector(as.matrix(avg_values))
 
-print(paste("Length of avg_values",length(avg_values))
-
 nTimeOfDay=list(values[1:48])
 names(nTimeOfDay)=c("llTimeOfDay")
 nDayType=list(values[49:50])
@@ -382,7 +385,8 @@ names(aL)=c(taroute)
 
 #FIT DATE
 final=list(aL)
-names(final)=c(Sys.Date())
+# names(final)=c(Sys.Date())
+names(final) = c("6/18/2013")
 
 json = toJSON(final)
 
@@ -392,7 +396,7 @@ print("Made it to Creating the JSON File")
 
 print(paste("json_output/boardParams_",input_tageoid,".json",sep = ""))
 
-write(json, file=paste("json_output/boardParams_",input_tageoid,".json",sep = ""), append = TRUE)
+write(json, file=paste("/home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/json_output/boardParams_",input_tageoid,".json",sep = ""), append = TRUE)
 
 print("Created JSON File")
 

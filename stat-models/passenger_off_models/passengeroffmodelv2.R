@@ -40,6 +40,12 @@ stop_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_train_apc where tarou
 
 names(stop_data) <- c("serial_number","survey_date","pattern_id", "time_actual_arrive","time_actual_depart", "passengers_on","passengers_in","passengers_off", "taroute","dir_group","tageoid")
 
+odbcClose(conn)
+
+dim(stop_data)
+
+summary(stop_data)
+
 ### Cleaning ###
 
 actualtime <- function(x) { 
@@ -132,34 +138,34 @@ for(i in 1:num_days){empty_days[i] <- max(buckets_in[,i])}
 
 ### Calculate Distr for Input_month and Input_weekend ###
 
-print("About to Calc Distributions")
+#print("About to Calc Distributions")
 
-print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
+#print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
 
-for (i in 1:12) {
-for (j in 1:2) {
+#for (i in 1:12) {
+#for (j in 1:2) {
 
-distr_obs = which(actual_months == i-1 & weekend == j)
+#distr_obs = which(actual_months == i-1 & weekend == j)
 
-if (length(distr_obs) != 0 ){
+#if (length(distr_obs) != 0 ){
 
-distr_buckets = matrix(ncol = 3, nrow = num_buckets)
+#distr_buckets = matrix(ncol = 3, nrow = num_buckets)
 
-print(c(i,j))
+#print(c(i,j))
 
-for(k in 1:num_buckets) {
-    distr_buckets[k,2] <- mean(buckets_in[k,distr_obs] / buckets_off[k,distr_obs])
-    distr_buckets[k,1] <- quantile(buckets_in[k,distr_obs] / buckets_off[k,distr_obs],0.25)
-    distr_buckets[k,3] <- quantile(buckets_in[k,distr_obs] / buckets_off[k,distr_obs],0.75)
-}
+#for(k in 1:num_buckets) {
+#    distr_buckets[k,2] <- mean(buckets_in[k,distr_obs] / buckets_off[k,distr_obs], na.rm = TRUE)
+#    distr_buckets[k,1] <- quantile(buckets_in[k,distr_obs] / buckets_off[k,distr_obs],0.25, na.rm = TRUE)
+#    distr_buckets[k,3] <- quantile(buckets_in[k,distr_obs] / buckets_off[k,distr_obs],0.75, na.rm = TRUE)
+#}
 
-write.table(distr_buckets, paste("mcmc_output/distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
+#write.table(distr_buckets, paste("mcmc_output/distr_on_mon_",i,"_week_",j,".csv",sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
 
-}
-}
-}
+#}
+#}
+#}
 
-print("Finished Calcing Distributions")
+#print("Finished Calcing Distributions")
 
 ### Vectorize the Matrix ###
 Ydata = round(buckets_off,0)
@@ -174,8 +180,6 @@ vector.bucket <- buckets[obs]
 vector.weekend <- rep(weekend[1],length(obs))
 vector.month <- rep(months[1], length(obs))
 
-
-
 for (d in 2:num_days) {
   obs <- which(N[,d] != 0 & is.na(N[,1]) == FALSE)
   vector.N <- c(vector.N,N[obs,d])
@@ -187,15 +191,17 @@ for (d in 2:num_days) {
 
 badobs = which(vector.N < vector.Y)
 
+if (length(badobs) != 0) {
 vector.N = vector.N[-badobs]
 vector.Y = vector.Y[-badobs]
 vector.bucket = vector.bucket[-badobs]
 vector.weekend = vector.weekend[-badobs]
 vector.month = vector.month[-badobs]
-
-which(vector.N < vector.Y)
+}
 
 totalobs <- length(vector.Y)
+
+print(paste("Number of Observations we're using:",length(totalobs)))
 
 ### BUGS CODE ###
 
@@ -346,8 +352,8 @@ for (i in 1:dim(total_df)[2]) {
 }
 
 # write to file
-write.table(total_df, "mcmc_output/totalsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
-write.table(avg_values, "mcmc_output/avgsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
+#write.table(total_df, "mcmc_output/totalsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
+#write.table(avg_values, "mcmc_output/avgsim_off.csv", sep=",", row.names = FALSE, col.names = TRUE)
 
 ### JSON OUTPUT ### 
 
@@ -395,7 +401,8 @@ names(aL)=c(taroute)
 
 #FIT DATE
 final=list(aL)
-names(final)=c(Sys.Date())
+#names(final)=c(Sys.Date())
+names(final) = c("6/18/2013")
 
 json = toJSON(final)
 
@@ -405,7 +412,7 @@ print("Made it to Creating the JSON File")
 
 print(paste("json_output/boardParams_",input_tageoid,".json",sep = ""))
 
-write(json, file=paste("json_output/boardParams_",input_tageoid,".json",sep = ""), append = TRUE)
+write(json, file=paste("/home/wdempsey/dssg-cta-project/stat-models/passenger_off_models/json_output/boardParams_",input_tageoid,".json",sep = ""), append = TRUE)
 
 print("Created JSON File")
 
