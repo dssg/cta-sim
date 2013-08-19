@@ -50,7 +50,7 @@ public class PassengerOffModelBinom implements PassengerOffModel {
     double logP = lpTimeOfDayFactor + lpDayTypeFactor + lpMonthFactor;
 
     int n = arrivingLoad;
-    double p = Math.exp(logP);
+    double p = Math.exp(logP)/(1+Math.exp(logP));
     double u = rng.nextDouble();
 
     return BinomialDist.inverseF(n, p, u); 
