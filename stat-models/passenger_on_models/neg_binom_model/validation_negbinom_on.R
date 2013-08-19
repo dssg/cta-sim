@@ -1,7 +1,7 @@
 # Turn Command Line Arguments On
 
 # Command Line: Rscript validation_negbinom_on.R /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv 6 0 1423
-
+# Uses TEST data to estimate MSE of the model and test overall fit.
 
 # Necessary Libraries #
 library(R2jags)
@@ -25,7 +25,7 @@ params = read.csv(parameter_pathname, header = TRUE)
 
 conn <- odbcConnect("dssg_cta_redshift")
 
-print( paste("select * from rcp_join_dn1_test_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
+# Pull in the TEST Data using Redshift Connection
 
 test_data<-sqlQuery(conn,paste("select * from rcp_join_dn1_test_apc where taroute='",input_taroute,"' and dir_group=",input_dir_group," and tageoid='",input_tageoid,"'", sep = ""))
 
@@ -56,8 +56,6 @@ test_data$time <- actualtime(test_data$time_actual_arrive)$time
 if( length(which(is.na(test_data$time))) != 0) {
     test_data = test_data[-which(is.na(test_data$time)),]
 }
-
-# summary(test_data$time)
 
 ### Re-order Data To Compute Headways ###
 date <- dateinfo(test_data$survey_date)
@@ -98,6 +96,8 @@ halfhr_bucket <- function(t) {
 
 print("We made it to the MSE Calc")
 
+# MSE calculation using the constructed explanatory variables and test data.
+
 MSE = 0
 
 result = c(0,0,0)
@@ -127,8 +127,4 @@ for (k in 2:length(weekend)) {
 
 norm_MSE = MSE / length(weekend)
 
-# print(result[-1,])
-
 print(norm_MSE)
-
-# write.table(norm_MSE, "norm_MSE.csv", sep=",", row.names = FALSE, col.names = FALSE)

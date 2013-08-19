@@ -1,17 +1,19 @@
 # Turn Command Line Arguments On
 
 # Command Line: Rscript plot_negbinom_generator.R /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model//mcmc_output/avgsim_negbinom_on.csv 1 1 
+# For a given output of the Passenger ON Model, and Month and Weekend,
+# Produce plots to see how the predictions compare to the actual distributions
 
 args <- commandArgs(TRUE)
 parameter_pathname <- toString(args[1]) # Model Parameters
 month <- as.numeric(args[2])
 weekend <- as.numeric(args[3])
 
+#  Only run the code if the file already exists #
+
 if(file.exists(paste("/home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/distr_by_month_week/distr_on_mon_",month,"_week_",weekend,".csv", sep = ""))) {
 
 ### Loading and Cleaning the Data and Parameter Estimates ###
-
-print(parameter_pathname)
 
 params = read.csv(parameter_pathname, header = TRUE)
 
@@ -25,6 +27,8 @@ gamma = as.numeric(params[99:110])
 halfhr = seq(0,24,0.5)
 
 print("We made it to the Distr Calc")
+
+# Calculate the mean, 25th, and 75th quantiles for the given parameter values.
 
 distr = matrix(nrow = length(halfhr), ncol = 3)
 
@@ -43,6 +47,8 @@ mean = as.numeric(mean)
 
 negbinom_distr = cbind(lowerquartile, round(mean,2), upperquartile)
 
+# Write the estimated distributions to csv
+
 write.table(negbinom_distr, paste("/home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/distr_by_month_week/est_distr_on_mon_",month,"_week_",weekend,".csv", sep = ""), sep=",", row.names = FALSE, col.names = FALSE)
 
 actual_distr = read.csv(paste("/home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/distr_by_month_week/distr_on_mon_",month,"_week_",weekend,".csv", sep = ""), header = FALSE)
@@ -51,6 +57,7 @@ halfhr = seq(0,24, 0.5)
 
 shownobs = which(halfhr > 5 & halfhr < 23)
 
+# Create a plot to compare the distributions over time visually
 
 png(paste('avg_prediction_',month,'_',weekend,'.png', sep = ""), width = 1100, height = 750)
 plot(halfhr[shownobs], actual_distr[shownobs,2], lty = 1, type = "l", axes = FALSE, xlab = "Hour", ylab = "Passenger On Count", ylim = c(0,45))
