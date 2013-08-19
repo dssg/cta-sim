@@ -1,15 +1,15 @@
 #!/bin/Rscript
 
-# Type each of the following in the same line of the terminal:
-# Rscript passengeron_negbin_model.R 
-# 6 0 1423
-# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/totalsim_negbinom_on.csv
-# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv
+# This R script fits the Negative Binomial Model for a specific route, 
+# direction, and stop id
 
-# This will run the code on data inside of the folder.
+# Type the following in the terminal for the code to run:
+# Ex. -> Rscript passengeron_negbin_model.R 6 0 1423
 
 
 ### Command Line Arguments ###
+
+# Allow for Command line arguments to specify route, direction, and stop id.
 
 args <- commandArgs(TRUE)
 
@@ -17,21 +17,18 @@ input_taroute <- toString(args[1])
 input_dir_group <- toString(args[2])
 input_tageoid <- toString(args[3])
 
-# totaloutput <- toString(args[4])
-# avgoutput <- toString(args[5])
-
-# input_months <- as.numeric(args[6])
-# input_weekend <- as.numeric(args[7])
-
 ### Required Libraries ###
 
 library(coda)
 library(R2jags)
 library(rjson)
 
-### Loading and Cleaning the Data ###
+# Loading and Cleaning the Data #
 
 ### Redshift Connect ###
+
+# Establish Redshift Connection using RODBC and then extract all APC data for a
+# specific route, direction, and stop id.
 
 library(RODBC)
 
@@ -78,12 +75,13 @@ stop_data$time <- actualtime(stop_data$time_actual_arrive)$time
 # the bus in the half hour interval
 
 # Currently only looks at the Time of Arrival at the Stop
-# Future Iteration will take into account if ToA is in bucket but previous ToA is outside the bucket
+# Future Iteration will take into account if Time of Arrival (ToA)
+# is in bucket but previous ToA is outside the bucket.
 # Will have to Include a Proportional Allotting to the Different Buckets
 
 interval_length = 30/60 # interval length in hours
 N = 24 # numer of hours in day
-days = levels(as.factor(stop_data$survey_date))
+days = levels(as.factor(stop_data$survey_date)) # extracts all unique days in dataset
 
 num_buckets <- N/interval_length # Number of Buckets
 num_days = length(levels(as.factor(stop_data$survey_date))) # Number of Days
@@ -104,7 +102,9 @@ for (d in 1:num_days) {
   }
 }
 
-# Removing Days that Have No Observed Counts #
+# Removing Days that Have No Observed Counts
+# There may be certain days where all counts are zero. These
+# cause compuational problems in JAGS and must be removed.
 
 num_days = dim(buckets)[2]
 
@@ -138,10 +138,16 @@ levels(factor_months) <- strsplit(toString(seq(1,num_months)), ", ")[[1]]
 months <- as.numeric(factor_months) %% 12
 months[months == 0] <- 12
 
+# Create a Week/Weekend Indicator Function {1,2} 
+
 day_of_week <- dates$wday
 weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend Indicator
 
 ### Calculate Distr for Input_month and Input_weekend ###
+
+# This code calculates the actual distribution for specified month and 
+# week vs. weekend.  This is important when doing model checking
+# and validation.
 
 #print("About to Calc Distributions")
 
@@ -174,9 +180,10 @@ weekend <- as.numeric(day_of_week == 0 | day_of_week == 6)+1  # Create Weekend I
 
 ### BUGS CODE ###
 
-# if(file.exists('mcmc_output/totalsim_negbinom_on.csv') == FALSE) {
-
 # If Number of Months is less than 12, then we have a disconnect in dependency #
+# The negative binomial fits a model where the rate parameter, lambda,
+# is log-linear in factors corresponding to half hr buckets, week, and month
+# No interaction terms are included, but could be in future iterations. 
 
 if(num_months < 12) {
 model.str <- 'model
@@ -219,9 +226,10 @@ logalpha ~ dnorm(0,0.0001)
 
 
 # If the Number of Months is 12, then we need to include a loop in dependency #
-# We assume that Month 0 is Marginally N(0,\sigma), then Month i is conditionally normal N( X_{i-1}, \sigma) 
-# for months i <12, and then for the final month we have it is conditionally normal N( (X_{11} + X_{0})/2, \sigma) 
-# Which creates a loop of dependency.
+# We assume that Month 0 is Marginally N(0,\sigma), then Month i is conditionally 
+# normal N( X_{i-1}, \sigma) for months i <12, and then for the final month we 
+# have it is conditionally normal N( (X_{11} + X_{0})/2, \sigma) 
+# which creates a loop of dependency.
 
 if (num_months == 12) {
 
@@ -266,9 +274,13 @@ logalpha ~ dnorm(0,0.0001)
 
 }
 
+# Saves JAGS model to a file
+
 model.file = file("model_negbinom.bug")
 writeLines(model.str, model.file)
 close(model.file)
+
+# CTA has non-integer valued passenger ON values.  Need to round for model.
 
 Ydata = round(buckets,0)
 
@@ -284,19 +296,13 @@ parameters <- c("alpha", "itau2.alpha", "beta0", "beta", "itau2.beta", "gamma0",
 
 print("About to run Rbugs")
 
-# load.sim <- rbugs(data, inits, parameters, "modeltest.bug",
-#                  verbose=T,
-#                  n.chains=1, n.iter=1000,
-#                  bugsWorkingDir="/tmp", cleanBugsWorkingDir = T)
-
-
 load.sim <- jags(data, inits, parameters, "model_negbinom.bug", n.chains=1, n.iter=6000, n.burnin=200, progress.bar="text")
 
 print(load.sim)
 
-load.mcmc <- as.mcmc(load.sim)
+load.mcmc <- as.mcmc(load.sim)  # Extracts MCMC output from the JAGS object
 
-# Re-order month variables #
+# Re-order month variables - necessary for linking with the simulation
 
 date <- dates$year + dates$month/12
 actual_months <- dates$month
@@ -338,6 +344,8 @@ for (i in 1:dim(total_df)[2]) {
 }
 
 ### JSON OUTPUT ### 
+
+# Produce an appropriate JSON output using the avg_values vector.
 
 print("About to print JSON Output")
 
@@ -390,8 +398,6 @@ names(final) = c("2013-08-18")
 
 json = toJSON(final)
 
-# setwd("cta-webapp/src/main/resources/")
-
 print("Made it to Creating the JSON File")
 
 print(paste("json_output/boardParams_",input_tageoid,".json",sep = ""))
@@ -399,19 +405,4 @@ print(paste("json_output/boardParams_",input_tageoid,".json",sep = ""))
 write(json, file=paste("/home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/json_output/boardParams_",input_tageoid,".json",sep = ""), append = TRUE)
 
 print("Created JSON File")
-
-# write to file
-#write.table(total_df, totaloutput, sep=",", row.names = FALSE, col.names = TRUE)
-#write.table(avg_values, avgoutput, sep=",", row.names = FALSE, col.names = TRUE)
-
-#print("Writing to Table")
-
-#print(avg_values)
-
-#write.table(total_df, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/totalsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
-#write.table(avg_values, "/home/wdempsey/dssg-cta-project/stat-models/mcmc_output/avgsim_negbinom_on.csv", sep=",", row.names = FALSE, col.names = TRUE)
-
-#print("Created csvs!")
-
-# }
 
