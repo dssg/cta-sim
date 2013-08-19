@@ -402,7 +402,7 @@ names(aL)=c(taroute)
 #FIT DATE
 final=list(aL)
 #names(final)=c(Sys.Date())
-names(final) = c("6/18/2013")
+names(final) = c("2013-08-18")
 
 json = toJSON(final)
 
