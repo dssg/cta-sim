@@ -77,7 +77,7 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
   @Override
   public String estimateParameters(String route) {
     System.out.println("\n[WA INFO] Attempt to run script for estimation process for parameters on route: "+ route);
-    String cmd = "/Users/Andres/Desktop/testScript.sh";
+    String cmd = "/var/lib/ctasim/testScript.sh";
     // TODO correct path to R script
 
     ProcessBuilder pb = new ProcessBuilder("/bin/sh", cmd, route);
