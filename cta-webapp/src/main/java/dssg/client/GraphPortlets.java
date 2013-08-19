@@ -62,73 +62,98 @@ public class GraphPortlets extends Portlet {
   private Integer[][] sim_dataTimeStopS;
   private Resizable r;
   private String title;
+  private Date date;
+  private final int NUMHOURSEG=48;
 
   /*
    * Constructor for LOAD and FLOW
    */
   public GraphPortlets(String dataType, String route, String direction,
-      Integer startT, Integer stopT, Date date,
-      Map<String, Integer[]> sim_data) {
+      Integer startT, Integer stopT, Date date, Map<String, Integer[]> sim_data) {
 
     // Global variable initializers
-    this.sim_data= sim_data;
-    timeSliderPosition = startT*2;
+    this.sim_data = sim_data;
+    timeSliderPosition = startT * 2;
     stopTageoid = 0;
     this.dataType = dataType;
     this.route = route;
     if (direction.equals(""))
-      MessageBox.alert("Error with direction", "Direction does not exist.", null);
+      MessageBox.alert("Error with direction", "Direction does not exist.",
+          null);
     else
       this.direction = direction;
 
     this.startT = startT;
     this.stopT = stopT;
-    
+    this.date = date;
+
     // Create the simulated data arrays
-    sim_dataTimeWindow = new Integer[2][48];
-    
+    sim_dataTimeWindow = new Integer[2][NUMHOURSEG];
+
     if (dataType.equals("Load")) {
-      numStops = sim_data.get("load_timestop_N_hour1").length;
+      if (direction.equals("N") || direction.equals("B"))
+        numStops = sim_data.get("load_timestop_N_hour1").length;
+      else
+        numStops = sim_data.get("load_timestop_S_hour1").length;
+
       sim_dataTimeWindow[0] = sim_data.get("max_load_N");
       sim_dataTimeWindow[1] = sim_data.get("max_load_S");
-      sim_dataTimeStopN = new Integer[48][numStops];
-      sim_dataTimeStopS = new Integer[48][numStops];
-      if(direction.equals("N")||direction.equals("B")) {
-      for(int i=0;i<numStops;i++)
-        sim_dataTimeStopN[i]=sim_data.get("load_timestop_N_hour"+i);
+      sim_dataTimeStopN = new Integer[NUMHOURSEG][numStops];
+      sim_dataTimeStopS = new Integer[NUMHOURSEG][numStops];
+      if (direction.equals("N") || direction.equals("B")) {
+        for (int i = 0; i < NUMHOURSEG; i++)
+          sim_dataTimeStopN[i] = sim_data.get("load_timestop_N_hour" + i);
       }
-      if(direction.equals("S")||direction.equals("B")) {
-        for(int i=0;i<numStops;i++)
-          sim_dataTimeStopS[i]=sim_data.get("load_timestop_S_hour"+i);
+      if (direction.equals("S")) {
+        for (int i = 0; i < NUMHOURSEG; i++)
+          sim_dataTimeStopS[i] = sim_data.get("load_timestop_S_hour" + i);
+      }
+      if (direction.equals("B")) {
+        Integer[][] temp_reverse = new Integer[NUMHOURSEG][numStops];
+        for (int i = 0; i < NUMHOURSEG; i++) {
+          temp_reverse[i] = sim_data.get("load_timestop_S_hour" + i);
+          for (int j = 0; j < numStops; j++)
+            sim_dataTimeStopS[i][j]=temp_reverse[i][numStops-(1+j)];
         }
+      }
     }
 
     if (dataType.equals("Flow")) {
-      this.numStops = sim_data.get("flow_timestop_N_hour1").length;
+      if (direction.equals("N") || direction.equals("B"))
+        numStops = sim_data.get("flow_timestop_N_hour1").length;
+      else
+        numStops = sim_data.get("flow_timestop_S_hour1").length;
+
       sim_dataTimeWindow[0] = sim_data.get("max_flow_N");
       sim_dataTimeWindow[1] = sim_data.get("max_flow_S");
-      sim_dataTimeStopN = new Integer[48][numStops];
-      sim_dataTimeStopS = new Integer[48][numStops];
-      if(direction.equals("N")||direction.equals("B")) {
-      for(int i=0;i<numStops;i++)
-        sim_dataTimeStopN[i]=sim_data.get("flow_timestop_N_hour"+i);
+      sim_dataTimeStopN = new Integer[NUMHOURSEG][numStops];
+      sim_dataTimeStopS = new Integer[NUMHOURSEG][numStops];
+      if (direction.equals("N") || direction.equals("B")) {
+        for (int i = 0; i < NUMHOURSEG; i++)
+          sim_dataTimeStopN[i] = sim_data.get("flow_timestop_N_hour" + i);
       }
-      if(direction.equals("S")||direction.equals("B")) {
-        for(int i=0;i<numStops;i++)
-          sim_dataTimeStopS[i]=sim_data.get("flow_timestop_S_hour"+i);
+      if (direction.equals("S")) {
+        for (int i = 0; i < NUMHOURSEG; i++)
+          sim_dataTimeStopS[i] = sim_data.get("flow_timestop_S_hour" + i);
+      }
+      if (direction.equals("B")) {
+        Integer[][] temp_reverse = new Integer[NUMHOURSEG][numStops];
+        for (int i = 0; i < NUMHOURSEG; i++) {
+          temp_reverse[i] = sim_data.get("flow_timestop_S_hour" + i);
+          for (int j = 0; j < numStops; j++)
+            sim_dataTimeStopS[i][j]=temp_reverse[i][numStops-(1+j)];
         }
+      }
+      
     }
-    
 
-    
-    
     // Box Layout for the charts and sliders
     final VBoxLayout portletLayout = new VBoxLayout();
     portletLayout.setPadding(new Padding(15));
     portletLayout.setVBoxLayoutAlign(VBoxLayoutAlign.STRETCH);
 
     // Layout preferences
-    this.setHeadingHtml("Route " + route + ": " + dataType + "  (" + date+")");
+    this.setHeadingHtml("Route " + route + ": " + dataType + "  (" + date + ")");
     configPanel(this);
     this.setHeight(750);
     this.setLayout(portletLayout);
@@ -190,7 +215,7 @@ public class GraphPortlets extends Portlet {
     lg.setPadding(5);
     lg.setShadow(false);
     cm.setLegend(lg);
-    cm.setBackgroundColour("#fffff0");  
+    cm.setBackgroundColour("#fffff0");
     // Create the X axis
     XAxis xa = new XAxis();
     // set the labels for the axis
@@ -208,9 +233,37 @@ public class GraphPortlets extends Portlet {
     // Add the labels to the Y axis
     int maxY = Math.max(getMax(sim_dataTimeWindow[0]),
         getMax(sim_dataTimeWindow[1]));
-    ya.setRange(0, 1.1 * maxY+1, 10);
+    ya.setRange(0, 1.1 * maxY + 1, 10);
     cm.setYAxis(ya);
 
+    // Creates the line for max Suggested load
+    LineChart lchartD = new LineChart();
+    lchartD.setColour("#0099FF");
+    lchartD.setText("Max 30ft bus");
+    for (double n = startT; n <= stopT; n = n + .5) {
+      lchartD.addValues(40);
+    }
+    if (dataType.equals("Load") && maxY >= 40)
+      cm.addChartConfig(lchartD);
+
+    LineChart lchartM = new LineChart();
+    lchartM.setColour("#0066FF");
+    lchartM.setText("Max 40ft bus");
+    for (double n = startT; n <= stopT; n = n + .5) {
+      lchartM.addValues(70);
+    }
+    if (dataType.equals("Load") && maxY >= 70)
+      cm.addChartConfig(lchartM);
+
+    LineChart lchartU = new LineChart();
+    lchartU.setColour("#0033FF");
+    lchartU.setText("Max 60ft bus");
+    for (double n = startT; n <= stopT; n = n + .5) {
+      lchartU.addValues(95);
+    }
+    if (dataType.equals("Load") && maxY >= 95)
+      cm.addChartConfig(lchartU);
+    
     // Create a Line Chart object NORTH DATA
     LineChart lchart = new LineChart();
     lchart.setAnimateOnShow(true);
@@ -226,7 +279,7 @@ public class GraphPortlets extends Portlet {
     if ((direction.equals("N") || direction.equals("B")) && route != null) {
       cm.addChartConfig(lchart);
     }
-
+    
     // Create a Line Chart object SOUTH DATA
     lchart = new LineChart();
     lchart.setAnimateOnShow(true);
@@ -241,34 +294,6 @@ public class GraphPortlets extends Portlet {
     if ((direction.equals("S") || direction.equals("B")) && route != null) {
       cm.addChartConfig(lchart);
     }
-
-    // Creates the line for max Suggested load
-    LineChart lchartD = new LineChart();
-    lchartD.setColour("#0099FF");
-    lchartD.setText("Max 30ft bus");
-    for (double n = startT; n <= stopT; n = n + .5) {
-      lchartD.addValues(40);
-    }
-    if (dataType.equals("Load")&& maxY>=40)
-      cm.addChartConfig(lchartD);
-
-    LineChart lchartM = new LineChart();
-    lchartM.setColour("#0066FF");
-    lchartM.setText("Max 40ft bus");
-    for (double n = startT; n <= stopT; n = n + .5) {
-      lchartM.addValues(70);
-    }
-    if (dataType.equals("Load")&& maxY>=70)
-      cm.addChartConfig(lchartM);
-
-    LineChart lchartU = new LineChart();
-    lchartU.setColour("#0033FF");
-    lchartU.setText("Max 60ft bus");
-    for (double n = startT; n <= stopT; n = n + .5) {
-      lchartU.addValues(95);
-    }
-    if (dataType.equals("Load")&& maxY>=95)
-      cm.addChartConfig(lchartU);
 
     // Returns the Chart Model
     return cm;
@@ -339,17 +364,17 @@ public class GraphPortlets extends Portlet {
       title = " hrs.   Load by stop.";
     if (dataType.equals("Flow"))
       title = " hrs.   Flow by stop.";
-    
 
     // Create a ChartModel with the Chart Title and some style attributes
-    ChartModel cm = new ChartModel("Time: " + (double) timeSliderPosition/2 + title,
+    ChartModel cm = new ChartModel("Time: " + (double) timeSliderPosition / 2
+        + title,
         "font-size: 14px; font-family:      Verdana; text-align: center;");
     // Code to add legends and paddings
     Legend lg = new Legend(Position.TOP, true);
     lg.setPadding(5);
     lg.setShadow(false);
     cm.setLegend(lg);
-    cm.setBackgroundColour("#fffff0");  
+    cm.setBackgroundColour("#fffff0");
     // Create the X axis
     XAxis xa = new XAxis();
     xa.setOffset(true);
@@ -366,9 +391,44 @@ public class GraphPortlets extends Portlet {
     // Create the Y axis
     YAxis ya = new YAxis();
     // Add the labels to the Y axis
-    int maxY= getMax(sim_dataTimeStopN[timeSliderPosition]);
-    ya.setRange(0, 1.1*maxY+1, 10);
+    int maxY= 1;
+    if (direction.equals("N"))
+        maxY= getMax(sim_dataTimeStopN[timeSliderPosition]);
+    if (direction.equals("S"))
+        maxY= getMax(sim_dataTimeStopS[timeSliderPosition]);
+    if (direction.equals("B"))
+        maxY= Math.max(getMax(sim_dataTimeStopN[timeSliderPosition]),getMax(sim_dataTimeStopS[timeSliderPosition]));
+    
+    ya.setRange(0, 1.1 * maxY + 1, 10);
     cm.setYAxis(ya);
+    
+    // Creates the line for max Suggested load
+    LineChart lchartD = new LineChart();
+    lchartD.setColour("#0099FF");
+    lchartD.setText("Max 30ft bus");
+    for (int n = 0; n <= numStops; n++) {
+      lchartD.addValues(40);
+    }
+    if (dataType.equals("Load") && maxY >= 40)
+      cm.addChartConfig(lchartD);
+
+    LineChart lchartM = new LineChart();
+    lchartM.setColour("#0066FF");
+    lchartM.setText("Max 40ft bus");
+    for (int n = 0; n <= numStops; n++) {
+      lchartM.addValues(70);
+    }
+    if (dataType.equals("Load") && maxY >= 70)
+      cm.addChartConfig(lchartM);
+
+    LineChart lchartU = new LineChart();
+    lchartU.setColour("#0033FF");
+    lchartU.setText("Max 60ft bus");
+    for (int n = 0; n <= numStops; n++) {
+      lchartU.addValues(95);
+    }
+    if (dataType.equals("Load") && maxY >= 95)
+      cm.addChartConfig(lchartU);
 
     // Create a Line Chart object NORTH DATA
     LineChart lchart = new LineChart();
@@ -376,8 +436,7 @@ public class GraphPortlets extends Portlet {
     lchart.setColour("#00aa00");
     lchart.setTooltip("#val#");
     lchart.setText("North");
-    
-    
+
     if ((direction.equals("N") || direction.equals("B")) && route != null) {
       for (int n = 0; n < numStops; n++) {
         lchart.addValues(sim_dataTimeStopN[timeSliderPosition][n]);
@@ -391,7 +450,7 @@ public class GraphPortlets extends Portlet {
     lchart.setColour("#ff0000");
     lchart.setTooltip("#val#");
     lchart.setText("South");
-    
+
     if ((direction.equals("S") || direction.equals("B")) && route != null) {
       for (int n = 0; n < numStops; n++) {
         lchart.addValues(sim_dataTimeStopS[timeSliderPosition][n]);
@@ -399,33 +458,7 @@ public class GraphPortlets extends Portlet {
       cm.addChartConfig(lchart);
     }
 
-    // Creates the line for max Suggested load
-    LineChart lchartD = new LineChart();
-    lchartD.setColour("#0099FF");
-    lchartD.setText("Max 30ft bus");
-    for (int n = 0; n <= numStops; n++) {
-      lchartD.addValues(40);
-    }
-    if (dataType.equals("Load")&& maxY>=40)
-      cm.addChartConfig(lchartD);
-
-    LineChart lchartM = new LineChart();
-    lchartM.setColour("#0066FF");
-    lchartM.setText("Max 40ft bus");
-    for (int n = 0; n <= numStops; n++) {
-      lchartM.addValues(70);
-    }
-    if (dataType.equals("Load")&& maxY>=70)
-      cm.addChartConfig(lchartM);
-
-    LineChart lchartU = new LineChart();
-    lchartU.setColour("#0033FF");
-    lchartU.setText("Max 60ft bus");
-    for (int n = 0; n <= numStops; n++) {
-      lchartU.addValues(95);
-    }
-    if (dataType.equals("Load")&& maxY>=95)
-      cm.addChartConfig(lchartU);
+    
 
     // Returns the Chart Model
     return cm;
@@ -472,7 +505,7 @@ public class GraphPortlets extends Portlet {
     final Portlet stopPortlet = new Portlet();
     // Layout preferences
     stopPortlet.setHeadingHtml("Route: " + route + "\t" + dataType
-        + " by half hour for one stop.");
+        + " by half hour for one stop. (" + date + ")");
     configPanel(stopPortlet);
     stopPortlet.setHeight(370);
     r = new Resizable(stopPortlet);
@@ -538,29 +571,60 @@ public class GraphPortlets extends Portlet {
     cm.setXAxis(xa);
 
     Integer[] dataN = new Integer[(stopT - startT) * 2];
-    Integer[] dataNM = new Integer[(stopT - startT) * 2];
     Integer[] dataS = new Integer[(stopT - startT) * 2];
-    Integer[] dataSM = new Integer[(stopT - startT) * 2];
     
     if ((direction.equals("N") || direction.equals("B")) && route != null) {
       for (int n = 0; n < (stopT - startT) * 2; n++) {
         dataN[n] = sim_dataTimeStopN[n][stopTageoid];
-        dataNM[n] = dataN[n] * 3 / 4;
       }
     }
     if ((direction.equals("S") || direction.equals("B")) && route != null) {
-    for (int n = 0; n < (stopT - startT) * 2; n++) {
-      dataS[n] = sim_dataTimeStopS[n][stopTageoid];
-      dataSM[n] = dataS[n] * 3 / 4;
+      for (int n = 0; n < (stopT - startT) * 2; n++) {
+        dataS[n] = sim_dataTimeStopS[n][stopTageoid];
+      }
     }
-    }
-    
+
     // Create the Y axis
     YAxis ya = new YAxis();
     // Add the labels to the Y axis
-    int maxY= getMax(dataN);
-    ya.setRange(0, 1.1*maxY+1, 10);
+    int maxY =1;
+    if (direction.equals("N"))
+        maxY= getMax(dataN);
+    if (direction.equals("S"))
+        maxY= getMax(dataS);
+    if (direction.equals("B")) {
+      maxY=Math.max(getMax(dataN), getMax(dataS));
+    }
+    ya.setRange(0, 1.1 * maxY + 1, 10);
     cm.setYAxis(ya);
+    
+ // Creates the line for max Suggested load
+    LineChart lchartD = new LineChart();
+    lchartD.setColour("#0099FF");
+    lchartD.setText("Max 30ft bus");
+    for (double n = startT; n <= stopT; n = n + .5) {
+      lchartD.addValues(40);
+    }
+    if (dataType.equals("Load") && maxY >= 40)
+      cm.addChartConfig(lchartD);
+
+    LineChart lchartM = new LineChart();
+    lchartM.setColour("#0066FF");
+    lchartM.setText("Max 40ft bus");
+    for (double n = startT; n <= stopT; n = n + .5) {
+      lchartM.addValues(70);
+    }
+    if (dataType.equals("Load") && maxY >= 70)
+      cm.addChartConfig(lchartM);
+
+    LineChart lchartU = new LineChart();
+    lchartU.setColour("#0033FF");
+    lchartU.setText("Max 60ft bus");
+    for (double n = startT; n <= stopT; n = n + .5) {
+      lchartU.addValues(95);
+    }
+    if (dataType.equals("Load") && maxY >= 95)
+      cm.addChartConfig(lchartU);
 
     // Creation of the bar chart NORTH DATA
     FilledBarChart bchartN = new FilledBarChart();
@@ -569,7 +633,6 @@ public class GraphPortlets extends Portlet {
     bchartN.setText("North");
     bchartN.setColour("#00aa00");
     bchartN.setAnimateOnShow(true);
-    
 
     if ((direction.equals("N") || direction.equals("B")) && route != null) {
       bchartN.addValues(dataN);
@@ -583,40 +646,13 @@ public class GraphPortlets extends Portlet {
     bchartS.setText("South");
     bchartS.setColour("#ff0000");
     bchartS.setAnimateOnShow(true);
-    
 
     if ((direction.equals("S") || direction.equals("B")) && route != null) {
       bchartS.addValues(dataS);
       cm.addChartConfig(bchartS);
     }
 
-    // Creates the line for max Suggested load
-    LineChart lchartD = new LineChart();
-    lchartD.setColour("#0099FF");
-    lchartD.setText("Max 30ft bus");
-    for (double n = startT; n <= stopT; n = n + .5) {
-      lchartD.addValues(40);
-    }
-    if (dataType.equals("Load"))
-      cm.addChartConfig(lchartD);
-
-    LineChart lchartM = new LineChart();
-    lchartM.setColour("#0066FF");
-    lchartM.setText("Max 40ft bus");
-    for (double n = startT; n <= stopT; n = n + .5) {
-      lchartM.addValues(70);
-    }
-    if (dataType.equals("Load"))
-      cm.addChartConfig(lchartM);
-
-    LineChart lchartU = new LineChart();
-    lchartU.setColour("#0033FF");
-    lchartU.setText("Max 60ft bus");
-    for (double n = startT; n <= stopT; n = n + .5) {
-      lchartU.addValues(95);
-    }
-    if (dataType.equals("Load"))
-      cm.addChartConfig(lchartU);
+    
 
     // Returns the Chart Model
     return cm;
@@ -630,29 +666,29 @@ public class GraphPortlets extends Portlet {
   public Portlet getGrid() {
     // Portlet for the Information Grid
     final Portlet gridPortlet = new Portlet();
-    gridPortlet.setHeadingHtml("Route: " + route + "\tSummary");
+    gridPortlet.setHeadingHtml("Route: " + route + " " + dataType
+        + " Summary (" + date + ")");
 
     configPanel(gridPortlet);
     gridPortlet.setHeight(370);
     gridPortlet.setLayout(new FitLayout());
     gridPortlet.add(createGrid());
-    
+
     r = new Resizable(gridPortlet);
     r.setDynamic(true);
 
     return gridPortlet;
   }
-  
-  
 
   /**
    * Statistic Information Grid panel
+   * 
    * @return
    */
   private ContentPanel createGrid() {
     final Grid<DataStats> grid;
     ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
-    
+
     ColumnConfig stopCol = new ColumnConfig();
     stopCol.setId("hour");
     stopCol.setHeaderHtml("Hour");
@@ -664,34 +700,34 @@ public class GraphPortlets extends Portlet {
 
     ColumnConfig loadBeg = new ColumnConfig();
     loadBeg.setId("load_at_beg");
-    loadBeg.setHeaderHtml("Load at stop 1");
+    loadBeg.setHeaderHtml(dataType + " at stop 1");
     loadBeg.setWidth(90);
     text = new TextField<String>();
     text.setAllowBlank(false);
     loadBeg.setEditor(new CellEditor(text));
     configs.add(loadBeg);
-    
+
     ColumnConfig loadMid = new ColumnConfig();
     loadMid.setId("load_at_mid");
-    loadMid.setHeaderHtml("Load at stop 20");
+    loadMid.setHeaderHtml(dataType + " at stop 20");
     loadMid.setWidth(90);
     text = new TextField<String>();
     text.setAllowBlank(false);
     loadMid.setEditor(new CellEditor(text));
     configs.add(loadMid);
-    
+
     ColumnConfig loadMid2 = new ColumnConfig();
     loadMid2.setId("load_at_mid2");
-    loadMid2.setHeaderHtml("Load at stop 40");
+    loadMid2.setHeaderHtml(dataType + " at stop 40");
     loadMid2.setWidth(90);
     text = new TextField<String>();
     text.setAllowBlank(false);
     loadMid2.setEditor(new CellEditor(text));
     configs.add(loadMid2);
-    
+
     ColumnConfig loadFin = new ColumnConfig();
     loadFin.setId("load_at_fin");
-    loadFin.setHeaderHtml("Load at stop 59");
+    loadFin.setHeaderHtml(dataType + " at stop 59");
     loadFin.setWidth(90);
     text = new TextField<String>();
     text.setAllowBlank(false);
@@ -711,7 +747,7 @@ public class GraphPortlets extends Portlet {
 
     GridSelectionModel<DataStats> selectModel = new GridSelectionModel<DataStats>();
     selectModel.select(stopTageoid, true);
-    
+
     grid = new Grid<DataStats>(store, cm);
     grid.setBorders(true);
     grid.setSelectionModel(selectModel);

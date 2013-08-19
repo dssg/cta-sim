@@ -34,7 +34,7 @@ public class GetData {
           stats.add(new DataStats((double) i / 2, sim_data
               .get("load_timestop_S_hour" + i)[1], sim_data
               .get("load_timestop_S_hour" + i)[20], sim_data
-              .get("load_timestop_N_hour" + i)[40], sim_data
+              .get("load_timestop_S_hour" + i)[40], sim_data
               .get("load_timestop_S_hour" + i)[59]));
       }
     }
@@ -51,7 +51,7 @@ public class GetData {
           stats.add(new DataStats((double) i / 2, sim_data
               .get("flow_timestop_S_hour" + i)[1], sim_data
               .get("flow_timestop_S_hour" + i)[20], sim_data
-              .get("load_timestop_N_hour" + i)[40], sim_data
+              .get("load_timestop_S_hour" + i)[40], sim_data
               .get("flow_timestop_S_hour" + i)[59]));
       }
     }

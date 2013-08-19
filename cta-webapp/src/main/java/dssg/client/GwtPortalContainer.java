@@ -11,6 +11,8 @@ import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.Style.Scroll;
+import com.extjs.gxt.ui.client.event.Listener;
+import com.extjs.gxt.ui.client.event.MessageBoxEvent;
 import com.extjs.gxt.ui.client.fx.Resizable;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.util.Margins;
@@ -197,7 +199,7 @@ public class GwtPortalContainer extends Viewport {
     // Content panel for "Chart Options"
     panel = new ContentPanel();
     // Layout preferences
-    panel.setHeadingHtml("Chart Options");
+    panel.setHeadingHtml("Chart Types");
     panel.setBorders(false);
     panel.setCollapsible(true);
     formData = new FormData("-20");
@@ -212,14 +214,14 @@ public class GwtPortalContainer extends Viewport {
     // Content panel for "General Settings"
     panel = new ContentPanel();
     // Layout preferences
-    panel.setHeadingHtml("Upload Files");
+    panel.setHeadingHtml("Parameter Estimation");
     panel.setBorders(false);
     panel.setCollapsible(true);
     formData = new FormData("-20");
     // Vertical panel for form data
     vp = new VerticalPanel();
     vp.setSpacing(10);
-    createUpldFileWest();
+    createNewParamsSel();
     panel.add(vp);
     panel.collapse();
     west.add(panel);
@@ -321,6 +323,7 @@ public class GwtPortalContainer extends Viewport {
     // Date field
     date = new DateField();
     date.setFieldLabel("Date");
+    date.setAllowBlank(false);
     simple.add(date, formData);
     // Time field
     final TimeField timeS = new TimeField();
@@ -404,29 +407,43 @@ public class GwtPortalContainer extends Viewport {
   }
 
   // Form to input schedule or gtfs
-  private void createUpldFileWest() {
+  private void createNewParamsSel() {
     // Initial panel
     final FormPanel simple = new FormPanel();
     // Layout preferences
     simple.setFrame(false);
     simple.setHeaderVisible(false);
     simple.setHideLabels(true);
-
-    // Upload Fields
-    final FileUploadField gtsfFile = new FileUploadField();
-    gtsfFile.setName("GTSF");
-    simple.add(gtsfFile);
-    final FileUploadField schedFile = new FileUploadField();
-    schedFile.setAllowBlank(true);
-    schedFile.setEmptyText("Schedule file");
-    simple.add(schedFile);
+    
+    // Text fields for route number
+    ListStore<DataRoutes> routes = new ListStore<DataRoutes>();
+    routes.add(GetData.getRoutes());
+    final ComboBox<DataRoutes> routeCmbParams = new ComboBox<DataRoutes>();
+    routeCmbParams.setFieldLabel("Route");
+    routeCmbParams.setEmptyText("Select a route");
+    routeCmbParams.setAllowBlank(false);
+    routeCmbParams.setDisplayField("name");
+    routeCmbParams.setStore(routes);
+    routeCmbParams.setTypeAhead(true);
+    simple.add(routeCmbParams, formData);
+    
+    final Listener<MessageBoxEvent> l = new Listener<MessageBoxEvent>() {  
+      public void handleEvent(MessageBoxEvent ce) {  
+        com.extjs.gxt.ui.client.widget.button.Button btn = ce.getButtonClicked();
+        String route_params = routeCmbParams.getValue().getId().toString();
+        if(btn.getHtml().equals("Yes")) {
+          ParamEstimation.estParameters(simulationService, route_params);
+          Info.display("Update", "Parameters are being updated. It might take several hours for the change to take place.");
+        }
+      }  
+    };  
 
     // Submit Button
-    Button submitBtn = new Button("Submit");
+    Button submitBtn = new Button("Calculate new parameters");
     submitBtn.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
-        // callS3Upload(gtsfFile.getRawValue());
+        MessageBox.confirm("Confirm", "Creating new parameter might take several hours.___________________ Are you sure you want to do this?", l);
       }
     });
     simple.add(submitBtn);

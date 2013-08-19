@@ -12,9 +12,9 @@ import umontreal.iro.lecuyer.rng.RandomStream;
 
 public class PassengerOffModelBinom implements PassengerOffModel {
   class ModelParams {
-    double[] lpTimeOfDay;
-    double[] lpDayType;
-    double[] lpMonth;
+    double[] llTimeOfDay;
+    double[] llDayType;
+    double[] llMonth;
   }
   Map<String, ModelParams> busStopToParams;
 
@@ -33,10 +33,7 @@ public class PassengerOffModelBinom implements PassengerOffModel {
    */
   @Override
   public int sample(String busStopId, DateMidnight day, int arrivalTime, int arrivingLoad, RandomStream rng) {
-    // We don't have all stops trained yet - use an example stop
-    // ModelParams params = this.busStopToParams.get(busStopId);
-    // TODO: fix parameter loading
-    ModelParams params = this.busStopToParams.entrySet().iterator().next().getValue();
+    ModelParams params = this.busStopToParams.get(busStopId);
 
     int dayIdx = Config.DAYTYPE_WEEKDAY;
     int dayId = day.getDayOfWeek();
@@ -44,11 +41,11 @@ public class PassengerOffModelBinom implements PassengerOffModel {
       dayIdx = Config.DAYTYPE_WEEKEND;
     int monthIdx = day.getMonthOfYear() - 1;
 
-    double lpDayTypeFactor = params.lpDayType[dayIdx];
-    double lpMonthFactor = params.lpMonth[monthIdx];
+    double lpDayTypeFactor = params.llDayType[dayIdx];
+    double lpMonthFactor = params.llMonth[monthIdx];
     
     int mTimeIdx = Config.getBucket(arrivalTime);
-    double lpTimeOfDayFactor = params.lpTimeOfDay[mTimeIdx];
+    double lpTimeOfDayFactor = params.llTimeOfDay[mTimeIdx];
 
     double logP = lpTimeOfDayFactor + lpDayTypeFactor + lpMonthFactor;
 
