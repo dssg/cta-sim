@@ -2,11 +2,7 @@
 
 # Type each of the following in the same line of the terminal:
 # Rscript passengeroffmodelv2.R 6 0 1423
-# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/totalsim_negbinom_on.csv
-# /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model/mcmc_output/avgsim_negbinom_on.csv
-
-# This will run the code on data inside of the folder.
-
+# This will run the OFF Model on a specificed route, direction, and stop id
 
 ### Command Line Arguments ###
 
@@ -16,12 +12,6 @@ input_taroute <- toString(args[1])
 input_dir_group <- toString(args[2])
 input_tageoid <- toString(args[3])
 
-# totaloutput <- toString(args[4])
-# avgoutput <- toString(args[5])
-
-# input_months <- as.numeric(args[6])
-# input_weekend <- as.numeric(args[7])
-
 ### Required Libraries ###
 
 library(coda)
@@ -30,7 +20,9 @@ library(rjson)
 
 ### Loading and Cleaning the Data ###
 
-### Redshift Connect ###
+# Establish Redshift Connection to pull in APC data for specified
+# route, direction, and stop id.  Disconnect when done, to allow 
+# other SQL queries to run (max 100 at a time).
 
 library(RODBC)
 
@@ -71,8 +63,13 @@ stop_data$time <- actualtime(stop_data$time_actual_arrive)$time
 
 ### Bucketing By 30 Minute Intervals ###
 
-# Buckets are 30 Minute Intervals and Observations are Per Day so bucket_off[t,d] is number of passengers getting
+# Buckets are 30 Minute Intervals and Observations are Per Day so
+# bucket_off[t,d] is number of passengers getting
 # off the bus in the half hour interval.
+
+# buckets_in[t,d] is the sum of all passengers IN the bus 
+# if the bus arrives in the half hour interval.
+ 
 
 interval_length = 30/60 # interval length in hours
 N = 24 # numer of hours in day
@@ -110,15 +107,12 @@ for (d in 1:num_days) {
   }
 }
 
-# buckets_in = buckets_in[,-1]
-# buckets_off = buckets_off[,-1]
-# days = days[-1]
-
 num_days = length(days)
 
 dates <- dateinfo(days)
 
 # Month Variable -> Need to Order By Earliest Month-Year Observed
+# The order matters for establishing conditional dependencies in the model
 
 date <- dates$year + dates$month/12
 actual_months <- dates$month
@@ -138,9 +132,12 @@ for(i in 1:num_days){empty_days[i] <- max(buckets_in[,i])}
 
 ### Calculate Distr for Input_month and Input_weekend ###
 
-#print("About to Calc Distributions")
+# The below calculates and writes to a file the mean, 25th, and 75th
+# quantiles of the actual distribution for a specified month and 
+# week/weekend indicator.  This is only necessary when running the code
+# for model validation purposes.
 
-#print(paste("Actual Levels of Months is :",levels(as.factor(actual_months))))
+#print("About to Calc Distributions")
 
 #for (i in 1:12) {
 #for (j in 1:2) {
@@ -150,8 +147,6 @@ for(i in 1:num_days){empty_days[i] <- max(buckets_in[,i])}
 #if (length(distr_obs) != 0 ){
 
 #distr_buckets = matrix(ncol = 3, nrow = num_buckets)
-
-#print(c(i,j))
 
 #for(k in 1:num_buckets) {
 #    distr_buckets[k,2] <- mean(buckets_in[k,distr_obs] / buckets_off[k,distr_obs], na.rm = TRUE)
@@ -168,6 +163,11 @@ for(i in 1:num_days){empty_days[i] <- max(buckets_in[,i])}
 #print("Finished Calcing Distributions")
 
 ### Vectorize the Matrix ###
+
+# We vectorize the matrix so that we can remove bad entries
+# Bad entries include IN < OFF, IN = 0, and situations in 
+# which either value is NA.
+
 Ydata = round(buckets_off,0)
 N = round(buckets_in,0)
 buckets <- seq(1,num_buckets)
@@ -205,6 +205,15 @@ print(paste("Number of Observations we're using:",length(totalobs)))
 
 ### BUGS CODE ###
 
+# The JAGS code which fits a Binomial regression in which the number of
+# people getting OFF the bus given N people on the bus is Bin(N,p).  
+# We assume that logit(p) is linear in month, half-hr, and week/weekend factors.
+
+# If we have less than 12 months of data, then we only need simple conditional 
+# statements of dependency.  That is the factor associated with month $i$ (gamma_i) 
+# conditional on factor associated with month $i-1$ (gamma_{i-1}) 
+# is N(gamma[i-1], sigma^2).
+
 if(num_months < 12) {
 model.str <- 'model
 {
@@ -236,6 +245,11 @@ itau2.beta ~ dgamma(1,1)
 itau2.gamma ~ dgamma(1,1)
 }'
 }
+
+
+# If we have 12 months of data, then we need the model to contain a dependency 
+# loop. We do this by assuming that gamma_{12} | gamma_1 , ..., gamma_{11}
+# is N((gamma_{11} + gamma{1}) / 2, sigma^2).
 
 if (num_months == 12) {
 
@@ -277,8 +291,6 @@ model.file = file("binomial_model.bug")
 writeLines(model.str, model.file)
 close(model.file)
 
-# check = cbind(vector.Y,vector.N,vector.bucket,vector.weekend,vector.month)
-
 data <- list("num_buckets" = num_buckets, "Y" = vector.Y, "weekend" = vector.weekend, "months" = vector.month, "num_months" = num_months, 
              "buckets_in" = vector.N, "totalobs" = totalobs, bucket = vector.bucket)
 
@@ -291,11 +303,6 @@ parameters <- c("alpha0", "alpha", "itau2.alpha", "beta0", "beta", "itau2.beta",
 
 print("About to run Jags")
 
-# load.sim <- rbugs(data, inits, parameters, "poisson_model.bug",
-#                  verbose=T,
-#                  n.chains=1, n.iter=6000,
-#                  bugsWorkingDir="/tmp", cleanBugsWorkingDir = T)
-
 load.sim <- jags(data, inits, parameters, "binomial_model.bug", n.chains=1, n.iter=2000, n.burnin=200, progress.bar="text")
 
 print(load.sim)
@@ -304,7 +311,9 @@ load.mcmc <- as.mcmc(load.sim)
 
 df_mcmc <- data.frame(load.mcmc[,c(1:48,50:51)])
 
-# df_mcmc <- data.frame(load.mcmc)
+# df_mcmc contains the half-hr, and week/weekend factor coefficients
+# We need to re-order the month coefficients for syncing with the 
+# simulation.
 
 # Re-order month variables #
 
@@ -405,8 +414,6 @@ final=list(aL)
 names(final) = c("2013-08-18")
 
 json = toJSON(final)
-
-# setwd("cta-webapp/src/main/resources/")
 
 print("Made it to Creating the JSON File")
 
