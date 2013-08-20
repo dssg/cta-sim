@@ -11,6 +11,10 @@
   * Command Line Example: -> bash totalrouteparam_bash.sh 6
   * Fits both ON and OFF models for route 6 at all stops going north and south.
   * If you look in /var/lib/ctasim/model-fit/ you would find the boardParams.json and alightParams.json containing all the parameter values.
+3. param_dict_join.py : Takes in a file of concatenated stop level params and creates a valid JSON file to be used in the simulation.
+  * Command Line Example: -> python param_dict_join.py  routeparamson.json final_params_on.json
+  * Generates a valid JSON file called final_params_on.json from a route level file.
+  * Used inside of [totalrouteparam_bash.sh](./totalrouteparam_bash.sh)
 
 
 ### Subdirectories: 
