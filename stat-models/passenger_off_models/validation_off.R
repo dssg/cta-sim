@@ -50,6 +50,10 @@ dateinfo <- function(x) {
 
 test_data$time <- actualtime(test_data$time_actual_arrive)$time
 
+# In test data, Passengers_in is actually the number of passengers
+# in the bus at the stop when the bus is leaving the station.
+# pass_in is the number of passengers in the bus as it arrives.
+
 pass_in <- test_data$passengers_in + test_data$passengers_off - test_data$passengers_on
 
 ### Remove NAs ###
@@ -124,10 +128,6 @@ for (k in 1:length(weekend)) {
 
 norm_MSE = MSE / length(weekend)
 
-# print(result[-1,])
-
 print(norm_MSE)
 
 print(c(mean(test_data$passengers_off),sd(test_data$passengers_off)))
-
-# write.table(norm_MSE, "norm_MSE.csv", sep=",", row.names = FALSE, col.names = FALSE)

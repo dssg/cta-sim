@@ -1,6 +1,9 @@
 # Turn Command Line Arguments On
 
 # Command Line: Rscript plot_negbinom_generator.R /home/wdempsey/dssg-cta-project/stat-models/passenger_on_models/neg_binom_model//mcmc_output/avgsim_negbinom_on.csv 1 1 
+# Creates plots of actual versus predicted probabilities for the OFF Model.
+# For stops where passengers_in is quite small, these plots are misleading as to the
+# accuracy of the simulation.
 
 args <- commandArgs(TRUE)
 parameter_pathname <- toString(args[1]) # Model Parameters
@@ -11,6 +14,7 @@ input_taroute <- toString(args[4])
 input_dir_group <- toString(args[5])
 input_tageoid <- toString(args[6])
 
+# Check to make sure necessary files exist
 
 if(file.exists(paste("/home/wdempsey/dssg-cta-project/stat-models/passenger_off_models/distr_by_month_week/distr_on_mon_",month,"_week_",weekend,".csv", sep = ""))) {
 
