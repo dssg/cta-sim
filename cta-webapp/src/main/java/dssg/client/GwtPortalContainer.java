@@ -27,7 +27,6 @@ import com.extjs.gxt.ui.client.widget.custom.Portal;
 import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.DateField;
-import com.extjs.gxt.ui.client.widget.form.FileUploadField;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.Radio;
 import com.extjs.gxt.ui.client.widget.form.RadioGroup;
@@ -72,8 +71,11 @@ public class GwtPortalContainer extends Viewport {
   private Map<String, Integer[]> simulation_data;
   private DateField date;
 
-  /*
+  /**
    * Constructor
+   *
+   * @param simulationService
+   * @param s3ComunicationService
    */
   public GwtPortalContainer(SimulationServiceAsync simulationService,
       S3CommunicationServiceAsync s3ComunicationService) {
@@ -89,7 +91,7 @@ public class GwtPortalContainer extends Viewport {
     checkFlow = new CheckBox();
   }
 
-  /*
+  /**
    * Elements to add upon rendering
    */
   @Override
@@ -123,8 +125,9 @@ public class GwtPortalContainer extends Viewport {
     add(getCenter(), centerData);
   }
 
-  /*
+  /**
    * --- North region information (top region of the webapp) ---
+   * @return LayoutContainer
    */
   private LayoutContainer getNorth() {
     LayoutContainer north = new LayoutContainer();
@@ -168,8 +171,10 @@ public class GwtPortalContainer extends Viewport {
     return north;
   }
 
-  /*
+  /**
    * --- West region information (region to the left of the webapp) ---
+   *
+   * @return ContentPanel
    */
   private ContentPanel getWest() {
     ContentPanel west = new ContentPanel();
@@ -229,8 +234,9 @@ public class GwtPortalContainer extends Viewport {
     return west;
   }
 
-  /*
+  /**
    * --- Center region information (center region of the webapp) ---
+   * @return ContentPanel
    */
   private ContentPanel getCenter() {
     final ContentPanel center = new ContentPanel();
@@ -258,14 +264,16 @@ public class GwtPortalContainer extends Viewport {
       public void execute() {
         if (checkLoad.getValue()) {
           GraphPortlets graphPortlets = new GraphPortlets("Load", route,
-              direction, startT, stopT,date.getDatePicker().getValue(), simulation_data);
+              direction, startT, stopT, date.getDatePicker().getValue(),
+              simulation_data);
           portal.add(graphPortlets, 0);
           portal.add(graphPortlets.getPortletOneStop(), 1);
           portal.add(graphPortlets.getGrid(), 1);
         }
         if (checkFlow.getValue()) {
           GraphPortlets graphPortlets = new GraphPortlets("Flow", route,
-              direction, startT, stopT, date.getDatePicker().getValue(), simulation_data);
+              direction, startT, stopT, date.getDatePicker().getValue(),
+              simulation_data);
           portal.add(graphPortlets, 0);
           portal.add(graphPortlets.getPortletOneStop(), 1);
           portal.add(graphPortlets.getGrid(), 1);
@@ -277,10 +285,10 @@ public class GwtPortalContainer extends Viewport {
     return center;
   }
 
-  /*
-   * -- Methods to create forms --
+  /**
+   * -- Methods to create West Region selectors --
+   * Form to display data visualization options
    */
-  // Form to display data visualization options
   private void createGenInfWest() {
 
     // Local variables
@@ -365,7 +373,8 @@ public class GwtPortalContainer extends Viewport {
           // RUN SIMULATION
           GetData.runSim(simulationService, portalContainer, route, direction,
               date.getDatePicker().getValue(), startT, stopT);
-          Info.display("Starting Simulation.","The results will be displayed at the bottom of the page.");
+          Info.display("Starting Simulation.",
+              "The results will be displayed at the bottom of the page.");
         }
       }
     });
@@ -384,7 +393,9 @@ public class GwtPortalContainer extends Viewport {
     vp.add(simple);
   }
 
-  // Form to display Chart Option
+  /**
+   * Form to display Chart Options
+   */
   private void createCharOptWest() {
 
     // Initial Layout
@@ -406,7 +417,9 @@ public class GwtPortalContainer extends Viewport {
     vp.add(simple);
   }
 
-  // Form to input schedule or gtfs
+  /**
+   * Form to create new parameters options
+   */
   private void createNewParamsSel() {
     // Initial panel
     final FormPanel simple = new FormPanel();
@@ -414,7 +427,7 @@ public class GwtPortalContainer extends Viewport {
     simple.setFrame(false);
     simple.setHeaderVisible(false);
     simple.setHideLabels(true);
-    
+
     // Text fields for route number
     ListStore<DataRoutes> routes = new ListStore<DataRoutes>();
     routes.add(GetData.getRoutes());
@@ -426,24 +439,33 @@ public class GwtPortalContainer extends Viewport {
     routeCmbParams.setStore(routes);
     routeCmbParams.setTypeAhead(true);
     simple.add(routeCmbParams, formData);
-    
-    final Listener<MessageBoxEvent> l = new Listener<MessageBoxEvent>() {  
-      public void handleEvent(MessageBoxEvent ce) {  
-        com.extjs.gxt.ui.client.widget.button.Button btn = ce.getButtonClicked();
+
+    // Executed when pressing the confirm buttons
+    final Listener<MessageBoxEvent> l = new Listener<MessageBoxEvent>() {
+      @Override
+      public void handleEvent(MessageBoxEvent ce) {
+        com.extjs.gxt.ui.client.widget.button.Button btn = ce
+            .getButtonClicked();
         String route_params = routeCmbParams.getValue().getId().toString();
-        if(btn.getHtml().equals("Yes")) {
+        if (btn.getHtml().equals("Yes")) {
           ParamEstimation.estParameters(simulationService, route_params);
-          Info.display("Update", "Parameters are being updated. It might take several hours for the change to take place.");
+          Info.display(
+              "Update",
+              "Parameters are being updated. It might take several hours for the change to take place.");
         }
-      }  
-    };  
+      }
+    };
 
     // Submit Button
     Button submitBtn = new Button("Calculate new parameters");
     submitBtn.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
-        MessageBox.confirm("Confirm", "Creating new parameter might take several hours.___________________ Are you sure you want to do this?", l);
+        MessageBox
+            .confirm(
+                "Confirm",
+                "Creating new parameter might take several hours.___________________ Are you sure you want to do this?",
+                l);
       }
     });
     simple.add(submitBtn);
@@ -462,23 +484,18 @@ public class GwtPortalContainer extends Viewport {
     vp.add(simple);
   }
 
-  /*
+  /**
    * -- Charts -- EXECUTED AFTER SIMULATION FINISHES Create new charts for the
-   * ouput of the simulation.
+   * output of the simulation.
    */
-  // Update all charts
   public void updateCharts(Map<String, Integer[]> data) {
-    // Info.display("Sucess in getting data @portal.",
-    // "The results are shown in a new pannel at the bottom of your screen.");
     simulation_data = data;
     createCenterPanelCmd.execute();
-
   }
 
-  /*
-   * -- Other Functions --
+  /**
+   * UNUSED -- LOADING MESSAGE --
    */
-  // -- LOADING MESSAGE --
   private void callLoading() {
     final MessageBox box = MessageBox.progress("Please wait",
         "Loading simulation...", "Initializing...");
@@ -499,24 +516,4 @@ public class GwtPortalContainer extends Viewport {
     };
     t.scheduleRepeating(150);
   }
-
-  // -- AWS S3 File Upload--
-  // FIXME get this method to work
-  // private void callS3Upload(final String file) {
-  // System.out.println("File path: " + file);
-  //
-  // this.s3ComunicationService.uploadFile(file,
-  // new AsyncCallback<List<DataStats>>() {
-  // @Override
-  // public void onSuccess(List<DataStats> output) {
-  // Info.display("Sucess", "");
-  // }
-  //
-  // @Override
-  // public void onFailure(Throwable e) {
-  // Info.display("Failure", "");
-  //
-  // }
-  // });
-  // }
 }

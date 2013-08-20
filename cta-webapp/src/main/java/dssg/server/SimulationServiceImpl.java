@@ -74,16 +74,24 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
     return simulations.get(batchId);
   }
   
+  /**
+   * Method that executes bash script for parameter estimation
+   * 
+   * @param route
+   * @return String
+   */
   @Override
   public String estimateParameters(String route) {
     System.out.println("\n[WA INFO] Attempt to run script for estimation process for parameters on route: "+ route);
+ // TODO correct path to R script
     String cmd = "/var/lib/ctasim/testScript.sh";
-    // TODO correct path to R script
-
+    
+    // Building process to execute
     ProcessBuilder pb = new ProcessBuilder("/bin/sh", cmd, route);
     try {
       Process p = pb.start();
       p.waitFor();
+      // Read lines outputted from the script execution
       BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
       String line = reader.readLine();        
       while (line != null) {
@@ -101,6 +109,14 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
     return "Done";
   }
 
+  /**
+   * Method to submit a simulation based on input parameters
+   * 
+   * @param routeAndDirs
+   * @param startTime
+   * @param endTime
+   * @return String
+   */
   @Override
   public String submitSimulation(Set<String> routeAndDirs, Date startTime,
       Date endTime) throws IllegalArgumentException {
@@ -125,7 +141,13 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
   }
 
   /**
-   * Return simulation results to client side for display.
+   * Run simulation and return simulation results to client side for display.
+   * 
+   * @param route
+   * @param direction
+   * @param date
+   * @param startT
+   * @param endT
    */
   @Override
   public Map<String, Integer[]> runSimulation(String route, String direction,
