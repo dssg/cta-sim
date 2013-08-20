@@ -1,10 +1,11 @@
 #!/bin/Rscript
 
-# Type each of the following in the same line of the terminal:
-# Rscript supply_gpmodel.R
-# 6 0 1423
+# Type the following in the terminal:
+# Rscript supply_gpmodel.R 6 0
 
-# This will run the code on data inside of the folder.
+# This code fits a Gaussian Process Model to the schedule deviation data
+# for a specific route and direction.
+
 
 ### Command Line Arguments ###
 
@@ -12,12 +13,6 @@ args <- commandArgs(TRUE)
 
 input_taroute <- toString(args[1])
 input_dir_group <- toString(args[2])
-
-# totaloutput <- toString(args[4])
-# avgoutput <- toString(args[5])
-
-# input_months <- as.numeric(args[6])
-# input_weekend <- as.numeric(args[7])
 
 ### Required Libraries ###
 
@@ -61,9 +56,7 @@ dateinfo <- function(x) {
   return(list(month = month, year = year, wday = wday, day = day))
 }
 
-# time_pt_data$time <- actualtime(time_pt_data$time_actual_arrive)$time
-
-# Fix trip_diff_minutes_prev 
+# Fix trip_diff_minutes_prev:  Change "" to 0.0
 
 time_pt_data$trip_diff_prev[time_pt_data$trip_diff_prev == ""] == 0.0
 
@@ -71,27 +64,42 @@ time_pt_data$trip_diff_prev[time_pt_data$trip_diff_prev == ""] == 0.0
 
 time_scheduled = actualtime(time_pt_data$time_scheduled)$time
 
-time_diff = time_scheduled - c(0,time_scheduled[1:(length(time_scheduled)-1)])
+time_dist = time_scheduled - c(0,time_scheduled[1:(length(time_scheduled)-1)])
 
-time_diff[time_pt_data$trip_diff_prev == 0] = 0
+# We assume it takes 10 minutes to get from terminal to first time point.
+# Better assumption is that the first time point is modeled with a separate
+# variance component.  Since JAGS uses precision instead of variance, this 
+# is slightly difficult.  I suggest creating an indicator of whether it is the
+# first observation and then defining precision is going to be 
+# (tau_1^2 / diff_arrival_{t}) * initial_obs_{t} + (tau_2^2) * (1-initial_obs_{t})
 
-### BUGS CODE - Estimate Single Variance Parameter ###
+time_dist[time_pt_data$trip_diff_prev == 0] = 10  
+
+### BUGS CODE ###
+
+# The code assumes that conditional on the previous deviation (delta_{t-1}),
+# and the distance between scheduled arrival times (diff_arrival_{t}), then
+# delta_{t} is normal with mean = intercept + alpha1 * delta_{t-1} + alpha2 * w_{t}
+# where w_{t} is a half normal.  w_{t} is necessary because of the skew we see in 
+# the data.  
+
+# The variance is given by sigma^2 * diff_arrival_{t} .  So the variance increases
+# as the distance between time points (measured in minutes) increases.
 
 model.str <- 'model
 {
   for(d in 1:num_obs) {
     delta[d] ~ dnorm(mu[d], var[d])
     mu[d] <- alpha0 + alpha1 * prev_delta[d] + alpha2 * w[d]
-    var[d] <- itau2.alpha * diff_arrival[d] + itau2.gamma
+    var[d] <- itau2.alpha / diff_arrival[d]
     w[d] ~ dnorm(0, wvar[d]) I(0,)
-    wvar[d] <- itau2.beta * diff_arrival[d]    
+    wvar[d] <- itau2.beta / diff_arrival[d]    
   }
   alpha0 ~ dnorm(0,.001)
   alpha1 ~ dnorm(0,.001)
   alpha2 ~ dnorm(0,.001)
   itau2.alpha ~ dgamma(1,1)
   itau2.beta ~ dgamma(1,1)
-  itau2.gamma ~ dgamma(1,1)
 }'
 
 model.file = file("gaussianprocess_model.bug")
