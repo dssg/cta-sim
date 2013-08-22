@@ -39,6 +39,7 @@ import dssg.shared.Config;
  * This class holds the state/results of a batch of simulations.
  * 
  * @author jtbates
+ * If you get a nullpointer exception for line 115 or 116 clean the proyect and try again.
  * 
  */
 
