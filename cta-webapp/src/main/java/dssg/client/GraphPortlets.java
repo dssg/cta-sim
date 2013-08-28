@@ -39,6 +39,12 @@ import com.extjs.gxt.ui.client.widget.layout.VBoxLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.VBoxLayout.VBoxLayoutAlign;
 import com.google.gwt.user.client.Command;
 
+/**
+ * Class to create the three panels for the center region of the webapp
+ * Depending on the type of information given the panels are created slightly
+ * different
+ * 
+ */
 public class GraphPortlets extends Portlet {
   // Global variables
   private ContentPanel panel;
@@ -63,10 +69,18 @@ public class GraphPortlets extends Portlet {
   private Resizable r;
   private String title;
   private Date date;
-  private final int NUMHOURSEG=48;
+  private final int NUMHOURSEG = 48;
 
-  /*
+  /**
    * Constructor for LOAD and FLOW
+   * 
+   * @param dataType
+   * @param route
+   * @param direction
+   * @param startT
+   * @param stopT
+   * @param date
+   * @param sim_data
    */
   public GraphPortlets(String dataType, String route, String direction,
       Integer startT, Integer stopT, Date date, Map<String, Integer[]> sim_data) {
@@ -89,7 +103,7 @@ public class GraphPortlets extends Portlet {
 
     // Create the simulated data arrays
     sim_dataTimeWindow = new Integer[2][NUMHOURSEG];
-
+    // arrays for LOAD
     if (dataType.equals("Load")) {
       if (direction.equals("N") || direction.equals("B"))
         numStops = sim_data.get("load_timestop_N_hour1").length;
@@ -113,11 +127,11 @@ public class GraphPortlets extends Portlet {
         for (int i = 0; i < NUMHOURSEG; i++) {
           temp_reverse[i] = sim_data.get("load_timestop_S_hour" + i);
           for (int j = 0; j < numStops; j++)
-            sim_dataTimeStopS[i][j]=temp_reverse[i][numStops-(1+j)];
+            sim_dataTimeStopS[i][j] = temp_reverse[i][numStops - (1 + j)];
         }
       }
     }
-
+    // arrays for FLOW
     if (dataType.equals("Flow")) {
       if (direction.equals("N") || direction.equals("B"))
         numStops = sim_data.get("flow_timestop_N_hour1").length;
@@ -141,10 +155,10 @@ public class GraphPortlets extends Portlet {
         for (int i = 0; i < NUMHOURSEG; i++) {
           temp_reverse[i] = sim_data.get("flow_timestop_S_hour" + i);
           for (int j = 0; j < numStops; j++)
-            sim_dataTimeStopS[i][j]=temp_reverse[i][numStops-(1+j)];
+            sim_dataTimeStopS[i][j] = temp_reverse[i][numStops - (1 + j)];
         }
       }
-      
+
     }
 
     // Box Layout for the charts and sliders
@@ -162,6 +176,7 @@ public class GraphPortlets extends Portlet {
     final VBoxLayoutData vBoxData = new VBoxLayoutData(10, 15, 10, 25);
     final VBoxLayoutData vBoxData2 = new VBoxLayoutData(10, 10, 10, 25);
 
+    // Elements added
     this.add(panelChartTimeWindow());
     this.add(hourControls(), vBoxData);
     this.add(panelChartAllStops());
@@ -169,10 +184,11 @@ public class GraphPortlets extends Portlet {
 
   }
 
-  /*
+  /**
    * Create All Elements Left Potlet (Double Chart)
+   * 
+   * @return ContentPanel
    */
-  // Panel for Time Window chart
   private ContentPanel panelChartTimeWindow() {
     // Local variables
     String url;
@@ -199,7 +215,11 @@ public class GraphPortlets extends Portlet {
     return panel;
   }
 
-  // Line chart Time Window
+  /**
+   * Line chart Time Window
+   * 
+   * @return ChartModel
+   */
   private ChartModel createChartTimeWindow() {
     // Choose title
     if (dataType.equals("Load"))
@@ -263,7 +283,7 @@ public class GraphPortlets extends Portlet {
     }
     if (dataType.equals("Load") && maxY >= 95)
       cm.addChartConfig(lchartU);
-    
+
     // Create a Line Chart object NORTH DATA
     LineChart lchart = new LineChart();
     lchart.setAnimateOnShow(true);
@@ -279,7 +299,7 @@ public class GraphPortlets extends Portlet {
     if ((direction.equals("N") || direction.equals("B")) && route != null) {
       cm.addChartConfig(lchart);
     }
-    
+
     // Create a Line Chart object SOUTH DATA
     lchart = new LineChart();
     lchart.setAnimateOnShow(true);
@@ -299,7 +319,11 @@ public class GraphPortlets extends Portlet {
     return cm;
   }
 
-  // Center Slider
+  /**
+   * Center Slider
+   * 
+   * @return SliderField
+   */
   private SliderField hourControls() {
     // Time Window slider
     final Slider slider = new Slider();
@@ -330,7 +354,11 @@ public class GraphPortlets extends Portlet {
     return sf;
   }
 
-  // Panel for All Stops chart
+  /**
+   * Panel for All Stops chart
+   * 
+   * @return ContentPanel
+   */
   private ContentPanel panelChartAllStops() {
     // Local variables
     String url;
@@ -357,7 +385,11 @@ public class GraphPortlets extends Portlet {
     return panel;
   }
 
-  // Line chart for All Stops chart
+  /**
+   * Line chart for All Stops
+   * 
+   * @return ChartModel
+   */
   private ChartModel createChartAllStops() {
     // Choose title
     if (dataType.equals("Load"))
@@ -391,17 +423,18 @@ public class GraphPortlets extends Portlet {
     // Create the Y axis
     YAxis ya = new YAxis();
     // Add the labels to the Y axis
-    int maxY= 1;
+    int maxY = 1;
     if (direction.equals("N"))
-        maxY= getMax(sim_dataTimeStopN[timeSliderPosition]);
+      maxY = getMax(sim_dataTimeStopN[timeSliderPosition]);
     if (direction.equals("S"))
-        maxY= getMax(sim_dataTimeStopS[timeSliderPosition]);
+      maxY = getMax(sim_dataTimeStopS[timeSliderPosition]);
     if (direction.equals("B"))
-        maxY= Math.max(getMax(sim_dataTimeStopN[timeSliderPosition]),getMax(sim_dataTimeStopS[timeSliderPosition]));
-    
+      maxY = Math.max(getMax(sim_dataTimeStopN[timeSliderPosition]),
+          getMax(sim_dataTimeStopS[timeSliderPosition]));
+
     ya.setRange(0, 1.1 * maxY + 1, 10);
     cm.setYAxis(ya);
-    
+
     // Creates the line for max Suggested load
     LineChart lchartD = new LineChart();
     lchartD.setColour("#0099FF");
@@ -458,13 +491,15 @@ public class GraphPortlets extends Portlet {
       cm.addChartConfig(lchart);
     }
 
-    
-
     // Returns the Chart Model
     return cm;
   }
 
-  // Bottom Slider
+  /**
+   * Bottom Slider
+   * 
+   * @return SliderField
+   */
   private SliderField stopControls() {
     // Stop slider
     final Slider slider = new Slider();
@@ -496,10 +531,11 @@ public class GraphPortlets extends Portlet {
     return sf;
   }
 
-  /*
-   * Create All Elements Right Top Porlet (One Stop Chart)
+  /**
+   * Create All Elements Right Top Portlet (One Stop Chart)
+   * 
+   * @return Portlet
    */
-  // Portlet One Stop
   public Portlet getPortletOneStop() {
     // Portlet One stop, time period
     final Portlet stopPortlet = new Portlet();
@@ -515,7 +551,11 @@ public class GraphPortlets extends Portlet {
     return stopPortlet;
   }
 
-  // Pannel for One Stop chart
+  /**
+   * Pannel for One Stop chart
+   * 
+   * @return ContentPanel
+   */
   private ContentPanel pannelChartOneStop() {
 
     String url;
@@ -545,7 +585,13 @@ public class GraphPortlets extends Portlet {
 
   }
 
-  // Line and bar chart for One Stop
+  /**
+   * Line and bar chart for One Stop
+   * 
+   * @param s
+   *          (stop id)
+   * @return ChartModel
+   */
   private ChartModel createChartOneStop(int s) {
     // Chart model initialization
     ChartModel cm = new ChartModel("Stop: " + s + "\t" + dataType
@@ -572,7 +618,7 @@ public class GraphPortlets extends Portlet {
 
     Integer[] dataN = new Integer[(stopT - startT) * 2];
     Integer[] dataS = new Integer[(stopT - startT) * 2];
-    
+
     if ((direction.equals("N") || direction.equals("B")) && route != null) {
       for (int n = 0; n < (stopT - startT) * 2; n++) {
         dataN[n] = sim_dataTimeStopN[n][stopTageoid];
@@ -587,18 +633,18 @@ public class GraphPortlets extends Portlet {
     // Create the Y axis
     YAxis ya = new YAxis();
     // Add the labels to the Y axis
-    int maxY =1;
+    int maxY = 1;
     if (direction.equals("N"))
-        maxY= getMax(dataN);
+      maxY = getMax(dataN);
     if (direction.equals("S"))
-        maxY= getMax(dataS);
+      maxY = getMax(dataS);
     if (direction.equals("B")) {
-      maxY=Math.max(getMax(dataN), getMax(dataS));
+      maxY = Math.max(getMax(dataN), getMax(dataS));
     }
     ya.setRange(0, 1.1 * maxY + 1, 10);
     cm.setYAxis(ya);
-    
- // Creates the line for max Suggested load
+
+    // Creates the line for max Suggested load
     LineChart lchartD = new LineChart();
     lchartD.setColour("#0099FF");
     lchartD.setText("Max 30ft bus");
@@ -652,17 +698,17 @@ public class GraphPortlets extends Portlet {
       cm.addChartConfig(bchartS);
     }
 
-    
-
     // Returns the Chart Model
     return cm;
 
   }
 
-  /*
-   * Create All Elements Right Bottom Portlet (Grid)
+  /**
+   * Create All Elements Right Bottom Portlet (Grid) Statistic Information Grid
+   * portlet
+   * 
+   * @return Portlet
    */
-  // Stat. Information Grid portlet
   public Portlet getGrid() {
     // Portlet for the Information Grid
     final Portlet gridPortlet = new Portlet();
@@ -683,12 +729,13 @@ public class GraphPortlets extends Portlet {
   /**
    * Statistic Information Grid panel
    * 
-   * @return
+   * @return ContentPanel
    */
   private ContentPanel createGrid() {
     final Grid<DataStats> grid;
     ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 
+    // Columns for statistic types
     ColumnConfig stopCol = new ColumnConfig();
     stopCol.setId("hour");
     stopCol.setHeaderHtml("Hour");
@@ -734,17 +781,20 @@ public class GraphPortlets extends Portlet {
     loadFin.setEditor(new CellEditor(text));
     configs.add(loadFin);
 
+    // Information to populate grid
     final ListStore<DataStats> store = new ListStore<DataStats>();
     store.add(GetData.getStats(dataType, sim_data, direction));
 
     ColumnModel cm = new ColumnModel(configs);
-
+    // Layout preferences
     panel = new ContentPanel();
     panel.setFrame(false);
     panel.setHeight(280);
     panel.setHeaderVisible(false);
     panel.setLayout(new FitLayout());
 
+    // TODO: make the grid highlight the sime of day selected in the One Stop
+    // Chart
     GridSelectionModel<DataStats> selectModel = new GridSelectionModel<DataStats>();
     selectModel.select(stopTageoid, true);
 
@@ -758,9 +808,8 @@ public class GraphPortlets extends Portlet {
   }
 
   /*
-   * Other functions
+   * Function: Get the maximum value of an array
    */
-  // Get the maximum value of an array
   public int getMax(Integer[] list) {
     int max = Integer.MIN_VALUE;
     for (int i = 0; i < list.length; i++) {
@@ -771,7 +820,11 @@ public class GraphPortlets extends Portlet {
     return max;
   }
 
-  // Panel configuration method for portlets
+  /**
+   * Panel configuration method for portlets
+   * 
+   * @param panel
+   */
   private void configPanel(final ContentPanel panel) {
     // Layout configuration
     panel.setCollapsible(true);

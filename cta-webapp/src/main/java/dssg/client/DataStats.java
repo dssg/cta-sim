@@ -1,14 +1,18 @@
 package dssg.client;
 
 import com.extjs.gxt.ui.client.data.BaseModel;
-
+/**
+ * Class that define an object for storing statistical information 
+ * IN: hour, load at beginning, middle, middle2, end of the route
+ * 
+ * Used in GetData class
+ */
 public class DataStats extends BaseModel {
-	
+	// Initializers
 	public DataStats() {
 		
 	}
 	
-	// Temporary usage for stats grid in GwtPortalContainer
 	public DataStats(double hour, Integer load_at_beg, Integer load_at_mid, Integer load_at_mid2, Integer load_at_fin) {
 		set("hour",hour);
 		set("load_at_beg",load_at_beg);
@@ -16,7 +20,7 @@ public class DataStats extends BaseModel {
 		set("load_at_mid2",load_at_mid2);
 		set("load_at_fin",load_at_fin);
 	}
-	 
+	// General Methods
 	public double getHour() {
 	  Double open = (Double) get("hour");
       return open.doubleValue();

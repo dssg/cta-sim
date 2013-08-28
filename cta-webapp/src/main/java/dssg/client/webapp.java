@@ -11,24 +11,23 @@ import com.google.gwt.user.client.ui.RootPanel;
 public class webapp implements EntryPoint {
 
   /**
-   * Remote service proxy to talk to the server-side simulation
-   * service.
+   * Remote service proxy to talk to the server-side simulation service.
    */
   private final SimulationServiceAsync simulationService = GWT
       .create(SimulationService.class);
   private final S3CommunicationServiceAsync s3ComunicationService = GWT
-	      .create(S3CommunicationService.class);
+      .create(S3CommunicationService.class);
 
   /**
    * This is the entry point method.
    */
   public void onModuleLoad() {
-	RootPanel rootPanel = RootPanel.get();
+    RootPanel rootPanel = RootPanel.get();
     rootPanel.setStyleName("requires-min-width");
     rootPanel.setStyleName("root");
-    rootPanel.add(new GwtPortalContainer(simulationService, s3ComunicationService));
-    
-    DOM.removeChild(RootPanel.getBodyElement(),
-        DOM.getElementById("loading"));
+    rootPanel.add(new GwtPortalContainer(simulationService,
+        s3ComunicationService));
+
+    DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("loading"));
   }
 }
