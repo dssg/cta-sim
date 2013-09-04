@@ -332,7 +332,7 @@ public class GwtPortalContainer extends Viewport {
     simple.add(routeCmb, formData);
 
     // Date field
-    String sdate="14-02-2012";  //24 Jan 2012
+    String sdate="01-03-2013";  //24 Jan 2012
     DateTimeFormat dformat = DateTimeFormat.getFormat("dd-MM-yyyy");
     date = new DateField();
     date.getPropertyEditor().setFormat(dformat);

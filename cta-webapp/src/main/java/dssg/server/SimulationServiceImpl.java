@@ -181,7 +181,7 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 
     // Simulation Service Object
     SimulationServiceImpl simService = new SimulationServiceImpl();
-    Date day = new Date(date.getTime());
+    Date day = new Date(date.getTime()-(6*60*60*1000));
     Date startTimeH = new Date(day.getTime() + startT * 60 * 60 * 1000);
     Date endTimeH = new Date(startTimeH.getTime() + (endT - startT) * 60 * 60
         * 1000);
