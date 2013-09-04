@@ -181,8 +181,7 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 
     // Simulation Service Object
     SimulationServiceImpl simService = new SimulationServiceImpl();
-    // Substract 12 hourse from the date
-    Date day = new Date(date.getTime() - 12 * 60 * 60 * 1000);
+    Date day = new Date(date.getTime());
     Date startTimeH = new Date(day.getTime() + startT * 60 * 60 * 1000);
     Date endTimeH = new Date(startTimeH.getTime() + (endT - startT) * 60 * 60
         * 1000);
@@ -202,7 +201,8 @@ public class SimulationServiceImpl extends RemoteServiceServlet implements
 
     String batchId;
     try {
-      System.out.println("[WA INFO] Starting Simulation.");
+      System.out.println("[WA INFO] Starting Simulation with parameters:" +
+      		" routeAndDirs " + routeAndDirs + ", startTimeH " + startTimeH +", endTimeH "+ endTimeH);
       batchId = simService.submitSimulation(routeAndDirs, startTimeH, endTimeH);
       SimulationBatch simBatch = simService.getSimulation(batchId);
       StatProbesBatch statProbe = simBatch.getProbes();

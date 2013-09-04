@@ -40,11 +40,14 @@ import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Image;
+
+import eu.datex2.schema._1_0._1_0.Date;
 
 /*
  *  Main class containing all elements
@@ -329,10 +332,20 @@ public class GwtPortalContainer extends Viewport {
     simple.add(routeCmb, formData);
 
     // Date field
+    String sdate="14-02-2012";  //24 Jan 2012
+    DateTimeFormat dformat = DateTimeFormat.getFormat("dd-MM-yyyy");
     date = new DateField();
+    date.getPropertyEditor().setFormat(dformat);
+    java.util.Date dDate= dformat.parse(sdate);
+    date.setValue(dDate);
     date.setFieldLabel("Date");
     date.setAllowBlank(false);
     simple.add(date, formData);
+    
+    
+    DateField date2 = new DateField();
+    
+    
     // Time field
     final TimeField timeS = new TimeField();
     timeS.setFieldLabel("Start Time");
@@ -372,7 +385,7 @@ public class GwtPortalContainer extends Viewport {
           stopT = timeF.getDateValue().getHours();
           // RUN SIMULATION
           GetData.runSim(simulationService, portalContainer, route, direction,
-              date.getDatePicker().getValue(), startT, stopT);
+              date.getValue(), startT, stopT);
           Info.display("Starting Simulation.",
               "The results will be displayed at the bottom of the page.");
         }
