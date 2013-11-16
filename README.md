@@ -13,7 +13,7 @@ cause for concern over the last few years. The CTA has been collecting informati
 specific bus, the times at which more people board buses at a specific stop, and the delay times on different routes, among other
 things. This data, after some processing, is used to understand and modify schedules and routes for the following quarter.
 
-**[Read more about bus overcrowding on our](http://dssg.io/2013/08/02/why-bus-crowding-happens.html)**
+**[Read more about bus overcrowding on our blog](http://dssg.io/2013/08/02/why-bus-crowding-happens.html)**
 
 ## The solution: simulating Chicago's transit system
 While current best practices are data-focused, they are retrospective in nature. We propose to turn scheduling into a more 
