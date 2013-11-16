@@ -1,7 +1,7 @@
 Simulating Chicago's Transit System
 =================
 
-<a href="http://www.transitchicago.com"><img src="http://dssg.io/img/partners/cta.png" align="right" width="300"></a>
+<a href="http://www.transitchicago.com"><img src="http://dssg.io/img/partners/cta.png" align="right" width="150"></a>
 
 Big data simulation of Chicago's public transportation to improve transit planning and reduce bus crowding.
 
