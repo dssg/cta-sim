@@ -13,6 +13,8 @@ cause for concern over the last few years. The CTA has been collecting informati
 specific bus, the times at which more people board buses at a specific stop, and the delay times on different routes, among other
 things. This data, after some processing, is used to understand and modify schedules and routes for the following quarter.
 
+**[Read more about bus overcrowding on our](http://dssg.io/2013/08/02/why-bus-crowding-happens.html)**
+
 ## The solution: simulating Chicago's transit system
 While current best practices are data-focused, they are retrospective in nature. We propose to turn scheduling into a more 
 prospective exercise through statistical modeling and simulation. This will allow the planning analytics department to be more
@@ -23,6 +25,8 @@ insight into bus de-crowding.
 Our tool will display historical data with the metrics the CTA uses today and will incorporate new metrics along with simulated
 data. The new data will help the CTA have a deeper understanding of the results that arise from schedule changes. This new
 understanding will help the CTA in the effort to reduce crowding on buses.
+
+**[Read more about our methodology in the wiki](../../wiki/Models)**
 
 ## Project layout
 Coming soon!
