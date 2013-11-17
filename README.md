@@ -22,7 +22,9 @@ proactive and to better understand the impact of certain scheduling decisions on
 richness of the data available, we believe that even a simple statistical model and simulation approach will provide useful 
 insight into bus de-crowding.
 
-Our tool will display historical data with the metrics the CTA uses today and will incorporate new metrics along with simulated
+<img src="http://www.dssg.io/img/posts/cta-sim-screenshot.png" align="center">
+
+Our tool displays historical data with the metrics the CTA uses today and incorporates new metrics along with simulated
 data. The new data will help the CTA have a deeper understanding of the results that arise from schedule changes. This new
 understanding will help the CTA in the effort to reduce crowding on buses.
 
@@ -37,7 +39,9 @@ Most of the information regarding the project idea can be found in the wiki sect
 ## Team
 
 **Mentor**
-![Brandon profile](http://dssg.io/img/people/willard.jpg) <br>
+![Brandon profile](http://dssg.io/img/people/willard.jpg) 
+
+<br>
 Brandon Willard <br>
 Research Consultant at Chicago Booth 
 
