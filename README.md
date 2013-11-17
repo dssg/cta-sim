@@ -22,7 +22,7 @@ proactive and to better understand the impact of certain scheduling decisions on
 richness of the data available, we believe that even a simple statistical model and simulation approach will provide useful 
 insight into bus de-crowding.
 
-<img src="http://www.dssg.io/img/posts/cta-sim-screenshot.png" align="center">
+![web app screenshot](https://raw.github.com/dssg/dssg.github.io/master/img/posts/cta-sim-screenshot.png)
 
 Our tool displays historical data with the metrics the CTA uses today and incorporates new metrics along with simulated
 data. The new data will help the CTA have a deeper understanding of the results that arise from schedule changes. This new
