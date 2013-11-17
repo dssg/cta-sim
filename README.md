@@ -1,4 +1,4 @@
-Simulating Chicago's Transit System
+Simulating better bus service
 =================
 
 <a href="http://www.transitchicago.com"><img src="http://dssg.io/img/partners/cta.png" align="right" width="150"></a>
@@ -6,6 +6,8 @@ Simulating Chicago's Transit System
 Big data simulation of Chicago's public transportation to improve transit planning and reduce bus crowding.
 
 This project is a part of the 2013 [Data Science for Social Good](http://www.dssg.io) fellowship, in partnership with the [Chicago Transit Authority](http://www.transitchicago.com/).
+
+*For a quick and gentle overview of the project, check out our [blog post](http://dssg.io/2013/08/02/why-bus-crowding-happens.html).*
 
 ## The problem: bus overcrowding
 The Chicago Transit Authority (CTA) has made a concerted effort to decrease the crowding on public transportation that has been a 
